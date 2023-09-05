@@ -1,0 +1,10 @@
+:~  title+'ventureclub'
+    info+'A peer-to-peer trading platform provided by ventureclub'
+    color+0x11.1111
+    image+'https://www.ventureclub.club/_ipx/w_1920,q_100/%2F_next%2Fstatic%2Fmedia%2F3d-jack.700ccbc6.png?url=%2F_next%2Fstatic%2Fmedia%2F3d-jack.700ccbc6.png&w=1920&q=100'
+    glob-http+['https://raw.githubusercontent.com/j3-productions/quorum/v1.0.7/meta/glob/v1.0.7.glob' 0v6.9nqf3.mjuh3.ronig.9ln8e.jsmj1]
+    base+'vcc-trade'
+    version+[0 0 1]
+    website+'https://www.ventureclub.club/'
+    license+'MIT'
+==
