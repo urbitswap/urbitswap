@@ -16,7 +16,7 @@ to set up the [Vite] and the UI development environment:
 ```bash
 cd ./ui
 npm install
-echo "VITE_SHIP_URL=http://127.0.0.1:8080" >> .env.local
+echo "VITE_SHIP_URL=http://127.0.0.1:8080" > .env.local
 ```
 
 Subsequently, run the following commands to download [durploy] create a new
@@ -86,7 +86,7 @@ cd ./ui
 npm run build
 cd ..
 ./durploy desk -g zod vcc-trade ./ui/dist/
-# TODO
+cp "$(ls -dtr1 "${XDG_CACHE_HOME:-$HOME/.cache}/durploy/glob"/* | tail -1)" ./meta/glob
 ```
 
 
