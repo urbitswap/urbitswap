@@ -14,9 +14,16 @@ The following commands should be executed after each fresh clone of the project
 to set up the [Vite] and the UI development environment:
 
 ```bash
+nvm install 16
+nvm use 16
+
 cd ./ui
-npm install
+yarn install
+
 echo "VITE_SHIP_URL=http://127.0.0.1:8080" > .env.local
+echo "VITE_ETHRPC_URL=https://eth-goerli.alchemyapi.io/v2/$ALCHEMY_GOERLI_APIKEY" >> .env.local
+echo "VITE_RARIBLE_KEY=$RARIBLE_APIKEY" >> .env.local
+echo "VITE_WALLET_KEY=$ETH_WALLET_PRIKEY" >> .env.local
 ```
 
 Subsequently, run the following commands to download [durploy] create a new
@@ -52,8 +59,9 @@ npm run dev
 ```
 
 Also, be sure to authenticate via both the NPM web portal (default:
-`localhost:3000`) and the development ship's web portal ([fake `~zod`][fakezod]
-default: `localhost:8080`).
+`127.0.0.1:3000`) and the development ship's web portal ([fake `~zod`][fakezod]
+default: `127.0.0.1:8080`) using the output of the Urbit `+code` command as
+the password.
 
 ### Deployment Workflow ###
 

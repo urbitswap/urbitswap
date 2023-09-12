@@ -1,0 +1,23 @@
+diff --git a/node_modules/soltypes/build/index.es.js b/node_modules/soltypes/build/index.es.js
+index 8f8e4779..5690eb63 100644
+--- a/node_modules/soltypes/build/index.es.js
++++ b/node_modules/soltypes/build/index.es.js
+@@ -1,4 +1,4 @@
+-import buffer from 'buffer';
++import { Buffer } from 'buffer';
+ 
+ /*! *****************************************************************************
+ Copyright (c) Microsoft Corporation.
+@@ -85,12 +85,6 @@ var bn = createCommonjsModule(function (module) {
+   BN.BN = BN;
+   BN.wordSize = 26;
+ 
+-  var Buffer;
+-  try {
+-    Buffer = buffer.Buffer;
+-  } catch (e) {
+-  }
+-
+   BN.isBN = function isBN (num) {
+     if (num instanceof BN) {
+       return true;
