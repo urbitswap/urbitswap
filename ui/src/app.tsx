@@ -2,6 +2,12 @@ import React, { useEffect, useState } from 'react';
 import Urbit from '@urbit/http-api';
 import { ethers } from 'ethers';
 import { createRaribleSdk } from '@rarible/sdk';
+import type {
+  Collection as RaribleCollection,
+  Item as RaribleItem,
+  Items as RaribleItems,
+  MetaContent as RaribleMetaContent,
+} from '@rarible/api-client';
 import { toUnionAddress } from '@rarible/types';
 
 const api = new Urbit('', '', window.desk);
@@ -22,16 +28,17 @@ const rsdk = createRaribleSdk(eth, "testnet", {
 export function App() {
   const collectionAddress = "ETHEREUM:0xa144C7E81398B90680bBb34320e062f4bFE37564";
 
-  // TODO: Use @rarible/types
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [collectionName, setCollectionName] = useState<string | undefined>(undefined);
-  const [collectionItems, setCollectionItems] = useState<object[] | undefined>(undefined);
+  const [collectionName, setCollectionName] = useState<string>("");
+  const [collectionItems, setCollectionItems] = useState<RaribleItem[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       const colArgs = {collection: collectionAddress};
-      const col = await rsdk.apis.collection.getCollectionById(colArgs);
-      const colItems = await rsdk.apis.item.getItemsByCollection(colArgs);
+      const col: RaribleCollection =
+        await rsdk.apis.collection.getCollectionById(colArgs);
+      const colItems: RaribleItems =
+        await rsdk.apis.item.getItemsByCollection(colArgs);
 
       setCollectionName(col.name);
       setCollectionItems(colItems.items);
@@ -52,13 +59,15 @@ export function App() {
               grid w-full h-fit grid-cols-2 gap-4 px-4
               justify-center sm:grid-cols-[repeat(auto-fit,minmax(auto,200px))]
             `}>
-              {collectionItems.map((collectionItem: object) => (
+              {collectionItems.map((collectionItem: RaribleItem) => (
                 <div className="flex flex-col justify-center" key={collectionItem.tokenId}>
-                  <h3 className="text-lg text-center font-semibold">{collectionItem.meta.name}</h3>
+                  <h3 className="text-lg text-center font-semibold">
+                    {collectionItem.meta?.name ?? "<Unknown Collection>"}
+                  </h3>
                   <img className="object-contain" src={
-                    collectionItem.meta.content.find((entry: object) => (
+                    (collectionItem.meta?.content.find((entry: RaribleMetaContent) => (
                       entry["@type"] === "IMAGE"
-                    )).url
+                    )) ?? {})?.url
                   } />
                 </div>
               ))}
