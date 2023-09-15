@@ -16,14 +16,12 @@ to set up the [Vite] and the UI development environment:
 ```bash
 nvm install 16
 nvm use 16
-
 cd ./ui
 yarn install
-
 echo "VITE_SHIP_URL=http://127.0.0.1:8080" > .env.local
-echo "VITE_ETHRPC_URL=https://eth-goerli.alchemyapi.io/v2/$ALCHEMY_GOERLI_APIKEY" >> .env.local
 echo "VITE_RARIBLE_KEY=$RARIBLE_APIKEY" >> .env.local
-echo "VITE_WALLET_KEY=$ETH_WALLET_PRIKEY" >> .env.local
+# Optional: To eliminate rate limiting for ETH requests.
+echo "VITE_ALCHEMY_KEY=$ALCHEMY_APIKEY" >> .env.local
 ```
 
 Subsequently, run the following commands to download [durploy] create a new

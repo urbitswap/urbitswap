@@ -7,31 +7,20 @@ import {
   Location,
   useLocation,
 } from 'react-router-dom';
-import Urbit from '@urbit/http-api';
-import { WagmiConfig, createConfig } from 'wagmi';
-import { createPublicClient, http } from 'viem';
-import { mainnet, goerli } from 'viem/chains';
+import { WagmiConfig } from 'wagmi';
 import { CollectionGrid } from '@/app/Views';
 import NavBar from '@/app/NavBar';
+import { urbitAPI, wagmiAPI } from '@/api';
 import { APP_TERM } from '@/constants';
 import type { ReactRouterState } from '@/types/urbui';
 
-const api = new Urbit('', '', window.desk);
-api.ship = window.ship;
-
-// const config = createConfig({
-//   autoConnect: true,
-//   publicClient: createPublicClient({
-//     chain: goerli,
-//     transport: http(),
-//   }),
-// });
-
 export function App() {
   return (
-    <BrowserRouter basename={`/apps/${APP_TERM}/`}>
+    <WagmiConfig config={wagmiAPI}>
+      <BrowserRouter basename={`/apps/${APP_TERM}/`}>
         <RoutedApp />
-    </BrowserRouter>
+      </BrowserRouter>
+    </WagmiConfig>
   );
 }
 
@@ -44,6 +33,9 @@ function RoutedApp() {
   );
 }
 
+// NOTE: This seemingly unnecessary indirection is required to allow modals
+// to overlay on top of base paths without causing those base paths to
+// re-render their contents.
 function RoutedAppRoutes({
   state,
   location,

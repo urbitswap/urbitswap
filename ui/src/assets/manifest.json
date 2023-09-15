@@ -6,7 +6,7 @@
   "id": "/apps/vcc-trade/",
   "icons": [
     {
-      "src": "/apps/vcc-trade/android-chrome-512x512.png",
+      "src": "/apps/vcc-trade/src/assets/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
