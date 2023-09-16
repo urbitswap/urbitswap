@@ -1,28 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { ethers } from 'ethers'
 import { useWalletClient, usePublicClient } from 'wagmi';
 import { createRaribleSdk } from '@rarible/sdk';
+import { ENV_TEST } from '@/constants';
 import type { WalletClient } from '@wagmi/core'
 import type { IRaribleSdk as RaribleSdk } from '@rarible/sdk';
 
 export default function useRaribleSDK(): RaribleSdk | undefined {
-  const [rsdk, setRSDK] = useState<RaribleSdk | undefined>(undefined);
-
   const { data: walletClient } = useWalletClient();
 
-  useEffect(() => {
-    // source: https://docs.rarible.org/getting-started/quick-start/#using-sdk
-    if (walletClient) {
-      const ethersSigner = walletClientToSigner(walletClient);
-      const newRSDK = createRaribleSdk(ethersSigner, "testnet", {
-        logs: 0,
-        apiKey: import.meta.env.VITE_RARIBLE_KEY,
-      });
-      setRSDK(newRSDK);
-    }
-  }, [walletClient]);
-
-  return rsdk;
+  return useMemo(() => createRaribleSdk(
+    walletClient ? walletClientToSigner(walletClient) : undefined,
+    ENV_TEST ? "testnet" : "prod",
+    {
+      logs: 0,
+      apiKey: import.meta.env.VITE_RARIBLE_KEY,
+    },
+  ), [walletClient]);
 }
 
 // source: https://wagmi.sh/core/ethers-adapters

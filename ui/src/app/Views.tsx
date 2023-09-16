@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import cn from 'classnames';
 import { Blockchain } from '@rarible/api-client';
 import { toContractAddress, toItemId, toOrderId, toUnionAddress } from '@rarible/types';
@@ -51,40 +52,9 @@ export function CollectionGrid({className}: ClassProps) {
           justify-center sm:grid-cols-[repeat(auto-fit,minmax(auto,200px))]
         `}>
           {collectionItems.map((collectionItem: RaribleItem) => (
-            <div key={collectionItem.tokenId}
-              className="flex flex-col justify-center hover:cursor-pointer hover:border-2"
-              onClick={() => {
-                if (rsdk) {
-                  if (collectionItem?.bestSellOrder === undefined) {
-                    rsdk.order.sell({
-                      itemId: toItemId(collectionItem.id),
-                      amount: 1,
-                      price: "0.0005",
-                      currency: {
-                        "@type": "ETH",
-                        "blockchain": Blockchain.ETHEREUM,
-                      },
-                      expirationDate: new Date(Date.now() + 60 * 60 * 1000),
-                    }).then((orderId: RaribleOrderId) => {
-                      console.log("*************** ORDER SUCCEEDED ***************");
-                      setIsLoading(true);
-                    }, (reason: any) => {
-                      console.log("**************** ORDER FAILED ****************");
-                      console.log(reason);
-                    });
-                  } else {
-                    rsdk.order.cancel({
-                      orderId: toOrderId(collectionItem.bestSellOrder.id),
-                    }).then((orderTxn: RaribleTransaction) => {
-                      console.log("*************** CANCEL SUCCEEDED ***************");
-                      setIsLoading(true);
-                    }, (reason: any) => {
-                      console.log("**************** CANCEL FAILED ****************");
-                      console.log(reason);
-                    });
-                  }
-                }
-              }}
+            <Link key={collectionItem.tokenId}
+              to={`/item/${collectionItem.tokenId}`}
+              className="flex flex-col justify-center hover:border-2"
             >
               <h3 className="text-lg text-center font-semibold">
                 {collectionItem.meta?.name ?? "<Unknown Collection>"}
@@ -101,10 +71,49 @@ export function CollectionGrid({className}: ClassProps) {
                   `${collectionItem.bestSellOrder.makePrice} ETH`
                 )}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+export function ItemPage({className}: ClassProps) {
+  //            onClick={() => {
+  //              if (rsdk) {
+  //                if (collectionItem?.bestSellOrder === undefined) {
+  //                  rsdk.order.sell({
+  //                    itemId: toItemId(collectionItem.id),
+  //                    amount: 1,
+  //                    price: "0.0005",
+  //                    currency: {
+  //                      "@type": "ETH",
+  //                      "blockchain": Blockchain.ETHEREUM,
+  //                    },
+  //                    expirationDate: new Date(Date.now() + 60 * 60 * 1000),
+  //                  }).then((orderId: RaribleOrderId) => {
+  //                    console.log("*************** ORDER SUCCEEDED ***************");
+  //                    setIsLoading(true);
+  //                  }, (reason: any) => {
+  //                    console.log("**************** ORDER FAILED ****************");
+  //                    console.log(reason);
+  //                  });
+  //                } else {
+  //                  rsdk.order.cancel({
+  //                    orderId: toOrderId(collectionItem.bestSellOrder.id),
+  //                  }).then((orderTxn: RaribleTransaction) => {
+  //                    console.log("*************** CANCEL SUCCEEDED ***************");
+  //                    setIsLoading(true);
+  //                  }, (reason: any) => {
+  //                    console.log("**************** CANCEL FAILED ****************");
+  //                    console.log(reason);
+  //                  });
+  //                }
+  //              }
+  //            }}
+
+  return (
+    <p>TODO: Item Page Here</p>
   );
 }

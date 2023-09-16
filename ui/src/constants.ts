@@ -1,6 +1,8 @@
 // eslint-disable-next-line import/prefer-default-export
-export const APP_NAME = 'VCC Trade';
-export const APP_TERM = 'vcc-trade';
+export const ENV_TEST: boolean = true;
+
+export const APP_NAME: string = "VCC Trade";
+export const APP_TERM: string = "vcc-trade";
 
 export const CONTRACT = Object.freeze({
   COLLECTION: "ETHEREUM:0xa144C7E81398B90680bBb34320e062f4bFE37564",
@@ -8,6 +10,6 @@ export const CONTRACT = Object.freeze({
 });
 
 export const AUTHORS = [
-  '~labtug-doztec',
-  '~sidnym-ladrut',
+  "~labtug-doztec",
+  "~sidnym-ladrut",
 ];
