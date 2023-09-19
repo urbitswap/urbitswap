@@ -159,7 +159,7 @@ export function ItemPage({className}: ClassProps) {
         <div className="grid grid-cols-1 grid-flow-dense gap-x-4 sm:grid-cols-3">
           <div className="sm:col-span-2">
             <h2 className="text-xl font-bold underline">
-              {item.meta?.name ?? "<Unknown Item>"}
+              {item?.meta?.name ?? "<Unknown Item>"}
             </h2>
             <h3 className="text-lg">
               <span className="font-semibold">Owner:</span>
@@ -194,7 +194,7 @@ export function ItemPage({className}: ClassProps) {
           </div>
           <div className="sm:row-span-1 flex flex-col gap-4 items-center">
             <img className="object-contain border-2 border-gray-800" src={
-              (item.meta?.content.find((entry: RaribleMetaContent) => (
+              (item?.meta?.content.find((entry: RaribleMetaContent) => (
                 entry["@type"] === "IMAGE"
               )) ?? {})?.url
             } />
