@@ -3,6 +3,28 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import Dialog from '@/components/Dialog';
 import { useDismissNavigate } from '@/logic/routing';
 
+export function BidDialog() {
+  const dismiss = useDismissNavigate();
+  const onOpenChange = (open: boolean) => (!open && dismiss());
+
+  return (
+    <DefaultDialog onOpenChange={onOpenChange}>
+      <p>TODO: Create Bid Dialog</p>
+    </DefaultDialog>
+  );
+}
+
+export function TakeDialog() {
+  const dismiss = useDismissNavigate();
+  const onOpenChange = (open: boolean) => (!open && dismiss());
+
+  return (
+    <DefaultDialog onOpenChange={onOpenChange}>
+      <p>TODO: Create Take Dialog</p>
+    </DefaultDialog>
+  );
+}
+
 export function CancelDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());

@@ -45,3 +45,12 @@ export function useDismissNavigate() {
     }
   }, [navigate, state]);
 }
+
+export function useChatNavigate() {
+  const { origin } = window.location;
+
+  return useCallback((ship: string) => {
+    const href = `${origin}/apps/talk/dm/${ship}`;
+    return window.open(href, "_blank");
+  }, [origin]);
+}

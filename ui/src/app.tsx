@@ -8,7 +8,8 @@ import {
   useLocation,
 } from 'react-router-dom';
 import { WagmiConfig } from 'wagmi';
-import { CollectionGrid } from '@/app/Views';
+import { CollectionGrid, ItemPage } from '@/app/Views';
+import { BidDialog, TakeDialog, CancelDialog } from '@/app/Dialogs';
 import NavBar from '@/app/NavBar';
 import { urbitAPI, wagmiAPI } from '@/api';
 import { APP_TERM } from '@/constants';
@@ -53,15 +54,15 @@ function RoutedAppRoutes({
           </React.Fragment>
         }>
           <Route path="/" element={<CollectionGrid />} />
-          <Route path="/item/:itemid" element={<p children="Item" />} />
+          <Route path="/item/:itemId" element={<ItemPage />} />
         </Route>
       </Routes>
       {state?.backgroundLocation && (
         <Routes>
-          <Route path="/item/:itemid">
-            <Route path="bid" element={<p children="Bid" />} />
-            <Route path="take" element={<p children="Take" />} />
-            <Route path="cancel" element={<p children="Cancel" />} />
+          <Route path="/item/:itemId">
+            <Route path="bid" element={<BidDialog />} />
+            <Route path="take/:bidId" element={<TakeDialog />} />
+            <Route path="cancel" element={<CancelDialog />} />
           </Route>
         </Routes>
       )}

@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
+import { Link } from 'react-router-dom';
 import cn from 'classnames';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
@@ -26,9 +27,9 @@ export default function NavBar({className}: {className?: string}) {
       "border-gray-800 border-b-2",
     )}>
       <div className="flex flex-row justify-between items-center">
-        <h1 className="text-3xl font-bold">
+        <Link to="/" className="text-3xl font-bold">
           {APP_NAME}
-        </h1>
+        </Link>
         {address && (
           <div className="text-center text-xs">
             <p>

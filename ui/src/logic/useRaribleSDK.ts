@@ -7,6 +7,8 @@ import type { WalletClient } from '@wagmi/core'
 import type { IRaribleSdk as RaribleSdk } from '@rarible/sdk';
 
 export default function useRaribleSDK(): RaribleSdk | undefined {
+  // TODO: Wallet disconnects aren't registering properly; need some combination
+  // of this variable and some form of 'isConnected' checker.
   const { data: walletClient } = useWalletClient();
 
   return useMemo(() => createRaribleSdk(
