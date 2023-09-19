@@ -6,6 +6,11 @@ import { useAccount } from 'wagmi';
 import { Blockchain } from '@rarible/api-client';
 import { toContractAddress, toItemId, toOrderId, toUnionAddress } from '@rarible/types';
 import Dialog from '@/components/Dialog';
+import {
+  SingleSelector,
+  MultiSelector,
+  SelectorOption,
+} from '@/components/Selector';
 import useRaribleSDK from '@/logic/useRaribleSDK';
 import { useDismissNavigate } from '@/logic/routing';
 import { CONTRACT } from '@/constants';
@@ -32,6 +37,54 @@ export function BidDialog() {
 
   const isMyItem: boolean =
     (owner || "0").toLowerCase() === (address || "1").toLowerCase();
+  const tenderOpts = [
+    {value: "eth", label: "Ethereum"},
+    {value: "usdc", label: "USDC"},
+  ];
+
+  const form = useForm({
+    mode: "onChange",
+    defaultValues: {
+      tender: tenderOpts[0].value,
+      amount: "0",
+    },
+  });
+  const {register, handleSubmit, formState: {isValid}, control} = form;
+  const {field: {value: tender, onChange: tenderOnChange, ref: tenderRef}} =
+    useController({name: "tender", rules: {required: true}, control});
+  const onSubmit = useCallback(async ({
+    tender,
+    amount,
+  }: {
+    tender: string;
+    amount: string;
+  }) => {
+    // TODO: Actually use USDC if it was asked by the user
+    if (item?.bestSellOrder === undefined) {
+      rsdk.order.sell({
+        itemId: toItemId(item?.id ?? ""),
+        amount: 1,
+        price: amount,
+        currency: {
+          "@type": "ETH",
+          "blockchain": Blockchain.ETHEREUM,
+        },
+        expirationDate: new Date(Date.now() + 60 * 60 * 1000),
+      }).then((orderId: RaribleOrderId) => {
+        dismiss();
+      }, (reason: any) => {
+        console.log(reason);
+      });
+    } else {
+      rsdk.order.cancel({
+        orderId: toOrderId(item.bestSellOrder.id),
+      }).then((orderTxn: RaribleTransaction) => {
+        dismiss();
+      }, (reason: any) => {
+        console.log(reason);
+      });
+    }
+  }, [rsdk, item, dismiss]);
 
   useEffect(() => {
     if (isLoading) {
@@ -48,66 +101,65 @@ export function BidDialog() {
     }
   }, [params?.itemId, isLoading]);
 
-  const onSubmit = useCallback(async (event: any) => {
-    event.preventDefault();
-    if (item?.bestSellOrder === undefined) {
-      rsdk.order.sell({
-        itemId: toItemId(item?.id ?? ""),
-        amount: 1,
-        price: "0.0005",
-        currency: {
-          "@type": "ETH",
-          "blockchain": Blockchain.ETHEREUM,
-        },
-        expirationDate: new Date(Date.now() + 60 * 60 * 1000),
-      }).then((orderId: RaribleOrderId) => {
-        console.log("*************** ORDER SUCCEEDED ***************");
-        dismiss();
-      }, (reason: any) => {
-        console.log("**************** ORDER FAILED ****************");
-        console.log(reason);
-      });
-    } else {
-      rsdk.order.cancel({
-        orderId: toOrderId(item.bestSellOrder.id),
-      }).then((orderTxn: RaribleTransaction) => {
-        console.log("*************** CANCEL SUCCEEDED ***************");
-        dismiss();
-      }, (reason: any) => {
-        console.log("**************** CANCEL FAILED ****************");
-        console.log(reason);
-      });
-    }
-  }, [rsdk, item, dismiss]);
-
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
       <div className="w-5/6">
         <header className="mb-3 flex items-center">
           <h2 className="text-lg font-bold">
-            Post Bid
+            {`${(item?.bestSellOrder === undefined) ? "Post" : "Rescind"} Bid`}
           </h2>
         </header>
       </div>
 
-      <form onSubmit={onSubmit}>
-        {/* TODO: Implement the real dialog here. */}
-        <p>Do you want to {item?.bestSellOrder ? "rescind " : "post "}
-        this for 0.0005 ETH?</p>
+      {isLoading ? (
+        <p>
+          Loading...
+        </p>
+      ) : (
+        <form onSubmit={handleSubmit(onSubmit)}>
+          {(item?.bestSellOrder !== undefined) ? (
+            <p>
+              Would you like to rescind your existing listing on this item?
+            </p>
+          ) : (
+            <React.Fragment>
+              <label className="mb-3 font-semibold">
+                Tender*
+                <SingleSelector
+                  ref={tenderRef}
+                  defaultValue={tenderOpts[0]}
+                  isSearchable={false}
+                  options={tenderOpts}
+                  value={tenderOpts.find(e => e.value === tender)}
+                  onChange={o => tenderOnChange(o ? o.value : o)}
+                  className="my-2 w-full"
+                  autoFocus
+                />
+              </label>
+              <label className="mb-3 font-semibold">
+                Amount*
+                <input type="number" step="0.0001" min="0.0001"
+                  className="input my-2 block w-full py-1 px-2"
+                  {...register("amount", {required: true})}
+                />
+              </label>
+            </React.Fragment>
+          )}
 
-        <footer className="mt-4 flex items-center justify-between space-x-2">
-          <div className="ml-auto flex items-center space-x-2">
-            <DialogPrimitive.Close asChild>
-              <button className="secondary-button ml-auto">
-                Cancel
+          <footer className="mt-4 flex items-center justify-between space-x-2">
+            <div className="ml-auto flex items-center space-x-2">
+              <DialogPrimitive.Close asChild>
+                <button className="secondary-button ml-auto">
+                  Cancel
+                </button>
+              </DialogPrimitive.Close>
+              <button className="button" type="submit" disabled={!isValid}>
+                {item?.bestSellOrder ? "Rescind" : "Post"}
               </button>
-            </DialogPrimitive.Close>
-            <button className="button" type="submit">
-              {item?.bestSellOrder ? "Rescind" : "Post"}
-            </button>
-          </div>
-        </footer>
-      </form>
+            </div>
+          </footer>
+        </form>
+      )}
     </DefaultDialog>
   );
 }
