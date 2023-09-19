@@ -1,24 +1,23 @@
 import { useState, useMemo } from 'react';
 import { ethers } from 'ethers'
-import { useWalletClient, usePublicClient } from 'wagmi';
+import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
 import { createRaribleSdk } from '@rarible/sdk';
 import { ENV_TEST } from '@/constants';
 import type { WalletClient } from '@wagmi/core'
 import type { IRaribleSdk as RaribleSdk } from '@rarible/sdk';
 
-export default function useRaribleSDK(): RaribleSdk | undefined {
-  // TODO: Wallet disconnects aren't registering properly; need some combination
-  // of this variable and some form of 'isConnected' checker.
+export default function useRaribleSDK(): RaribleSdk {
+  const { isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
 
   return useMemo(() => createRaribleSdk(
-    walletClient ? walletClientToSigner(walletClient) : undefined,
+    (isConnected && walletClient) ? walletClientToSigner(walletClient) : undefined,
     ENV_TEST ? "testnet" : "prod",
     {
       logs: 0,
       apiKey: import.meta.env.VITE_RARIBLE_KEY,
     },
-  ), [walletClient]);
+  ), [isConnected, walletClient]);
 }
 
 // source: https://wagmi.sh/core/ethers-adapters

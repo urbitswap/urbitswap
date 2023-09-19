@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import cn from 'classnames';
-import { useWalletClient } from 'wagmi';
-import { Blockchain } from '@rarible/api-client';
-import { toContractAddress, toItemId, toOrderId, toUnionAddress } from '@rarible/types';
+import { useAccount } from 'wagmi';
 import useRaribleSDK from '@/logic/useRaribleSDK';
 import {
   ArrowsRightLeftIcon,
@@ -16,14 +14,12 @@ import type {
   Collection as RaribleCollection,
   Item as RaribleItem,
   Items as RaribleItems,
-  Ownership as RaribleOwnership,
   Ownerships as RaribleOwnerships,
   MetaContent as RaribleMetaContent,
 } from '@rarible/api-client';
 import type {
   IBlockchainTransaction as RaribleTransaction,
 } from '@rarible/sdk-transaction';
-import type { IRaribleSdk as RaribleSdk } from '@rarible/sdk';
 import type { OrderId as RaribleOrderId } from '@rarible/types';
 import type { ClassProps } from '@/types/urbui';
 
@@ -93,18 +89,21 @@ export function ItemPage({className}: ClassProps) {
   const [item, setItem] = useState<RaribleItem | undefined>(undefined);
   const [owner, setOwner] = useState<string | undefined>(undefined);
 
+  const rsdk = useRaribleSDK();
+  const { address, isConnected } = useAccount();
   const params = useParams();
   const modalNavigate = useModalNavigate();
   const chatNavigate = useChatNavigate();
   const location = useLocation();
-  const { data: walletClient } = useWalletClient();
-  const rsdk = useRaribleSDK();
 
   const isMyItem: boolean =
-    (owner || "0").toLowerCase() === (walletClient?.account.address || "1").toLowerCase();
+    (owner || "0").toLowerCase() === (address || "1").toLowerCase();
+  const hasMyBid: boolean = isMyItem
+    ? item?.bestSellOrder !== undefined
+    : false;
 
   useEffect(() => {
-    if (rsdk && isLoading) {
+    if (isLoading) {
       const itemId = `${CONTRACT.COLLECTION}:${params?.itemId || 0}`;
       Promise.all([
         rsdk.apis.item.getItemById({itemId}),
@@ -116,40 +115,7 @@ export function ItemPage({className}: ClassProps) {
         setIsLoading(false);
       });
     }
-  }, [rsdk, params?.itemId, isLoading]);
-
-  //            onClick={() => {
-  //              if (rsdk) {
-  //                if (collectionItem?.bestSellOrder === undefined) {
-  //                  rsdk.order.sell({
-  //                    itemId: toItemId(collectionItem.id),
-  //                    amount: 1,
-  //                    price: "0.0005",
-  //                    currency: {
-  //                      "@type": "ETH",
-  //                      "blockchain": Blockchain.ETHEREUM,
-  //                    },
-  //                    expirationDate: new Date(Date.now() + 60 * 60 * 1000),
-  //                  }).then((orderId: RaribleOrderId) => {
-  //                    console.log("*************** ORDER SUCCEEDED ***************");
-  //                    setIsLoading(true);
-  //                  }, (reason: any) => {
-  //                    console.log("**************** ORDER FAILED ****************");
-  //                    console.log(reason);
-  //                  });
-  //                } else {
-  //                  rsdk.order.cancel({
-  //                    orderId: toOrderId(collectionItem.bestSellOrder.id),
-  //                  }).then((orderTxn: RaribleTransaction) => {
-  //                    console.log("*************** CANCEL SUCCEEDED ***************");
-  //                    setIsLoading(true);
-  //                  }, (reason: any) => {
-  //                    console.log("**************** CANCEL FAILED ****************");
-  //                    console.log(reason);
-  //                  });
-  //                }
-  //              }
-  //            }}
+  }, [params?.itemId, isLoading]);
 
   return (
     <div className={cn("max-w-[1000px] mx-auto", className)}>
@@ -174,18 +140,29 @@ export function ItemPage({className}: ClassProps) {
               Listing
             </h4>
             <div className="flex flex-col text-sm gap-4 py-4">
-              <div className="grid grid-cols-3 gap-2 items-center border border-gray-800 rounded-lg p-2">
-                <div>100.00 USDC</div>
-                <div className="truncate">{owner}</div>
-                <button className="button"
-                  onClick={() => modalNavigate(`take/${0}`, {
-                    state: {backgroundLocation: location}
-                  })}
-                >
-                  <ArrowsRightLeftIcon className="w-4 h-4" />
-                  &nbsp;{"Take"}
-                </button>
-              </div>
+              {(item?.bestSellOrder !== undefined) && (
+                <div className="grid grid-cols-3 gap-2 items-center border border-gray-800 rounded-lg p-2">
+                  <div className="truncate">
+                    {item.bestSellOrder.makePrice} ETH
+                    {(item.bestSellOrder.makePriceUsd === undefined)
+                      ? ""
+                      : `(${(+item.bestSellOrder.makePriceUsd).toFixed(2)} USD)`
+                    }
+                  </div>
+                  <div className="truncate">
+                    {owner}
+                  </div>
+                  <button className="button"
+                    onClick={() => modalNavigate(`take/${0}`, {
+                      state: {backgroundLocation: location}
+                    })}
+                    disabled={!isConnected || isMyItem}
+                  >
+                    <ArrowsRightLeftIcon className="w-4 h-4" />
+                    &nbsp;{"Take"}
+                  </button>
+                </div>
+              )}
             </div>
             <h4 className="text-md font-bold underline">
               Offers
@@ -202,9 +179,13 @@ export function ItemPage({className}: ClassProps) {
               onClick={() => modalNavigate("bid", {
                 state: {backgroundLocation: location}
               })}
+              disabled={!isConnected}
             >
               <CurrencyDollarIcon className="w-4 h-4" />
-              &nbsp;{isMyItem ? "List Item" : "Place Offer"}
+              &nbsp;{`
+                ${hasMyBid ? "Update" : "Post"}
+                ${isMyItem ? "Listing" : "Offer"}
+              `}
             </button>
             {!isMyItem && (
               <button className="w-full button" onClick={() => (
