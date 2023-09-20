@@ -6,7 +6,10 @@ export const APP_TERM: string = "vcc-trade";
 
 export const CONTRACT = Object.freeze({
   COLLECTION: "ETHEREUM:0xa144C7E81398B90680bBb34320e062f4bFE37564",
-  USDC: "ETHEREUM:0x9f853f3B6a9dD425F8Cf73eF5B90e8eBf412317b",
+  // https://www.circle.com/en/usdc/developers#usdc-multichain
+  USDC: ENV_TEST
+    ? "ETHEREUM:0x07865c6e87b9f70255377e024ace6630c1eaa37f"
+    : "ETHEREUM:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
 });
 
 export const AUTHORS = [

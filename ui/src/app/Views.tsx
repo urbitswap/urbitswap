@@ -9,6 +9,7 @@ import {
   CurrencyDollarIcon,
 } from '@heroicons/react/24/solid';
 import { useModalNavigate, useChatNavigate } from '@/logic/routing';
+import { makePrettyPrice } from '@/logic/utils';
 import { CONTRACT } from '@/constants';
 import type {
   Collection as RaribleCollection,
@@ -30,7 +31,7 @@ export function CollectionGrid({className}: ClassProps) {
   const rsdk = useRaribleSDK();
 
   useEffect(() => {
-    if (rsdk && isLoading) {
+    if (isLoading) {
       Promise.all([
         rsdk.apis.collection.getCollectionById({collection: CONTRACT.COLLECTION}),
         rsdk.apis.item.getItemsByCollection({collection: CONTRACT.COLLECTION}),
@@ -42,7 +43,7 @@ export function CollectionGrid({className}: ClassProps) {
         setIsLoading(false);
       });
     }
-  }, [rsdk, isLoading]);
+  }, [isLoading]);
 
   return (
     <div className={cn(
@@ -73,7 +74,7 @@ export function CollectionGrid({className}: ClassProps) {
                 {(item?.bestSellOrder === undefined) ? (
                   "Unlisted"
                 ) : (
-                  `${item.bestSellOrder.makePrice} ETH`
+                  makePrettyPrice(item.bestSellOrder.take)
                 )}
               </p>
             </Link>
@@ -143,11 +144,7 @@ export function ItemPage({className}: ClassProps) {
               {(item?.bestSellOrder !== undefined) && (
                 <div className="grid grid-cols-3 gap-2 items-center border border-gray-800 rounded-lg p-2">
                   <div className="truncate">
-                    {item.bestSellOrder.makePrice} ETH
-                    {(item.bestSellOrder.makePriceUsd === undefined)
-                      ? ""
-                      : `(${(+item.bestSellOrder.makePriceUsd).toFixed(2)} USD)`
-                    }
+                    {makePrettyPrice(item.bestSellOrder.take)}
                   </div>
                   <div className="truncate">
                     {owner}

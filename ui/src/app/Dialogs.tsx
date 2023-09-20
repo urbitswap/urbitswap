@@ -59,15 +59,17 @@ export function BidDialog() {
     tender: string;
     amount: string;
   }) => {
-    // TODO: Actually use USDC if it was asked by the user
     if (item?.bestSellOrder === undefined) {
       rsdk.order.sell({
         itemId: toItemId(item?.id ?? ""),
         amount: 1,
         price: amount,
-        currency: {
+        currency: (tender === "eth") ? {
           "@type": "ETH",
           "blockchain": Blockchain.ETHEREUM,
+        } : {
+          "@type": "ERC20",
+          contract: toContractAddress(CONTRACT.USDC),
         },
         expirationDate: new Date(Date.now() + 60 * 60 * 1000),
       }).then((orderId: RaribleOrderId) => {
