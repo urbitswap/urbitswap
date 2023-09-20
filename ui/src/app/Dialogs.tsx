@@ -1,8 +1,10 @@
 import React, { ReactNode, useState, useEffect, useCallback } from 'react';
 import { FormProvider, useForm, useController } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useAccount } from 'wagmi';
+import useRaribleSDK from '@/logic/useRaribleSDK';
 import { Blockchain } from '@rarible/api-client';
 import { toContractAddress, toItemId, toOrderId, toUnionAddress } from '@rarible/types';
 import Dialog from '@/components/Dialog';
@@ -11,32 +13,20 @@ import {
   MultiSelector,
   SelectorOption,
 } from '@/components/Selector';
-import useRaribleSDK from '@/logic/useRaribleSDK';
+import { useRouteRaribleItem } from '@/state/app';
 import { useDismissNavigate } from '@/logic/routing';
-import { CONTRACT } from '@/constants';
-import type {
-  Item as RaribleItem,
-  Ownerships as RaribleOwnerships,
-} from '@rarible/api-client';
-import type {
-  IBlockchainTransaction as RaribleTransaction,
-} from '@rarible/sdk-transaction';
+import { APP_TERM, CONTRACT } from '@/constants';
 import type { OrderId as RaribleOrderId } from '@rarible/types';
+import type { IBlockchainTransaction as RaribleTransaction } from '@rarible/sdk-transaction';
 
 export function BidDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [item, setItem] = useState<RaribleItem | undefined>(undefined);
-  const [owner, setOwner] = useState<string | undefined>(undefined);
-
   const rsdk = useRaribleSDK();
+  const [item, _] = useRouteRaribleItem();
   const { address, isConnected } = useAccount();
-  const params = useParams();
 
-  const isMyItem: boolean =
-    (owner || "0").toLowerCase() === (address || "1").toLowerCase();
   const tenderOpts = [
     {value: "eth", label: "Ethereum"},
     {value: "usdc", label: "USDC"},
@@ -49,7 +39,7 @@ export function BidDialog() {
       amount: "0",
     },
   });
-  const {register, handleSubmit, formState: {isValid}, control} = form;
+  const {register, handleSubmit, formState: {isDirty, isValid}, control} = form;
   const {field: {value: tender, onChange: tenderOnChange, ref: tenderRef}} =
     useController({name: "tender", rules: {required: true}, control});
   const onSubmit = useCallback(async ({
@@ -88,80 +78,62 @@ export function BidDialog() {
     }
   }, [rsdk, item, dismiss]);
 
-  useEffect(() => {
-    if (isLoading) {
-      const itemId = `${CONTRACT.COLLECTION}:${params?.itemId || 0}`;
-      Promise.all([
-        rsdk.apis.item.getItemById({itemId}),
-        rsdk.apis.ownership.getOwnershipsByItem({itemId}),
-      ]).then(([item, owns]: [RaribleItem, RaribleOwnerships]) => {
-        // TODO: This code assumes exactly one owner per NFT
-        setItem(item);
-        setOwner(owns.ownerships[0].owner.replace(/^.+:/g, ""));
-        setIsLoading(false);
-      });
-    }
-  }, [params?.itemId, isLoading]);
-
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
-      <div className="w-5/6">
-        <header className="mb-3 flex items-center">
-          <h2 className="text-lg font-bold">
-            {`${(item?.bestSellOrder === undefined) ? "Post" : "Rescind"} Bid`}
-          </h2>
-        </header>
-      </div>
+      <FormProvider {...form}>
+        <div className="w-5/6">
+          <header className="mb-3 flex items-center">
+            <h2 className="text-lg font-bold">
+              {`${(item?.bestSellOrder === undefined) ? "Post" : "Rescind"} Bid`}
+            </h2>
+          </header>
+        </div>
 
-      {isLoading ? (
-        <p>
-          Loading...
-        </p>
-      ) : (
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {(item?.bestSellOrder !== undefined) ? (
-            <p>
-              Would you like to rescind your existing listing on this item?
-            </p>
-          ) : (
-            <React.Fragment>
-              <label className="mb-3 font-semibold">
-                Tender*
-                <SingleSelector
-                  ref={tenderRef}
-                  defaultValue={tenderOpts[0]}
-                  isSearchable={false}
-                  options={tenderOpts}
-                  value={tenderOpts.find(e => e.value === tender)}
-                  onChange={o => tenderOnChange(o ? o.value : o)}
-                  className="my-2 w-full"
-                  autoFocus
-                />
-              </label>
-              <label className="mb-3 font-semibold">
-                Amount*
-                <input type="number" step="0.0001" min="0.0001"
-                  className="input my-2 block w-full py-1 px-2"
-                  {...register("amount", {required: true})}
-                />
-              </label>
-            </React.Fragment>
-          )}
+        {(item !== undefined) && (
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {(item?.bestSellOrder !== undefined) ? (
+              <p>
+                Would you like to rescind your existing listing on this item?
+              </p>
+            ) : (
+              <React.Fragment>
+                <label className="mb-3 font-semibold">
+                  Tender*
+                  <SingleSelector
+                    ref={tenderRef}
+                    options={tenderOpts}
+                    value={tenderOpts.find(e => e.value === tender)}
+                    onChange={o => tenderOnChange(o ? o.value : o)}
+                    className="my-2 w-full"
+                    isSearchable={false}
+                    isClearable={false}
+                  />
+                </label>
+                <label className="mb-3 font-semibold">
+                  Amount*
+                  <input type="number" step="0.0001" min="0.0001"
+                    className="input my-2 block w-full py-1 px-2"
+                    {...register("amount", {required: true})}
+                  />
+                </label>
+              </React.Fragment>
+            )}
 
-          <footer className="mt-4 flex items-center justify-between space-x-2">
-            <div className="ml-auto flex items-center space-x-2">
-              <DialogPrimitive.Close asChild>
-                <button className="secondary-button ml-auto">
-                  Cancel
+            <footer className="mt-4 flex items-center justify-between space-x-2">
+              <div className="ml-auto flex items-center space-x-2">
+                <DialogPrimitive.Close asChild>
+                  <button className="secondary-button ml-auto">
+                    Cancel
+                  </button>
+                </DialogPrimitive.Close>
+                <button className="button" type="submit" disabled={!isValid || !isDirty}>
+                  {item?.bestSellOrder ? "Rescind" : "Post"}
                 </button>
-              </DialogPrimitive.Close>
-              <button className="button" type="submit" disabled={!isValid}>
-                {item?.bestSellOrder ? "Rescind" : "Post"}
-              </button>
-            </div>
-          </footer>
-        </form>
-      )}
+              </div>
+            </footer>
+          </form>
+        )}
+      </FormProvider>
     </DefaultDialog>
   );
 }

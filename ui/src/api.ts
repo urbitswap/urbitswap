@@ -1,10 +1,13 @@
-import Urbit from "@urbit/http-api";
+import { QueryClient } from '@tanstack/react-query'
+import Urbit from '@urbit/http-api';
 import { WagmiConfig, createConfig, configureChains } from 'wagmi'
 import { InjectedConnector } from 'wagmi/connectors/injected';
 import { alchemyProvider } from 'wagmi/providers/alchemy'
 import { publicProvider } from 'wagmi/providers/public';
 import { mainnet, goerli } from 'viem/chains';
 import { ENV_TEST } from '@/constants';
+
+export const queryAPI = new QueryClient();
 
 export const urbitAPI = new Urbit('', '', window.desk);
 urbitAPI.ship = window.ship;

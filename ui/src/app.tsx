@@ -7,21 +7,24 @@ import {
   Location,
   useLocation,
 } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query'
 import { WagmiConfig } from 'wagmi';
 import { CollectionGrid, ItemPage } from '@/app/Views';
 import { BidDialog, TakeDialog, CancelDialog } from '@/app/Dialogs';
 import NavBar from '@/app/NavBar';
-import { urbitAPI, wagmiAPI } from '@/api';
+import { queryAPI, urbitAPI, wagmiAPI } from '@/api';
 import { APP_TERM } from '@/constants';
 import type { ReactRouterState } from '@/types/urbui';
 
 export function App() {
   return (
-    <WagmiConfig config={wagmiAPI}>
-      <BrowserRouter basename={`/apps/${APP_TERM}/`}>
-        <RoutedApp />
-      </BrowserRouter>
-    </WagmiConfig>
+    <QueryClientProvider client={queryAPI}>
+      <WagmiConfig config={wagmiAPI}>
+        <BrowserRouter basename={`/apps/${APP_TERM}/`}>
+          <RoutedApp />
+        </BrowserRouter>
+      </WagmiConfig>
+    </QueryClientProvider>
   );
 }
 
