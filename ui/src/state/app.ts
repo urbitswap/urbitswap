@@ -14,7 +14,7 @@ import { APP_TERM, CONTRACT } from '@/constants';
 import type {
   Collection as RaribleCollection,
   Item as RaribleItem,
-  Ownerships as RaribleOwnerships,
+  Ownership as RaribleOwnership,
   MetaContent as RaribleMetaContent,
 } from '@rarible/api-client';
 
@@ -35,12 +35,14 @@ export function useRaribleCollection(): RaribleItem[] | undefined {
 }
 
 export function useRouteRaribleItem():
-    [RaribleItem, RaribleOwnerships] | [undefined, undefined] {
+    [RaribleItem, RaribleOwnership[]] | [undefined, undefined] {
   const { itemId } = useParams();
   const queryKey: QueryKey = useMemo(() => [
     APP_TERM, "item", itemId,
   ], [itemId]);
 
+  // TODO: `rsdk.api.ownership` returns a continuation, which is not properly
+  // explored/exhausted by these API calls
   const rsdk = useRaribleSDK();
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
@@ -55,5 +57,31 @@ export function useRouteRaribleItem():
 
   return (isLoading || isError)
     ? [undefined, undefined]
-    : (data as [RaribleItem, RaribleOwnerships]);
+    : ([data[0], data[1].ownerships] as [RaribleItem, RaribleOwnership[]]);
+}
+
+export function useRouteRaribleItemMutation<TResponse>(
+  raribleFn: string,
+  options?: UseMutationOptions<TResponse, unknown, any, unknown>
+) {
+  const { itemId } = useParams();
+  const queryKey: QueryKey = useMemo(() => [
+    APP_TERM, "item", itemId,
+  ], [itemId]);
+
+  const rsdk = useRaribleSDK();
+  const queryClient = useQueryClient();
+  return useMutation({
+    // @ts-ignore
+    mutationFn: (raribleFn.split('.').reduce((p,c)=>p&&p[c]||null, rsdk) as MutationFunction<TResponse, any>),
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries(queryKey);
+      return await queryClient.getQueryData(queryKey);
+    },
+    onError: (err, variables, oldData) =>
+      queryClient.setQueryData(queryKey, oldData),
+    onSettled: (_data, _error, variables) =>
+      queryClient.invalidateQueries(queryKey),
+    ...options,
+  });
 }

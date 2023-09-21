@@ -7,10 +7,12 @@ import {
   ArrowsRightLeftIcon,
   ChatBubbleLeftIcon,
   CurrencyDollarIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/solid';
+import TraderName from '@/components/TraderName';
 import { useRaribleCollection, useRouteRaribleItem } from '@/state/app';
 import { useModalNavigate, useChatNavigate } from '@/logic/routing';
-import { makePrettyPrice } from '@/logic/utils';
+import { makePrettyPrice, getOwnerAddress } from '@/logic/utils';
 import { APP_TERM, CONTRACT } from '@/constants';
 import type {
   Item as RaribleItem,
@@ -68,10 +70,9 @@ export function ItemPage({className}: ClassProps) {
   const modalNavigate = useModalNavigate();
   const chatNavigate = useChatNavigate();
 
-  const owner: string = owners?.ownerships[0].owner.replace(/^.+:/g, "") ?? "";
-  const isMyItem: boolean =
-    (owner ?? "a").toLowerCase() === (address ?? "b").toLowerCase();
-  const hasMyBid: boolean = isMyItem
+  const ownerAddresses = (owners ?? []).map(getOwnerAddress);
+  const isMyItem: boolean = ownerAddresses.includes((address ?? "0x").toLowerCase());
+  const hasMyOffer: boolean = isMyItem
     ? item?.bestSellOrder !== undefined
     : false;
 
@@ -86,8 +87,10 @@ export function ItemPage({className}: ClassProps) {
               {item.meta?.name ?? "<Unknown Item>"}
             </h2>
             <h3 className="text-lg">
-              <span className="font-semibold">Owner:</span>
-              &nbsp;{`${owner}${!isMyItem ? "" : " (Me)"}`}
+              <span className="font-semibold">Owner(s):</span>&nbsp;
+              {ownerAddresses.map((address: string) => (
+                <TraderName key={address} address={address}  />
+              ))}
             </h3>
             <h3 className="text-lg">
               <span className="font-semibold">Value:</span>
@@ -104,7 +107,7 @@ export function ItemPage({className}: ClassProps) {
                     {makePrettyPrice(item.bestSellOrder.take)}
                   </div>
                   <div className="truncate">
-                    {owner}
+                    <TraderName address={item.bestSellOrder.maker.replace(/^.+:/g, "")} />
                   </div>
                   <button className="button"
                     onClick={() => modalNavigate(`take/${0}`, {
@@ -119,7 +122,7 @@ export function ItemPage({className}: ClassProps) {
               )}
             </div>
             <h4 className="text-md font-bold underline">
-              Offers
+              Bids
             </h4>
             {/* TODO: Replicate the above. */}
           </div>
@@ -130,23 +133,25 @@ export function ItemPage({className}: ClassProps) {
               )) ?? {})?.url
             } />
             <button className="w-full button"
-              onClick={() => modalNavigate("bid", {
+              onClick={() => modalNavigate("offer", {
                 state: {backgroundLocation: location}
               })}
               disabled={!isConnected}
             >
               <CurrencyDollarIcon className="w-4 h-4" />
               &nbsp;{`
-                ${hasMyBid ? "Update" : "Post"}
-                ${isMyItem ? "Listing" : "Offer"}
+                ${hasMyOffer ? "Update" : "Post"}
+                ${isMyItem ? "Listing" : "Bid"}
               `}
             </button>
             {!isMyItem && (
-              <button className="w-full button" onClick={() => (
-                // FIXME: Use the owner's ship name if available, otherwise
-                // broadcast to this listing page.
-                chatNavigate("~nec")
-              )}>
+              <button className="w-full button"
+                onClick={() => (
+                  // FIXME: Use the owner's ship name if available, otherwise
+                  // broadcast to this listing page.
+                  chatNavigate("~nec")
+                )}
+              >
                 <ChatBubbleLeftIcon className="w-4 h-4" />
                 &nbsp;{"Contact Owner"}
               </button>

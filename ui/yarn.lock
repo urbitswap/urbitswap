@@ -3185,10 +3185,10 @@
   dependencies:
     "@types/yargs-parser" "*"
 
-"@urbit/api@^2.3.0":
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/@urbit/api/-/api-2.3.0.tgz#c876c9ca0569ae4cc7cb393edee33abe66b023df"
-  integrity sha512-uC0GyerFy6WaFHkgauvuJ55in2AUAJgCv/bHPOiwOKbdJQF4QgMaECn5gu/7n3d1/RGdNPaKw28nh0GCZ0AQKA==
+"@urbit/api@2.2":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@urbit/api/-/api-2.2.0.tgz#fa8d74d0fa2354a8d48e1c91e1f0be52956d4e02"
+  integrity sha512-W8kP9OT6yOK62n+4yCPO3i9QqU5xriLvZQ9WYW4SAV7ktbSrGuf2kmYbnoqfA/NybIs9Q/MbFkPewrz4XJ96Ag==
   dependencies:
     "@babel/runtime" "^7.16.0"
     big-integer "^1.6.48"

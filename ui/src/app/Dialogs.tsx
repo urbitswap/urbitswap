@@ -4,38 +4,39 @@ import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { useAccount } from 'wagmi';
-import useRaribleSDK from '@/logic/useRaribleSDK';
-import { Blockchain } from '@rarible/api-client';
-import { toContractAddress, toItemId, toOrderId, toUnionAddress } from '@rarible/types';
 import Dialog from '@/components/Dialog';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import {
   SingleSelector,
   MultiSelector,
   SelectorOption,
 } from '@/components/Selector';
-import { useRouteRaribleItem } from '@/state/app';
+import {
+  useRouteRaribleItem,
+  useRouteRaribleItemMutation,
+} from '@/state/app';
 import { useDismissNavigate } from '@/logic/routing';
-import { APP_TERM, CONTRACT } from '@/constants';
+import { tenderToCurrency } from '@/logic/utils';
+import { TENDERS } from '@/constants';
 import type { OrderId as RaribleOrderId } from '@rarible/types';
 import type { IBlockchainTransaction as RaribleTransaction } from '@rarible/sdk-transaction';
+import type { Tender } from '@/types/app';
 
-export function BidDialog() {
+export function OfferDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
-  const rsdk = useRaribleSDK();
-  const [item, _] = useRouteRaribleItem();
+  const [item, owners] = useRouteRaribleItem();
   const { address, isConnected } = useAccount();
-
-  const tenderOpts = [
-    {value: "eth", label: "Ethereum"},
-    {value: "usdc", label: "USDC"},
-  ];
+  const { mutate: sellMutate, status: sellStatus } = useRouteRaribleItemMutation(
+    "order.sell",
+    { onSuccess: () => dismiss() },
+  );
 
   const form = useForm({
     mode: "onChange",
     defaultValues: {
-      tender: tenderOpts[0].value,
+      tender: TENDERS[0].value,
       amount: "0",
     },
   });
@@ -46,37 +47,17 @@ export function BidDialog() {
     tender,
     amount,
   }: {
-    tender: string;
+    tender: Tender;
     amount: string;
   }) => {
-    if (item?.bestSellOrder === undefined) {
-      rsdk.order.sell({
-        itemId: toItemId(item?.id ?? ""),
-        amount: 1,
-        price: amount,
-        currency: (tender === "eth") ? {
-          "@type": "ETH",
-          "blockchain": Blockchain.ETHEREUM,
-        } : {
-          "@type": "ERC20",
-          contract: toContractAddress(CONTRACT.USDC),
-        },
-        expirationDate: new Date(Date.now() + 60 * 60 * 1000),
-      }).then((orderId: RaribleOrderId) => {
-        dismiss();
-      }, (reason: any) => {
-        console.log(reason);
-      });
-    } else {
-      rsdk.order.cancel({
-        orderId: toOrderId(item.bestSellOrder.id),
-      }).then((orderTxn: RaribleTransaction) => {
-        dismiss();
-      }, (reason: any) => {
-        console.log(reason);
-      });
-    }
-  }, [rsdk, item, dismiss]);
+    sellMutate({
+      itemId: item?.id || "",
+      amount: 1,
+      price: amount,
+      currency: tenderToCurrency(tender),
+      expirationDate: new Date(Date.now() + 60 * 60 * 1000),
+    });
+  }, [item, sellMutate, dismiss]);
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
@@ -101,8 +82,8 @@ export function BidDialog() {
                   Tender*
                   <SingleSelector
                     ref={tenderRef}
-                    options={tenderOpts}
-                    value={tenderOpts.find(e => e.value === tender)}
+                    options={TENDERS}
+                    value={TENDERS.find(e => e.value === tender)}
                     onChange={o => tenderOnChange(o ? o.value : o)}
                     className="my-2 w-full"
                     isSearchable={false}
@@ -127,7 +108,13 @@ export function BidDialog() {
                   </button>
                 </DialogPrimitive.Close>
                 <button className="button" type="submit" disabled={!isValid || !isDirty}>
-                  {item?.bestSellOrder ? "Rescind" : "Post"}
+                  {sellStatus === 'loading' ? (
+                    <LoadingSpinner />
+                  ) : sellStatus === 'error' ? (
+                    'Error'
+                  ) : (
+                    'Create'
+                  )}
                 </button>
               </div>
             </footer>
@@ -138,7 +125,7 @@ export function BidDialog() {
   );
 }
 
-export function TakeDialog() {
+export function TradeDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
