@@ -12,12 +12,15 @@ import {
 import TraderName from '@/components/TraderName';
 import { useRaribleCollection, useRouteRaribleItem } from '@/state/app';
 import { useModalNavigate, useChatNavigate } from '@/logic/routing';
-import { makePrettyPrice, getOwnerAddress } from '@/logic/utils';
+import { makePrettyPrice, makePrettyLapse, getOwnerAddress } from '@/logic/utils';
 import { APP_TERM, CONTRACT } from '@/constants';
 import type {
+  Asset as RaribleAsset,
   Item as RaribleItem,
+  Order as RaribleOrder,
   MetaContent as RaribleMetaContent,
 } from '@rarible/api-client';
+import type { OfferType } from '@/types/app';
 import type { ClassProps } from '@/types/urbui';
 
 export function CollectionGrid({className}: ClassProps) {
@@ -64,12 +67,12 @@ export function CollectionGrid({className}: ClassProps) {
 }
 
 export function ItemPage({className}: ClassProps) {
-  const [item, owners] = useRouteRaribleItem();
-  const { address, isConnected } = useAccount();
   const location = useLocation();
   const modalNavigate = useModalNavigate();
   const chatNavigate = useChatNavigate();
 
+  const [item, owners] = useRouteRaribleItem();
+  const { address, isConnected } = useAccount();
   const ownerAddresses = (owners ?? []).map(getOwnerAddress);
   const isMyItem: boolean = ownerAddresses.includes((address ?? "0x").toLowerCase());
   const hasMyOffer: boolean = isMyItem
@@ -98,31 +101,19 @@ export function ItemPage({className}: ClassProps) {
             </h3>
             <hr className="my-4" />
             <h4 className="text-md font-bold underline">
-              Listing
+              Listing(s)
             </h4>
             <div className="flex flex-col text-sm gap-4 py-4">
               {(item.bestSellOrder !== undefined) && (
-                <div className="grid grid-cols-3 gap-2 items-center border border-gray-800 rounded-lg p-2">
-                  <div className="truncate">
-                    {makePrettyPrice(item.bestSellOrder.take)}
-                  </div>
-                  <div className="truncate">
-                    <TraderName address={item.bestSellOrder.maker.replace(/^.+:/g, "")} />
-                  </div>
-                  <button className="button"
-                    onClick={() => modalNavigate(`take/${0}`, {
-                      state: {backgroundLocation: location}
-                    })}
-                    disabled={!isConnected || isMyItem}
-                  >
-                    <ArrowsRightLeftIcon className="w-4 h-4" />
-                    &nbsp;{"Take"}
-                  </button>
-                </div>
+                <ItemOffer
+                  order={item.bestSellOrder}
+                  offerType="list"
+                  disabled={!isConnected || isMyItem}
+                />
               )}
             </div>
             <h4 className="text-md font-bold underline">
-              Bids
+              Bid(s)
             </h4>
             {/* TODO: Replicate the above. */}
           </div>
@@ -159,6 +150,42 @@ export function ItemPage({className}: ClassProps) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function ItemOffer({
+  order,
+  offerType,
+  disabled,
+} : {
+  order: RaribleOrder;
+  offerType: OfferType;
+  disabled: boolean;
+}) {
+  const offerer: string =
+    ((offerType === "list") ? order.maker : (order?.taker || "0x"))
+    .replace(/^.+:/g, "");
+  const request: RaribleAsset =
+    (offerType === "list") ? order.take : order.make;
+
+  return (
+    <div className={cn(
+      "grid grid-cols-4 gap-2 items-center",
+      "border border-gray-800 rounded-lg p-2",
+    )}>
+      <div className="truncate" children={makePrettyPrice(request)} />
+      <TraderName address={offerer} />
+      <div children={makePrettyLapse(new Date(order?.endedAt || ""))} />
+      <button className="button"
+        onClick={() => console.log("Item Offer")/*modalNavigate(`take/${0}`, {
+          state: {backgroundLocation: location}
+        })*/}
+        disabled={disabled}
+      >
+        <ArrowsRightLeftIcon className="w-4 h-4" />
+        &nbsp;{"Take"}
+      </button>
     </div>
   );
 }

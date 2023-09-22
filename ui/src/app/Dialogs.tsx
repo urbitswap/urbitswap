@@ -3,6 +3,12 @@ import { FormProvider, useForm, useController } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as DialogPrimitive from '@radix-ui/react-dialog';
+import DateTimePicker from 'react-datetime-picker';
+// FIXME: There's an issue with the CSS where 'active' and 'now' tiles are
+// having their default background colors overridden by Tailwindcss
+import 'react-datetime-picker/dist/DateTimePicker.css';
+import 'react-calendar/dist/Calendar.css';
+import '@/styles/DateTimePicker.css';
 import { useAccount } from 'wagmi';
 import Dialog from '@/components/Dialog';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -16,11 +22,11 @@ import {
   useRouteRaribleItemMutation,
 } from '@/state/app';
 import { useDismissNavigate } from '@/logic/routing';
-import { tenderToCurrency } from '@/logic/utils';
+import { tenderToCurrency, makePrettyPrice, getOwnerAddress } from '@/logic/utils';
 import { TENDERS } from '@/constants';
 import type { OrderId as RaribleOrderId } from '@rarible/types';
 import type { IBlockchainTransaction as RaribleTransaction } from '@rarible/sdk-transaction';
-import type { Tender } from '@/types/app';
+import type { TenderType } from '@/types/app';
 
 export function OfferDialog() {
   const dismiss = useDismissNavigate();
@@ -28,6 +34,8 @@ export function OfferDialog() {
 
   const [item, owners] = useRouteRaribleItem();
   const { address, isConnected } = useAccount();
+  const ownerAddresses = (owners ?? []).map(getOwnerAddress);
+  const isMyItem: boolean = ownerAddresses.includes((address ?? "0x").toLowerCase());
   const { mutate: sellMutate, status: sellStatus } = useRouteRaribleItemMutation(
     "order.sell",
     { onSuccess: () => dismiss() },
@@ -38,24 +46,30 @@ export function OfferDialog() {
     defaultValues: {
       tender: TENDERS[0].value,
       amount: "0",
+      // TODO: Make default expiration 'never'?
+      expiration: new Date(Date.now() + 24 * 60 * 60 * 1000),
     },
   });
   const {register, handleSubmit, formState: {isDirty, isValid}, control} = form;
   const {field: {value: tender, onChange: tenderOnChange, ref: tenderRef}} =
     useController({name: "tender", rules: {required: true}, control});
+  const {field: {value: expiration, onChange: expirationOnChange}} =
+    useController({name: "expiration", rules: {required: true}, control});
   const onSubmit = useCallback(async ({
     tender,
     amount,
+    expiration,
   }: {
-    tender: Tender;
+    tender: TenderType;
     amount: string;
+    expiration: Date;
   }) => {
     sellMutate({
       itemId: item?.id || "",
       amount: 1,
       price: amount,
       currency: tenderToCurrency(tender),
-      expirationDate: new Date(Date.now() + 60 * 60 * 1000),
+      expirationDate: expiration,
     });
   }, [item, sellMutate, dismiss]);
 
@@ -95,6 +109,17 @@ export function OfferDialog() {
                   <input type="number" step="0.0001" min="0.0001"
                     className="input my-2 block w-full py-1 px-2"
                     {...register("amount", {required: true})}
+                  />
+                </label>
+                <label className="mb-3 font-semibold">
+                  Expiration*
+                  <DateTimePicker
+                    minDate={new Date(Date.now())}
+                    value={expiration}
+                    onChange={expirationOnChange}
+                    className="input w-full"
+                    disableClock={true}
+                    calendarIcon={null}
                   />
                 </label>
               </React.Fragment>
