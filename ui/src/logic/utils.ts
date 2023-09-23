@@ -16,20 +16,28 @@ import type {
   Order as RaribleOrder,
   Ownership as RaribleOwnership,
 } from '@rarible/api-client';
-import type { TenderType } from '@/types/app';
+import type { TenderType, OfferType } from '@/types/app';
 
-export function tenderToCurrency(tender: TenderType): RaribleCurrency {
+export function tenderToAsset(tender: TenderType): RaribleAssetType {
   return tender === "eth"
     ? {"@type": "ETH", "blockchain": Blockchain.ETHEREUM}
     : {"@type": "ERC20", "contract": toContractAddress(CONTRACT.USDC)};
 }
 
+export function assetToTender(asset: RaribleAssetType): TenderType {
+  return (asset["@type"] === "ERC20" && asset.contract === CONTRACT.USDC)
+    ? "usdc"
+    : "eth";
+}
+
 export function makePrettyPrice(asset: RaribleAsset): string {
-  return asset.value.toString() + " " + (
-    (asset.type["@type"] === "ERC20" && asset.type.contract === CONTRACT.USDC)
-      ? "USDC"
-      : asset.type["@type"]
-  );
+  const assetValue = asset.value.toString();
+  const assetIdent = (assetToTender(asset.type) === "usdc") ? "USDC" : asset.type["@type"];
+  return `${assetValue} ${assetIdent}`;
+}
+
+export function getOfferAsset(order: RaribleOrder, otype: OfferType): RaribleAsset {
+  return otype === "sell" ? order.take : order.make;
 }
 
 export function getOwnerAddress(owner: RaribleOwnership): string {

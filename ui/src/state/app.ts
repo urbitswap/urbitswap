@@ -14,9 +14,16 @@ import { APP_TERM, CONTRACT } from '@/constants';
 import type {
   Collection as RaribleCollection,
   Item as RaribleItem,
+  Order as RaribleOrder,
+  Orders as RaribleOrders,
   Ownership as RaribleOwnership,
+  Ownerships as RaribleOwnerships,
   MetaContent as RaribleMetaContent,
 } from '@rarible/api-client';
+import type {
+  RouteRaribleItem,
+  RaribleContinuation,
+} from '@/types/app';
 
 export function useRaribleCollection(): RaribleItem[] | undefined {
   const queryKey: QueryKey = useMemo(() => [
@@ -34,15 +41,12 @@ export function useRaribleCollection(): RaribleItem[] | undefined {
     : (data.items as RaribleItem[]);
 }
 
-export function useRouteRaribleItem():
-    [RaribleItem, RaribleOwnership[]] | [undefined, undefined] {
+export function useRouteRaribleItem(): RouteRaribleItem {
   const { itemId } = useParams();
   const queryKey: QueryKey = useMemo(() => [
     APP_TERM, "item", itemId,
   ], [itemId]);
 
-  // TODO: `rsdk.api.ownership` returns a continuation, which is not properly
-  // explored/exhausted by these API calls
   const rsdk = useRaribleSDK();
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
@@ -50,14 +54,27 @@ export function useRouteRaribleItem():
       const itemAddr: string = `${CONTRACT.COLLECTION}:${itemId}`;
       return Promise.all([
         rsdk.apis.item.getItemById({itemId: itemAddr}),
-        rsdk.apis.ownership.getOwnershipsByItem({itemId: itemAddr}),
+        queryRaribleContinuation(
+          rsdk.apis.ownership.getOwnershipsByItem,
+          (result: RaribleOwnerships): RaribleOwnership[] => result.ownerships,
+          {itemId: itemAddr},
+        ),
+        queryRaribleContinuation(
+          rsdk.apis.order.getOrderBidsByItem,
+          (result: RaribleOrders): RaribleOrder[] => result.orders,
+          {itemId: itemAddr},
+        ),
       ]);
     }
   });
 
   return (isLoading || isError)
-    ? [undefined, undefined]
-    : ([data[0], data[1].ownerships] as [RaribleItem, RaribleOwnership[]]);
+    ? {item: undefined, owners: undefined, bids: undefined}
+    : {
+      item: (data[0] as RaribleItem),
+      owners: (data[1] as RaribleOwnership[]),
+      bids: (data[2] as RaribleOrder[]),
+    };
 }
 
 export function useRouteRaribleItemMutation<TResponse>(
@@ -84,4 +101,24 @@ export function useRouteRaribleItemMutation<TResponse>(
       queryClient.invalidateQueries(queryKey),
     ...options,
   });
+}
+
+function queryRaribleContinuation<
+  TInput extends RaribleContinuation,
+  TOutput extends RaribleContinuation,
+  TResult,
+>(
+  queryFn: (params: TInput) => Promise<TOutput>,
+  resultFn: (result: TOutput) => TResult[],
+  queryIn: TInput,
+  results: TResult[] = [],
+  first: boolean = true,
+): Promise<TResult[]> {
+  return (!first && queryIn.continuation === undefined)
+    ? new Promise((resolve) => resolve(results))
+    : queryFn(queryIn).then((result: TOutput) => queryRaribleContinuation(
+      queryFn, resultFn,
+      Object.assign({}, queryIn, {continuation: result.continuation}),
+      results.concat(resultFn(result)), false,
+    ));
 }

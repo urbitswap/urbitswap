@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import cn from 'classnames';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -15,7 +15,6 @@ import { useModalNavigate, useChatNavigate } from '@/logic/routing';
 import { makePrettyPrice, makePrettyLapse, getOwnerAddress } from '@/logic/utils';
 import { APP_TERM, CONTRACT } from '@/constants';
 import type {
-  Asset as RaribleAsset,
   Item as RaribleItem,
   Order as RaribleOrder,
   MetaContent as RaribleMetaContent,
@@ -71,13 +70,47 @@ export function ItemPage({className}: ClassProps) {
   const modalNavigate = useModalNavigate();
   const chatNavigate = useChatNavigate();
 
-  const [item, owners] = useRouteRaribleItem();
+  const { item, owners, bids } = useRouteRaribleItem();
   const { address, isConnected } = useAccount();
+  const activeBids = (bids ?? []).filter((o: RaribleOrder) => o.status === "ACTIVE");
   const ownerAddresses = (owners ?? []).map(getOwnerAddress);
   const isMyItem: boolean = ownerAddresses.includes((address ?? "0x").toLowerCase());
-  const hasMyOffer: boolean = isMyItem
-    ? item?.bestSellOrder !== undefined
-    : false;
+  const myOffer: RaribleOrder | undefined = isMyItem
+    ? item?.bestSellOrder
+    : activeBids.find(o => o.maker === (address ?? "0x").toLowerCase());
+
+  const ItemOffer = useCallback(({
+      order,
+      offerType,
+      disabled,
+    } : {
+      order: RaribleOrder;
+      offerType: OfferType;
+      disabled: boolean;
+    }) => (
+      <div className={cn(
+        "grid grid-cols-4 gap-2 items-center",
+        "border border-gray-800 rounded-lg p-2",
+      )}>
+        <div className="truncate" children={makePrettyPrice(
+          (offerType === "sell") ? order.take : order.make
+        )} />
+        <TraderName address={
+          ((offerType === "sell") ? order.maker : (order?.taker || "0x"))
+          .replace(/^.+:/g, "")
+        } />
+        <div children={makePrettyLapse(new Date(order?.endedAt || ""))} />
+        <button className="button"
+          onClick={() => modalNavigate(`take/${0}`, {
+            state: {backgroundLocation: location}
+          })}
+          disabled={!isConnected || disabled}
+        >
+          <ArrowsRightLeftIcon className="w-4 h-4" />
+          &nbsp;{"Take"}
+        </button>
+      </div>
+  ), [isConnected, modalNavigate, location]);
 
   return (
     <div className={cn("max-w-[1000px] mx-auto", className)}>
@@ -89,33 +122,42 @@ export function ItemPage({className}: ClassProps) {
             <h2 className="text-xl font-bold underline">
               {item.meta?.name ?? "<Unknown Item>"}
             </h2>
-            <h3 className="text-lg">
+            <h3 className="text-md">
               <span className="font-semibold">Owner(s):</span>&nbsp;
               {ownerAddresses.map((address: string) => (
                 <TraderName key={address} address={address}  />
               ))}
             </h3>
-            <h3 className="text-lg">
+            {/* TODO: Value should be derived from recent sales and all
+            active offers/bids.
+            <h3 className="text-md">
               <span className="font-semibold">Value:</span>
               &nbsp;{"TODO"}
             </h3>
+            */}
             <hr className="my-4" />
             <h4 className="text-md font-bold underline">
-              Listing(s)
+              Sale(s)
             </h4>
             <div className="flex flex-col text-sm gap-4 py-4">
               {(item.bestSellOrder !== undefined) && (
                 <ItemOffer
                   order={item.bestSellOrder}
-                  offerType="list"
-                  disabled={!isConnected || isMyItem}
+                  offerType="sell"
+                  disabled={isMyItem}
                 />
               )}
             </div>
             <h4 className="text-md font-bold underline">
               Bid(s)
             </h4>
-            {/* TODO: Replicate the above. */}
+            {activeBids.map((bid: RaribleOrder) => (
+              <ItemOffer
+                order={bid}
+                offerType="bid"
+                disabled={bid.maker === (address ?? "0x").toLowerCase()}
+              />
+            ))}
           </div>
           <div className="sm:row-span-1 flex flex-col gap-4 items-center">
             <img className="object-contain border-2 border-gray-800" src={
@@ -130,11 +172,20 @@ export function ItemPage({className}: ClassProps) {
               disabled={!isConnected}
             >
               <CurrencyDollarIcon className="w-4 h-4" />
-              &nbsp;{`
-                ${hasMyOffer ? "Update" : "Post"}
-                ${isMyItem ? "Listing" : "Bid"}
+              &nbsp;{`${(myOffer !== undefined) ? "Update" : "Post"}
+                ${isMyItem ? "Sale" : "Bid"}
               `}
             </button>
+            {(myOffer !== undefined) && (
+              <button className="w-full button"
+                onClick={() => modalNavigate("cancel", {
+                  state: {backgroundLocation: location}
+                })}
+              >
+                <XCircleIcon className="w-4 h-4" />
+                &nbsp;{`Cancel ${isMyItem ? "Sale" : "Bid"}`}
+              </button>
+            )}
             {!isMyItem && (
               <button className="w-full button"
                 onClick={() => (
@@ -150,42 +201,6 @@ export function ItemPage({className}: ClassProps) {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function ItemOffer({
-  order,
-  offerType,
-  disabled,
-} : {
-  order: RaribleOrder;
-  offerType: OfferType;
-  disabled: boolean;
-}) {
-  const offerer: string =
-    ((offerType === "list") ? order.maker : (order?.taker || "0x"))
-    .replace(/^.+:/g, "");
-  const request: RaribleAsset =
-    (offerType === "list") ? order.take : order.make;
-
-  return (
-    <div className={cn(
-      "grid grid-cols-4 gap-2 items-center",
-      "border border-gray-800 rounded-lg p-2",
-    )}>
-      <div className="truncate" children={makePrettyPrice(request)} />
-      <TraderName address={offerer} />
-      <div children={makePrettyLapse(new Date(order?.endedAt || ""))} />
-      <button className="button"
-        onClick={() => console.log("Item Offer")/*modalNavigate(`take/${0}`, {
-          state: {backgroundLocation: location}
-        })*/}
-        disabled={disabled}
-      >
-        <ArrowsRightLeftIcon className="w-4 h-4" />
-        &nbsp;{"Take"}
-      </button>
     </div>
   );
 }

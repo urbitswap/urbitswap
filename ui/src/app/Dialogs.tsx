@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, useEffect, useCallback } from 'react';
+import React, { ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
 import { FormProvider, useForm, useController } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -22,33 +22,65 @@ import {
   useRouteRaribleItemMutation,
 } from '@/state/app';
 import { useDismissNavigate } from '@/logic/routing';
-import { tenderToCurrency, makePrettyPrice, getOwnerAddress } from '@/logic/utils';
+import {
+  tenderToAsset,
+  assetToTender,
+  getOfferAsset,
+  makePrettyPrice,
+  getOwnerAddress,
+} from '@/logic/utils';
 import { TENDERS } from '@/constants';
-import type { OrderId as RaribleOrderId } from '@rarible/types';
-import type { IBlockchainTransaction as RaribleTransaction } from '@rarible/sdk-transaction';
+import type {
+  Asset as RaribleAsset,
+  Order as RaribleOrder,
+} from '@rarible/api-client';
+import type {
+  IBlockchainTransaction as RaribleTransaction,
+} from '@rarible/sdk-transaction';
 import type { TenderType } from '@/types/app';
 
 export function OfferDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
-  const [item, owners] = useRouteRaribleItem();
+  const { item, owners, bids } = useRouteRaribleItem();
   const { address, isConnected } = useAccount();
+  const activeBids = (bids ?? []).filter((o: RaribleOrder) => o.status === "ACTIVE");
   const ownerAddresses = (owners ?? []).map(getOwnerAddress);
   const isMyItem: boolean = ownerAddresses.includes((address ?? "0x").toLowerCase());
+  const myOffer: RaribleOrder | undefined = isMyItem
+    ? item?.bestSellOrder
+    : activeBids.find(o => o.maker === (address ?? "0x").toLowerCase());
+  const hasMyOffer: boolean = myOffer !== undefined;
+
   const { mutate: sellMutate, status: sellStatus } = useRouteRaribleItemMutation(
-    "order.sell",
-    { onSuccess: () => dismiss() },
+    "order.sell", {onSuccess: () => dismiss()},
+  );
+  const { mutate: updSellMutate, status: updSellStatus } = useRouteRaribleItemMutation(
+    "order.sellUpdate", {onSuccess: () => dismiss()},
   );
 
+  // TODO: Enable users to set 'never' for expiration date (maybe if date is undefined?
+  // need special handling for the UX)
+  // TODO: Make default expiration for a listing 'never' (?)
   const form = useForm({
     mode: "onChange",
-    defaultValues: {
-      tender: TENDERS[0].value,
-      amount: "0",
-      // TODO: Make default expiration 'never'?
-      expiration: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    },
+    defaultValues: useMemo(() => {
+      if (myOffer === undefined) { // FIXME: appeasing TypeScript
+        return {
+          tender: TENDERS[0].value,
+          amount: "0",
+          expiration: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        };
+      } else {
+        const myAsset: RaribleAsset = getOfferAsset(myOffer, isMyItem ? "sell" : "bid");
+        return {
+          tender: assetToTender(myAsset.type),
+          amount: myAsset.value.toString(),
+          expiration: new Date(myOffer?.endedAt ?? ""),
+        };
+      }
+    }, [item, owners, bids]),
   });
   const {register, handleSubmit, formState: {isDirty, isValid}, control} = form;
   const {field: {value: tender, onChange: tenderOnChange, ref: tenderRef}} =
@@ -64,14 +96,21 @@ export function OfferDialog() {
     amount: string;
     expiration: Date;
   }) => {
-    sellMutate({
-      itemId: item?.id || "",
-      amount: 1,
-      price: amount,
-      currency: tenderToCurrency(tender),
-      expirationDate: expiration,
-    });
-  }, [item, sellMutate, dismiss]);
+    if (hasMyOffer) {
+      updSellMutate({
+        orderId: item?.bestSellOrder?.id || "",
+        price: amount,
+      });
+    } else {
+      sellMutate({
+        itemId: item?.id || "",
+        amount: 1,
+        price: amount,
+        currency: tenderToAsset(tender),
+        expirationDate: expiration,
+      });
+    }
+  }, [item, bids, sellMutate, updSellMutate]);
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
@@ -79,51 +118,49 @@ export function OfferDialog() {
         <div className="w-5/6">
           <header className="mb-3 flex items-center">
             <h2 className="text-lg font-bold">
-              {`${(item?.bestSellOrder === undefined) ? "Post" : "Rescind"} Bid`}
+              {`${(item?.bestSellOrder === undefined) ? "Post" : "Update"} Listing`}
             </h2>
           </header>
         </div>
 
         {(item !== undefined) && (
           <form onSubmit={handleSubmit(onSubmit)}>
-            {(item?.bestSellOrder !== undefined) ? (
-              <p>
-                Would you like to rescind your existing listing on this item?
-              </p>
-            ) : (
-              <React.Fragment>
-                <label className="mb-3 font-semibold">
-                  Tender*
-                  <SingleSelector
-                    ref={tenderRef}
-                    options={TENDERS}
-                    value={TENDERS.find(e => e.value === tender)}
-                    onChange={o => tenderOnChange(o ? o.value : o)}
-                    className="my-2 w-full"
-                    isSearchable={false}
-                    isClearable={false}
-                  />
-                </label>
-                <label className="mb-3 font-semibold">
-                  Amount*
-                  <input type="number" step="0.0001" min="0.0001"
-                    className="input my-2 block w-full py-1 px-2"
-                    {...register("amount", {required: true})}
-                  />
-                </label>
-                <label className="mb-3 font-semibold">
-                  Expiration*
-                  <DateTimePicker
-                    minDate={new Date(Date.now())}
-                    value={expiration}
-                    onChange={expirationOnChange}
-                    className="input w-full"
-                    disableClock={true}
-                    calendarIcon={null}
-                  />
-                </label>
-              </React.Fragment>
-            )}
+            <label className="mb-3 font-semibold">
+              Tender*
+              <SingleSelector
+                ref={tenderRef}
+                options={TENDERS}
+                value={TENDERS.find(e => e.value === tender)}
+                onChange={o => tenderOnChange(o ? o.value : o)}
+                className="my-2 w-full"
+                isSearchable={false}
+                isClearable={false}
+                isDisabled={hasMyOffer}
+              />
+            </label>
+            <label className="mb-3 font-semibold">
+              Amount*
+              <input type="number" step="0.0001" min="0.0001"
+                max={!hasMyOffer
+                  ? Number.MAX_VALUE
+                  : ((isMyItem ? myOffer?.makePrice : myOffer?.takePrice) ?? {}).toString()
+                }
+                className="input my-2 block w-full py-1 px-2"
+                {...register("amount", {required: true})}
+              />
+            </label>
+            <label className="mb-3 font-semibold">
+              Expiration*
+              <DateTimePicker
+                minDate={new Date(Date.now())}
+                value={expiration}
+                onChange={expirationOnChange}
+                className="input w-full"
+                disableClock={true}
+                calendarIcon={null}
+                disabled={hasMyOffer}
+              />
+            </label>
 
             <footer className="mt-4 flex items-center justify-between space-x-2">
               <div className="ml-auto flex items-center space-x-2">
@@ -132,13 +169,15 @@ export function OfferDialog() {
                     Cancel
                   </button>
                 </DialogPrimitive.Close>
-                <button className="button" type="submit" disabled={!isValid || !isDirty}>
-                  {sellStatus === 'loading' ? (
+                <button className="button" type="submit"
+                  disabled={!isValid || !isDirty}
+                >
+                  {(sellStatus === "loading" || updSellStatus === "loading") ? (
                     <LoadingSpinner />
-                  ) : sellStatus === 'error' ? (
-                    'Error'
+                  ) : (sellStatus === "error" || updSellStatus === "error") ? (
+                    "Error"
                   ) : (
-                    'Create'
+                    hasMyOffer ? "Update" : "Create"
                   )}
                 </button>
               </div>
@@ -165,9 +204,61 @@ export function CancelDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
+  const { item, owners, bids } = useRouteRaribleItem();
+  const { address, isConnected } = useAccount();
+  const activeBids = (bids ?? []).filter((o: RaribleOrder) => o.status === "ACTIVE");
+  const ownerAddresses = (owners ?? []).map(getOwnerAddress);
+  const isMyItem: boolean = ownerAddresses.includes((address ?? "0x").toLowerCase());
+  const myOffer: RaribleOrder | undefined = isMyItem
+    ? item?.bestSellOrder
+    : activeBids.find(o => o.maker === (address ?? "0x").toLowerCase());
+
+  const { mutate: cancelMutate, status: cancelStatus } = useRouteRaribleItemMutation(
+    "order.cancel", {onSuccess: () => dismiss()},
+  );
+
+  // FIXME: This doesn't properly block until the cancellation has been processed
+  // by the blockchain; need to inject some form of 'Promise' or monitor
+  // cancellation.
+  const onSubmit = useCallback(async (event: any) => {
+    event.preventDefault();
+    (myOffer !== undefined) && cancelMutate({orderId: myOffer.id});
+  }, [item, bids, cancelMutate]);
+
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
-      <p>TODO: Create Cancel Dialog</p>
+      <div className="w-5/6">
+        <header className="mb-3 flex items-center">
+          <h2 className="text-lg font-bold">
+            Cancel Listing
+          </h2>
+        </header>
+      </div>
+
+      <form onSubmit={onSubmit}>
+        <p>
+          Do you really want to cancel your this listing?
+        </p>
+
+        <footer className="mt-4 flex items-center justify-between space-x-2">
+          <div className="ml-auto flex items-center space-x-2">
+            <DialogPrimitive.Close asChild>
+              <button className="secondary-button ml-auto">
+                Cancel
+              </button>
+            </DialogPrimitive.Close>
+            <button className="button bg-red" type="submit">
+              {cancelStatus === "loading" ? (
+                <LoadingSpinner />
+              ) : cancelStatus === "error" ? (
+                "Error"
+              ) : (
+                "Cancel"
+              )}
+            </button>
+          </div>
+        </footer>
+      </form>
     </DefaultDialog>
   );
 }
