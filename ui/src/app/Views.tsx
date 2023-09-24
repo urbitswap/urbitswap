@@ -77,7 +77,7 @@ export function ItemPage({className}: ClassProps) {
   const isMyItem: boolean = ownerAddresses.includes((address ?? "0x").toLowerCase());
   const myOffer: RaribleOrder | undefined = isMyItem
     ? item?.bestSellOrder
-    : activeBids.find(o => o.maker === (address ?? "0x").toLowerCase());
+    : activeBids.find(o => o.maker === `ETHEREUM:${(address ?? "0x").toLowerCase()}`);
 
   const ItemOffer = useCallback(({
       order,
@@ -96,8 +96,7 @@ export function ItemPage({className}: ClassProps) {
           (offerType === "sell") ? order.take : order.make
         )} />
         <TraderName address={
-          ((offerType === "sell") ? order.maker : (order?.taker || "0x"))
-          .replace(/^.+:/g, "")
+          order.maker.replace(/^.+:/g, "")
         } />
         <div children={makePrettyLapse(new Date(order?.endedAt || ""))} />
         <button className="button"
@@ -151,13 +150,16 @@ export function ItemPage({className}: ClassProps) {
             <h4 className="text-md font-bold underline">
               Bid(s)
             </h4>
-            {activeBids.map((bid: RaribleOrder) => (
-              <ItemOffer
-                order={bid}
-                offerType="bid"
-                disabled={bid.maker === (address ?? "0x").toLowerCase()}
-              />
-            ))}
+            <div className="flex flex-col text-sm gap-4 py-4">
+              {activeBids.map((bid: RaribleOrder) => (
+                <ItemOffer
+                  key={bid.id}
+                  order={bid}
+                  offerType="bid"
+                  disabled={bid.maker === `ETHEREUM:${(address ?? "0x").toLowerCase()}`}
+                />
+              ))}
+            </div>
           </div>
           <div className="sm:row-span-1 flex flex-col gap-4 items-center">
             <img className="object-contain border-2 border-gray-800" src={

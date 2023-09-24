@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
+import { useAccount } from 'wagmi';
 import {
   QueryKey,
   MutationFunction,
@@ -10,6 +11,7 @@ import {
   UseMutationOptions,
 } from '@tanstack/react-query';
 import useRaribleSDK from '@/logic/useRaribleSDK';
+import { getOwnerAddress } from '@/logic/utils';
 import { APP_TERM, CONTRACT } from '@/constants';
 import type {
   Collection as RaribleCollection,
@@ -101,6 +103,29 @@ export function useRouteRaribleItemMutation<TResponse>(
       queryClient.invalidateQueries(queryKey),
     ...options,
   });
+}
+
+// FIXME: This is a terrible hack, but it has the right ergonomics.
+export function useRouteRaribleItemMutation2<TResponse>(
+  options?: UseMutationOptions<TResponse, unknown, any, unknown>
+) {
+  const { item, owners, bids } = useRouteRaribleItem();
+  const { address, isConnected } = useAccount();
+  const activeBids = (bids ?? []).filter((o: RaribleOrder) => o.status === "ACTIVE");
+  const ownerAddresses = (owners ?? []).map(getOwnerAddress);
+  const isMyItem: boolean = ownerAddresses.includes((address ?? "0x").toLowerCase());
+  const myOffer: RaribleOrder | undefined = isMyItem
+    ? item?.bestSellOrder
+    : activeBids.find(o => o.maker === `ETHEREUM:${(address ?? "0x").toLowerCase()}`);
+  const hasMyOffer: boolean = myOffer !== undefined;
+
+  return useRouteRaribleItemMutation(
+    `order.${isMyItem
+      ? `sell${!hasMyOffer ? "" : "Update"}`
+      : `bid${!hasMyOffer ? "" : "Update"}`
+    }`,
+    options,
+  );
 }
 
 function queryRaribleContinuation<

@@ -20,6 +20,7 @@ import {
 import {
   useRouteRaribleItem,
   useRouteRaribleItemMutation,
+  useRouteRaribleItemMutation2,
 } from '@/state/app';
 import { useDismissNavigate } from '@/logic/routing';
 import {
@@ -50,15 +51,11 @@ export function OfferDialog() {
   const isMyItem: boolean = ownerAddresses.includes((address ?? "0x").toLowerCase());
   const myOffer: RaribleOrder | undefined = isMyItem
     ? item?.bestSellOrder
-    : activeBids.find(o => o.maker === (address ?? "0x").toLowerCase());
+    : activeBids.find(o => o.maker === `ETHEREUM:${(address ?? "0x").toLowerCase()}`);
   const hasMyOffer: boolean = myOffer !== undefined;
 
-  const { mutate: sellMutate, status: sellStatus } = useRouteRaribleItemMutation(
-    "order.sell", {onSuccess: () => dismiss()},
-  );
-  const { mutate: updSellMutate, status: updSellStatus } = useRouteRaribleItemMutation(
-    "order.sellUpdate", {onSuccess: () => dismiss()},
-  );
+  const { mutate: offerMutate, status: offerStatus } =
+    useRouteRaribleItemMutation2({onSuccess: () => dismiss()});
 
   // TODO: Enable users to set 'never' for expiration date (maybe if date is undefined?
   // need special handling for the UX)
@@ -96,21 +93,25 @@ export function OfferDialog() {
     amount: string;
     expiration: Date;
   }) => {
-    if (hasMyOffer) {
-      updSellMutate({
-        orderId: item?.bestSellOrder?.id || "",
-        price: amount,
-      });
-    } else {
-      sellMutate({
-        itemId: item?.id || "",
-        amount: 1,
-        price: amount,
-        currency: tenderToAsset(tender),
-        expirationDate: expiration,
-      });
+    offerMutate({
+      orderId: myOffer?.id || "",
+      itemId: item?.id || "",
+      amount: 1,
+      price: amount,
+      currency: tenderToAsset(tender),
+      expirationDate: expiration,
+    });
+  }, [item, bids, offerMutate]);
+
+  // TODO: If we are selling, only allow the listing to go lower.
+  // If we are buying, only allow the listing to go higher.
+  // (These are requirements of the Rarible interface.)
+  /*
+    max={!hasMyOffer
+      ? Number.MAX_VALUE
+      : ((isMyItem ? myOffer?.makePrice : myOffer?.takePrice) ?? {}).toString()
     }
-  }, [item, bids, sellMutate, updSellMutate]);
+  */
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
@@ -118,7 +119,7 @@ export function OfferDialog() {
         <div className="w-5/6">
           <header className="mb-3 flex items-center">
             <h2 className="text-lg font-bold">
-              {`${(item?.bestSellOrder === undefined) ? "Post" : "Update"} Listing`}
+              {`${!hasMyOffer ? "Post" : "Update"} Listing`}
             </h2>
           </header>
         </div>
@@ -140,11 +141,7 @@ export function OfferDialog() {
             </label>
             <label className="mb-3 font-semibold">
               Amount*
-              <input type="number" step="0.0001" min="0.0001"
-                max={!hasMyOffer
-                  ? Number.MAX_VALUE
-                  : ((isMyItem ? myOffer?.makePrice : myOffer?.takePrice) ?? {}).toString()
-                }
+              <input type="number" step="0.001"
                 className="input my-2 block w-full py-1 px-2"
                 {...register("amount", {required: true})}
               />
@@ -172,9 +169,9 @@ export function OfferDialog() {
                 <button className="button" type="submit"
                   disabled={!isValid || !isDirty}
                 >
-                  {(sellStatus === "loading" || updSellStatus === "loading") ? (
+                  {(offerStatus === "loading") ? (
                     <LoadingSpinner />
-                  ) : (sellStatus === "error" || updSellStatus === "error") ? (
+                  ) : (offerStatus === "error") ? (
                     "Error"
                   ) : (
                     hasMyOffer ? "Update" : "Create"
@@ -211,7 +208,7 @@ export function CancelDialog() {
   const isMyItem: boolean = ownerAddresses.includes((address ?? "0x").toLowerCase());
   const myOffer: RaribleOrder | undefined = isMyItem
     ? item?.bestSellOrder
-    : activeBids.find(o => o.maker === (address ?? "0x").toLowerCase());
+    : activeBids.find(o => o.maker === `ETHEREUM:${(address ?? "0x").toLowerCase()}`);
 
   const { mutate: cancelMutate, status: cancelStatus } = useRouteRaribleItemMutation(
     "order.cancel", {onSuccess: () => dismiss()},
