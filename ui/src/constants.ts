@@ -13,8 +13,8 @@ export const CONTRACT = Object.freeze({
 });
 
 export const TENDERS = [
-  Object.freeze({value: "eth", label: "Ethereum"}),
   Object.freeze({value: "usdc", label: "USDC"}),
+  Object.freeze({value: "eth", label: "Ethereum"}),
 ];
 
 export const AUTHORS = [

@@ -182,9 +182,54 @@ export function TradeDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
+  const { mine, offer } = useRouteRaribleAccountItem();
+  const { mutate: tradeMutate, status: tradeStatus } = useRouteRaribleItemMutation(
+    `order.${mine ? "acceptBid" : "buy"}`,
+    { onSuccess: () => dismiss() },
+  );
+
+  // FIXME: This doesn't properly block until the cancellation has been processed
+  // by the blockchain; need to inject some form of 'Promise' or monitor
+  // cancellation.
+  const onSubmit = useCallback(async (event: any) => {
+    event.preventDefault();
+    (offer !== undefined) && tradeMutate({orderId: offer.id, amount: 1});
+  }, [offer, tradeMutate]);
+
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
-      <p>TODO: Create Take Dialog</p>
+      <div className="w-5/6">
+        <header className="mb-3 flex items-center">
+          <h2 className="text-lg font-bold">
+            Accept {mine ? "Bid" : "Sale"}
+          </h2>
+        </header>
+      </div>
+
+      <form onSubmit={onSubmit}>
+        <p>
+          Do you really want to accept this {mine ? "bid" : "sale"}?
+        </p>
+
+        <footer className="mt-4 flex items-center justify-between space-x-2">
+          <div className="ml-auto flex items-center space-x-2">
+            <DialogPrimitive.Close asChild>
+              <button className="secondary-button ml-auto">
+                Cancel
+              </button>
+            </DialogPrimitive.Close>
+            <button className="button bg-red" type="submit">
+              {tradeStatus === "loading" ? (
+                <LoadingSpinner />
+              ) : tradeStatus === "error" ? (
+                "Error"
+              ) : (
+                "Cancel"
+              )}
+            </button>
+          </div>
+        </footer>
+      </form>
     </DefaultDialog>
   );
 }
@@ -195,12 +240,10 @@ export function CancelDialog() {
 
   const { offer } = useRouteRaribleAccountItem();
   const { mutate: cancelMutate, status: cancelStatus } = useRouteRaribleItemMutation(
-    "order.cancel", {onSuccess: () => dismiss()},
+    "order.cancel",
+    { onSuccess: () => dismiss() },
   );
 
-  // FIXME: This doesn't properly block until the cancellation has been processed
-  // by the blockchain; need to inject some form of 'Promise' or monitor
-  // cancellation.
   const onSubmit = useCallback(async (event: any) => {
     event.preventDefault();
     (offer !== undefined) && cancelMutate({orderId: offer.id});
@@ -218,7 +261,7 @@ export function CancelDialog() {
 
       <form onSubmit={onSubmit}>
         <p>
-          Do you really want to cancel your listing?
+          Do you really want to rescind your listing?
         </p>
 
         <footer className="mt-4 flex items-center justify-between space-x-2">
@@ -234,7 +277,7 @@ export function CancelDialog() {
               ) : cancelStatus === "error" ? (
                 "Error"
               ) : (
-                "Cancel"
+                "Rescind"
               )}
             </button>
           </div>

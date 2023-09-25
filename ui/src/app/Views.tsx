@@ -186,7 +186,7 @@ export function ItemPage({className}: ClassProps) {
                 })}
               >
                 <XCircleIcon className="w-4 h-4" />
-                &nbsp;{`Cancel ${mine ? "Sale" : "Bid"}`}
+                &nbsp;{`Rescind ${mine ? "Sale" : "Bid"}`}
               </button>
             )}
             {!mine && (

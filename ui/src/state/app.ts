@@ -118,8 +118,14 @@ export function useRouteRaribleItemMutation<TResponse>(
   const rsdk = useRaribleSDK();
   const queryClient = useQueryClient();
   return useMutation({
-    // @ts-ignore
-    mutationFn: (raribleFn.split('.').reduce((p,c)=>p&&p[c]||null, rsdk) as MutationFunction<TResponse, any>),
+    mutationFn: (((...args) => {
+      // @ts-ignore
+      const mutate: MutationFunction<TResponse, any> = raribleFn.split(".").reduce((p,c) => p && p[c] || null, rsdk);
+      return mutate(...args).then((result: TResponse) => (
+        // @ts-ignore
+        (result?.wait && typeof(result.wait) === "function") ? result.wait() : result
+      ));
+    }) as MutationFunction<TResponse, any>),
     onMutate: async (variables) => {
       await queryClient.cancelQueries(queryKey);
       return await queryClient.getQueryData(queryKey);
