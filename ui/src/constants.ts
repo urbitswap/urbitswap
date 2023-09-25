@@ -4,6 +4,9 @@ export const ENV_TEST: boolean = true;
 export const APP_NAME: string = "VCC Trade";
 export const APP_TERM: string = "vcc-trade";
 
+// https://stackoverflow.com/a/27093173
+export const MAX_DATE: Date = new Date(8640000000000000);
+
 export const CONTRACT = Object.freeze({
   COLLECTION: "ETHEREUM:0xa144C7E81398B90680bBb34320e062f4bFE37564",
   // https://www.circle.com/en/usdc/developers#usdc-multichain

@@ -16,7 +16,7 @@ import {
   useRouteRaribleAccountItem,
 } from '@/state/app';
 import { useModalNavigate, useChatNavigate } from '@/logic/routing';
-import { makePrettyPrice, makePrettyLapse } from '@/logic/utils';
+import { isMaxDate, makePrettyPrice, makePrettyLapse } from '@/logic/utils';
 import { APP_TERM, CONTRACT } from '@/constants';
 import type {
   Item as RaribleItem,
@@ -98,7 +98,10 @@ export function ItemPage({className}: ClassProps) {
         <TraderName address={
           (order.maker.replace(/^.+:/g, "") as Address)
         } />
-        <div children={makePrettyLapse(new Date(order?.endedAt || ""))} />
+        <div children={isMaxDate(new Date(order?.endedAt || ""))
+          ? "never"
+          : makePrettyLapse(new Date(order?.endedAt || ""))
+        } />
         <button className="button"
           onClick={() => modalNavigate(`trade/${order?.id}`, {
             state: {backgroundLocation: location}

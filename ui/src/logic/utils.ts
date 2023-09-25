@@ -1,5 +1,5 @@
 import { format, formatDistance } from 'date-fns';
-import { CONTRACT } from '@/constants';
+import { MAX_DATE, CONTRACT } from '@/constants';
 import { Blockchain } from '@rarible/api-client';
 import {
   toContractAddress,
@@ -36,15 +36,19 @@ export function makePrettyPrice(asset: RaribleAsset): string {
   return `${assetValue} ${assetIdent}`;
 }
 
-export function makeTerseDate(date: Date) {
+export function isMaxDate(date: Date): boolean {
+  return date.getTime() === MAX_DATE.getTime();
+}
+
+export function makeTerseDate(date: Date): string {
   return format(date, 'yy/MM/dd');
 }
 
-export function makeTerseDateAndTime(date: Date) {
+export function makeTerseDateAndTime(date: Date): string {
   return format(date, 'yy/MM/dd HH:mm');
 }
 
-export function makePrettyLapse(date: Date) {
+export function makePrettyLapse(date: Date): string {
   return formatDistance(date, Date.now(), {addSuffix: true})
     .replace(/ a /, ' 1 ')
     .replace(/less than /, '<')
@@ -53,7 +57,7 @@ export function makePrettyLapse(date: Date) {
     .replace(/over /, '>~');
 }
 
-export function makeTerseLapse(date: Date) {
+export function makeTerseLapse(date: Date): string {
   return formatDistance(date, Date.now(), {addSuffix: true})
     .replace(/ a /, ' 1 ')
     .replace(/less than /, '<')

@@ -25,11 +25,12 @@ import {
 } from '@/state/app';
 import { useDismissNavigate } from '@/logic/routing';
 import {
+  isMaxDate,
   tenderToAsset,
   assetToTender,
   makePrettyPrice,
 } from '@/logic/utils';
-import { TENDERS } from '@/constants';
+import { MAX_DATE, TENDERS } from '@/constants';
 import type {
   Asset as RaribleAsset,
   Order as RaribleOrder,
@@ -49,9 +50,6 @@ export function OfferDialog() {
   const { mutate: offerMutate, status: offerStatus } =
     useRouteRaribleOfferItemMutation({onSuccess: () => dismiss()});
 
-  // TODO: Enable users to set 'never' for expiration date (maybe if date is undefined?
-  // need special handling for the UX)
-  // TODO: Make default expiration for a listing 'never' (?)
   const form = useForm({
     mode: "onChange",
     defaultValues: useMemo(() => {
@@ -59,14 +57,15 @@ export function OfferDialog() {
         return {
           tender: TENDERS[0].value,
           amount: "0",
-          expiration: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          expiration: undefined,
         };
       } else {
         const myAsset: RaribleAsset = mine ? offer.take : offer.make;
+        const endDate: Date = new Date(offer.endedAt ?? "");
         return {
           tender: assetToTender(myAsset.type),
           amount: myAsset.value.toString(),
-          expiration: new Date(offer.endedAt ?? ""),
+          expiration: isMaxDate(endDate) ? undefined : endDate,
         };
       }
     }, [mine, offer]),
@@ -75,7 +74,7 @@ export function OfferDialog() {
   const {field: {value: tender, onChange: tenderOnChange, ref: tenderRef}} =
     useController({name: "tender", rules: {required: true}, control});
   const {field: {value: expiration, onChange: expirationOnChange}} =
-    useController({name: "expiration", rules: {required: true}, control});
+    useController({name: "expiration", rules: {required: false}, control});
   const onSubmit = useCallback(async ({
     tender,
     amount,
@@ -83,7 +82,7 @@ export function OfferDialog() {
   }: {
     tender: TenderType;
     amount: string;
-    expiration: Date;
+    expiration: Date | undefined;
   }) => {
     offerMutate({
       orderId: offer?.id || "",
@@ -91,19 +90,9 @@ export function OfferDialog() {
       amount: 1,
       price: amount,
       currency: tenderToAsset(tender),
-      expirationDate: expiration,
+      expirationDate: expiration ?? MAX_DATE,
     });
   }, [item, offer, offerMutate]);
-
-  // TODO: If we are selling, only allow the listing to go lower.
-  // If we are buying, only allow the listing to go higher.
-  // (These are requirements of the Rarible interface.)
-  /*
-    max={!hasMyOffer
-      ? Number.MAX_VALUE
-      : ((isMyItem ? myOffer?.makePrice : myOffer?.takePrice) ?? {}).toString()
-    }
-  */
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
@@ -116,63 +105,69 @@ export function OfferDialog() {
           </header>
         </div>
 
-        {(item !== undefined) && (
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <label className="mb-3 font-semibold">
-              Tender*
-              <SingleSelector
-                ref={tenderRef}
-                options={TENDERS}
-                value={TENDERS.find(e => e.value === tender)}
-                onChange={o => tenderOnChange(o ? o.value : o)}
-                className="my-2 w-full"
-                isSearchable={false}
-                isClearable={false}
-                isDisabled={offer !== undefined}
-              />
-            </label>
-            <label className="mb-3 font-semibold">
-              Amount*
-              <input type="number" step="0.001"
-                className="input my-2 block w-full py-1 px-2"
-                {...register("amount", {required: true})}
-              />
-            </label>
-            <label className="mb-3 font-semibold">
-              Expiration*
-              <DateTimePicker
-                minDate={new Date(Date.now())}
-                value={expiration}
-                onChange={expirationOnChange}
-                className="input w-full"
-                disableClock={true}
-                calendarIcon={null}
-                disabled={offer !== undefined}
-              />
-            </label>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <label className="mb-3 font-semibold">
+            Tender*
+            <SingleSelector
+              ref={tenderRef}
+              options={TENDERS}
+              value={TENDERS.find(e => e.value === tender)}
+              onChange={o => tenderOnChange(o ? o.value : o)}
+              className="my-2 w-full"
+              isSearchable={false}
+              isClearable={false}
+              isDisabled={offer !== undefined}
+            />
+          </label>
+          <label className="mb-3 font-semibold">
+            Amount*
+            <input type="number" autoComplete="off"
+              step="0.00001"
+              min={(offer !== undefined && !mine)
+                ? ((mine ? offer?.makePrice : offer?.takePrice) ?? "0.00001").toString()
+                : "0.00001"
+              }
+              max={(offer !== undefined && mine)
+                ? ((mine ? offer?.makePrice : offer?.takePrice) ?? `${Number.MAX_VALUE}`).toString()
+                : Number.MAX_VALUE
+              }
+              className="input my-2 block w-full py-1 px-2"
+              {...register("amount", {required: true})}
+            />
+          </label>
+          <label className="mb-3 font-semibold">
+            Expiration
+            <DateTimePicker
+              minDate={new Date(Date.now())}
+              value={expiration}
+              onChange={expirationOnChange}
+              className="input w-full"
+              disableClock={true}
+              disabled={offer !== undefined}
+            />
+          </label>
 
-            <footer className="mt-4 flex items-center justify-between space-x-2">
-              <div className="ml-auto flex items-center space-x-2">
-                <DialogPrimitive.Close asChild>
-                  <button className="secondary-button ml-auto">
-                    Cancel
-                  </button>
-                </DialogPrimitive.Close>
-                <button className="button" type="submit"
-                  disabled={!isValid || !isDirty}
-                >
-                  {(offerStatus === "loading") ? (
-                    <LoadingSpinner />
-                  ) : (offerStatus === "error") ? (
-                    "Error"
-                  ) : (
-                    (offer !== undefined) ? "Update" : "Create"
-                  )}
+          <footer className="mt-4 flex items-center justify-between space-x-2">
+            <div className="ml-auto flex items-center space-x-2">
+              <DialogPrimitive.Close asChild>
+                <button className="secondary-button ml-auto">
+                  Cancel
                 </button>
-              </div>
-            </footer>
-          </form>
-        )}
+              </DialogPrimitive.Close>
+              <button className="button" type="submit"
+                disabled={!isValid || !isDirty}
+              >
+                {(offerStatus === "loading") ? (
+                  <LoadingSpinner />
+                ) : (offerStatus === "error") ? (
+                  "Error"
+                ) : (
+                  (offer !== undefined) ? "Update" : "Create"
+                )}
+              </button>
+            </div>
+          </footer>
+        </form>
       </FormProvider>
     </DefaultDialog>
   );
