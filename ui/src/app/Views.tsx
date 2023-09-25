@@ -100,13 +100,13 @@ export function ItemPage({className}: ClassProps) {
         } />
         <div children={makePrettyLapse(new Date(order?.endedAt || ""))} />
         <button className="button"
-          onClick={() => modalNavigate(`take/${0}`, {
+          onClick={() => modalNavigate(`trade/${order?.id}`, {
             state: {backgroundLocation: location}
           })}
           disabled={!isConnected || disabled}
         >
           <ArrowsRightLeftIcon className="w-4 h-4" />
-          &nbsp;{"Take"}
+          &nbsp;{"Trade"}
         </button>
       </div>
   ), [isConnected, modalNavigate, location]);

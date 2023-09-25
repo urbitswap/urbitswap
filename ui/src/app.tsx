@@ -64,7 +64,7 @@ function RoutedAppRoutes({
         <Routes>
           <Route path="/item/:itemId">
             <Route path="offer" element={<OfferDialog />} />
-            <Route path="trade/:bidId" element={<TradeDialog />} />
+            <Route path="trade/:offerId" element={<TradeDialog />} />
             <Route path="cancel" element={<CancelDialog />} />
           </Route>
         </Routes>

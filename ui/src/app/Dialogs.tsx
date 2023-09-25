@@ -182,19 +182,17 @@ export function TradeDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
-  const { mine, offer } = useRouteRaribleAccountItem();
+  const { offerId } = useParams();
+  const { mine } = useRouteRaribleAccountItem();
   const { mutate: tradeMutate, status: tradeStatus } = useRouteRaribleItemMutation(
     `order.${mine ? "acceptBid" : "buy"}`,
     { onSuccess: () => dismiss() },
   );
 
-  // FIXME: This doesn't properly block until the cancellation has been processed
-  // by the blockchain; need to inject some form of 'Promise' or monitor
-  // cancellation.
   const onSubmit = useCallback(async (event: any) => {
     event.preventDefault();
-    (offer !== undefined) && tradeMutate({orderId: offer.id, amount: 1});
-  }, [offer, tradeMutate]);
+    (offerId !== undefined) && tradeMutate({orderId: offerId, amount: 1});
+  }, [offerId, tradeMutate]);
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
@@ -218,13 +216,13 @@ export function TradeDialog() {
                 Cancel
               </button>
             </DialogPrimitive.Close>
-            <button className="button bg-red" type="submit">
+            <button className="button bg-green" type="submit">
               {tradeStatus === "loading" ? (
                 <LoadingSpinner />
               ) : tradeStatus === "error" ? (
                 "Error"
               ) : (
-                "Cancel"
+                "Trade"
               )}
             </button>
           </div>
