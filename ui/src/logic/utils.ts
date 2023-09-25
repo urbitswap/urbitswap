@@ -36,14 +36,6 @@ export function makePrettyPrice(asset: RaribleAsset): string {
   return `${assetValue} ${assetIdent}`;
 }
 
-export function getOfferAsset(order: RaribleOrder, otype: OfferType): RaribleAsset {
-  return otype === "sell" ? order.take : order.make;
-}
-
-export function getOwnerAddress(owner: RaribleOwnership): string {
-  return owner.owner.replace(/^.+:/g, "").toLowerCase();
-}
-
 export function makeTerseDate(date: Date) {
   return format(date, 'yy/MM/dd');
 }

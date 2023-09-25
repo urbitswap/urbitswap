@@ -19,16 +19,15 @@ import {
 } from '@/components/Selector';
 import {
   useRouteRaribleItem,
+  useRouteRaribleAccountItem,
   useRouteRaribleItemMutation,
-  useRouteRaribleItemMutation2,
+  useRouteRaribleOfferItemMutation,
 } from '@/state/app';
 import { useDismissNavigate } from '@/logic/routing';
 import {
   tenderToAsset,
   assetToTender,
-  getOfferAsset,
   makePrettyPrice,
-  getOwnerAddress,
 } from '@/logic/utils';
 import { TENDERS } from '@/constants';
 import type {
@@ -40,22 +39,15 @@ import type {
 } from '@rarible/sdk-transaction';
 import type { TenderType } from '@/types/app';
 
+// TODO: Auto-close dialogs if a user account is not connected.
+
 export function OfferDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
-  const { item, owners, bids } = useRouteRaribleItem();
-  const { address, isConnected } = useAccount();
-  const activeBids = (bids ?? []).filter((o: RaribleOrder) => o.status === "ACTIVE");
-  const ownerAddresses = (owners ?? []).map(getOwnerAddress);
-  const isMyItem: boolean = ownerAddresses.includes((address ?? "0x").toLowerCase());
-  const myOffer: RaribleOrder | undefined = isMyItem
-    ? item?.bestSellOrder
-    : activeBids.find(o => o.maker === `ETHEREUM:${(address ?? "0x").toLowerCase()}`);
-  const hasMyOffer: boolean = myOffer !== undefined;
-
+  const { item, mine, offer } = useRouteRaribleAccountItem();
   const { mutate: offerMutate, status: offerStatus } =
-    useRouteRaribleItemMutation2({onSuccess: () => dismiss()});
+    useRouteRaribleOfferItemMutation({onSuccess: () => dismiss()});
 
   // TODO: Enable users to set 'never' for expiration date (maybe if date is undefined?
   // need special handling for the UX)
@@ -63,21 +55,21 @@ export function OfferDialog() {
   const form = useForm({
     mode: "onChange",
     defaultValues: useMemo(() => {
-      if (myOffer === undefined) { // FIXME: appeasing TypeScript
+      if (offer === undefined) {
         return {
           tender: TENDERS[0].value,
           amount: "0",
           expiration: new Date(Date.now() + 24 * 60 * 60 * 1000),
         };
       } else {
-        const myAsset: RaribleAsset = getOfferAsset(myOffer, isMyItem ? "sell" : "bid");
+        const myAsset: RaribleAsset = mine ? offer.take : offer.make;
         return {
           tender: assetToTender(myAsset.type),
           amount: myAsset.value.toString(),
-          expiration: new Date(myOffer?.endedAt ?? ""),
+          expiration: new Date(offer.endedAt ?? ""),
         };
       }
-    }, [item, owners, bids]),
+    }, [mine, offer]),
   });
   const {register, handleSubmit, formState: {isDirty, isValid}, control} = form;
   const {field: {value: tender, onChange: tenderOnChange, ref: tenderRef}} =
@@ -94,14 +86,14 @@ export function OfferDialog() {
     expiration: Date;
   }) => {
     offerMutate({
-      orderId: myOffer?.id || "",
+      orderId: offer?.id || "",
       itemId: item?.id || "",
       amount: 1,
       price: amount,
       currency: tenderToAsset(tender),
       expirationDate: expiration,
     });
-  }, [item, bids, offerMutate]);
+  }, [item, offer, offerMutate]);
 
   // TODO: If we are selling, only allow the listing to go lower.
   // If we are buying, only allow the listing to go higher.
@@ -119,7 +111,7 @@ export function OfferDialog() {
         <div className="w-5/6">
           <header className="mb-3 flex items-center">
             <h2 className="text-lg font-bold">
-              {`${!hasMyOffer ? "Post" : "Update"} Listing`}
+              {`${(offer === undefined) ? "Post" : "Update"} Listing`}
             </h2>
           </header>
         </div>
@@ -136,7 +128,7 @@ export function OfferDialog() {
                 className="my-2 w-full"
                 isSearchable={false}
                 isClearable={false}
-                isDisabled={hasMyOffer}
+                isDisabled={offer !== undefined}
               />
             </label>
             <label className="mb-3 font-semibold">
@@ -155,7 +147,7 @@ export function OfferDialog() {
                 className="input w-full"
                 disableClock={true}
                 calendarIcon={null}
-                disabled={hasMyOffer}
+                disabled={offer !== undefined}
               />
             </label>
 
@@ -174,7 +166,7 @@ export function OfferDialog() {
                   ) : (offerStatus === "error") ? (
                     "Error"
                   ) : (
-                    hasMyOffer ? "Update" : "Create"
+                    (offer !== undefined) ? "Update" : "Create"
                   )}
                 </button>
               </div>
@@ -201,15 +193,7 @@ export function CancelDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
-  const { item, owners, bids } = useRouteRaribleItem();
-  const { address, isConnected } = useAccount();
-  const activeBids = (bids ?? []).filter((o: RaribleOrder) => o.status === "ACTIVE");
-  const ownerAddresses = (owners ?? []).map(getOwnerAddress);
-  const isMyItem: boolean = ownerAddresses.includes((address ?? "0x").toLowerCase());
-  const myOffer: RaribleOrder | undefined = isMyItem
-    ? item?.bestSellOrder
-    : activeBids.find(o => o.maker === `ETHEREUM:${(address ?? "0x").toLowerCase()}`);
-
+  const { offer } = useRouteRaribleAccountItem();
   const { mutate: cancelMutate, status: cancelStatus } = useRouteRaribleItemMutation(
     "order.cancel", {onSuccess: () => dismiss()},
   );
@@ -219,8 +203,8 @@ export function CancelDialog() {
   // cancellation.
   const onSubmit = useCallback(async (event: any) => {
     event.preventDefault();
-    (myOffer !== undefined) && cancelMutate({orderId: myOffer.id});
-  }, [item, bids, cancelMutate]);
+    (offer !== undefined) && cancelMutate({orderId: offer.id});
+  }, [offer, cancelMutate]);
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
@@ -234,7 +218,7 @@ export function CancelDialog() {
 
       <form onSubmit={onSubmit}>
         <p>
-          Do you really want to cancel your this listing?
+          Do you really want to cancel your listing?
         </p>
 
         <footer className="mt-4 flex items-center justify-between space-x-2">

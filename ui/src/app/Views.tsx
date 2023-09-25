@@ -10,15 +10,20 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/solid';
 import TraderName from '@/components/TraderName';
-import { useRaribleCollection, useRouteRaribleItem } from '@/state/app';
+import {
+  useRaribleCollection,
+  useRouteRaribleItem,
+  useRouteRaribleAccountItem,
+} from '@/state/app';
 import { useModalNavigate, useChatNavigate } from '@/logic/routing';
-import { makePrettyPrice, makePrettyLapse, getOwnerAddress } from '@/logic/utils';
+import { makePrettyPrice, makePrettyLapse } from '@/logic/utils';
 import { APP_TERM, CONTRACT } from '@/constants';
 import type {
   Item as RaribleItem,
   Order as RaribleOrder,
   MetaContent as RaribleMetaContent,
 } from '@rarible/api-client';
+import type { Address } from 'viem';
 import type { OfferType } from '@/types/app';
 import type { ClassProps } from '@/types/urbui';
 
@@ -69,15 +74,10 @@ export function ItemPage({className}: ClassProps) {
   const location = useLocation();
   const modalNavigate = useModalNavigate();
   const chatNavigate = useChatNavigate();
-
-  const { item, owners, bids } = useRouteRaribleItem();
-  const { address, isConnected } = useAccount();
-  const activeBids = (bids ?? []).filter((o: RaribleOrder) => o.status === "ACTIVE");
-  const ownerAddresses = (owners ?? []).map(getOwnerAddress);
-  const isMyItem: boolean = ownerAddresses.includes((address ?? "0x").toLowerCase());
-  const myOffer: RaribleOrder | undefined = isMyItem
-    ? item?.bestSellOrder
-    : activeBids.find(o => o.maker === `ETHEREUM:${(address ?? "0x").toLowerCase()}`);
+  const {
+    item, owner, bids, mine, offer,
+    address, isConnected,
+  } = useRouteRaribleAccountItem();
 
   const ItemOffer = useCallback(({
       order,
@@ -96,7 +96,7 @@ export function ItemPage({className}: ClassProps) {
           (offerType === "sell") ? order.take : order.make
         )} />
         <TraderName address={
-          order.maker.replace(/^.+:/g, "")
+          (order.maker.replace(/^.+:/g, "") as Address)
         } />
         <div children={makePrettyLapse(new Date(order?.endedAt || ""))} />
         <button className="button"
@@ -122,10 +122,10 @@ export function ItemPage({className}: ClassProps) {
               {item.meta?.name ?? "<Unknown Item>"}
             </h2>
             <h3 className="text-md">
-              <span className="font-semibold">Owner(s):</span>&nbsp;
-              {ownerAddresses.map((address: string) => (
-                <TraderName key={address} address={address}  />
-              ))}
+              <span className="font-semibold">Owner:</span>&nbsp;
+              {owner && (
+                <TraderName address={owner}  />
+              )}
             </h3>
             {/* TODO: Value should be derived from recent sales and all
             active offers/bids.
@@ -143,7 +143,7 @@ export function ItemPage({className}: ClassProps) {
                 <ItemOffer
                   order={item.bestSellOrder}
                   offerType="sell"
-                  disabled={isMyItem}
+                  disabled={mine}
                 />
               )}
             </div>
@@ -151,12 +151,13 @@ export function ItemPage({className}: ClassProps) {
               Bid(s)
             </h4>
             <div className="flex flex-col text-sm gap-4 py-4">
-              {activeBids.map((bid: RaribleOrder) => (
+              {/* TODO: Sort highest to lowest price (converted to USD) */}
+              {(bids ?? []).map((bid: RaribleOrder) => (
                 <ItemOffer
                   key={bid.id}
                   order={bid}
                   offerType="bid"
-                  disabled={bid.maker === `ETHEREUM:${(address ?? "0x").toLowerCase()}`}
+                  disabled={!mine}
                 />
               ))}
             </div>
@@ -174,21 +175,21 @@ export function ItemPage({className}: ClassProps) {
               disabled={!isConnected}
             >
               <CurrencyDollarIcon className="w-4 h-4" />
-              &nbsp;{`${(myOffer !== undefined) ? "Update" : "Post"}
-                ${isMyItem ? "Sale" : "Bid"}
+              &nbsp;{`${(offer !== undefined) ? "Update" : "Post"}
+                ${mine ? "Sale" : "Bid"}
               `}
             </button>
-            {(myOffer !== undefined) && (
+            {(offer !== undefined) && (
               <button className="w-full button"
                 onClick={() => modalNavigate("cancel", {
                   state: {backgroundLocation: location}
                 })}
               >
                 <XCircleIcon className="w-4 h-4" />
-                &nbsp;{`Cancel ${isMyItem ? "Sale" : "Bid"}`}
+                &nbsp;{`Cancel ${mine ? "Sale" : "Bid"}`}
               </button>
             )}
-            {!isMyItem && (
+            {!mine && (
               <button className="w-full button"
                 onClick={() => (
                   // FIXME: Use the owner's ship name if available, otherwise

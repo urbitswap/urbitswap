@@ -1,9 +1,10 @@
 import React, { HTMLAttributes } from 'react';
 import ENSName from '@/components/ENSName';
 import ShipName from '@/components/ShipName';
+import type { Address } from 'viem';
 
 type EntityNameProps = {
-  address: string;
+  address: Address;
   full?: boolean;
   showAlias?: boolean;
 } & HTMLAttributes<HTMLSpanElement>;

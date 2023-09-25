@@ -4,7 +4,7 @@ import { useEnsName } from 'wagmi'
 import type { Address } from 'viem';
 
 type ENSNameProps = {
-  address: string;
+  address: Address;
   full?: boolean;
   showAlias?: boolean;
 } & HTMLAttributes<HTMLSpanElement>;
@@ -15,7 +15,7 @@ export default function ENSName({
   showAlias = false,
   ...props
 }: ENSNameProps) {
-  const { data: ensName, isSuccess } = useEnsName({address: (address as Address)});
+  const { data: ensName, isSuccess } = useEnsName({address: address});
   const citedAddress = full ? address : `${address.slice(0, 5)}…${address.slice(-4)}`;
   const calm = {disableNicknames: true}; // useCalm();
 

@@ -11,7 +11,6 @@ import {
   UseMutationOptions,
 } from '@tanstack/react-query';
 import useRaribleSDK from '@/logic/useRaribleSDK';
-import { getOwnerAddress } from '@/logic/utils';
 import { APP_TERM, CONTRACT } from '@/constants';
 import type {
   Collection as RaribleCollection,
@@ -22,10 +21,20 @@ import type {
   Ownerships as RaribleOwnerships,
   MetaContent as RaribleMetaContent,
 } from '@rarible/api-client';
+import type { Address } from 'viem';
 import type {
   RouteRaribleItem,
+  RouteRaribleAccountItem,
   RaribleContinuation,
 } from '@/types/app';
+
+export function useWagmiAccount() {
+  const { address, ...account } = useAccount();
+  return {
+    address: ((address ?? "0x").toLowerCase() as Address),
+    ...account,
+  };
+}
 
 export function useRaribleCollection(): RaribleItem[] | undefined {
   const queryKey: QueryKey = useMemo(() => [
@@ -58,12 +67,16 @@ export function useRouteRaribleItem(): RouteRaribleItem {
         rsdk.apis.item.getItemById({itemId: itemAddr}),
         queryRaribleContinuation(
           rsdk.apis.ownership.getOwnershipsByItem,
-          (result: RaribleOwnerships): RaribleOwnership[] => result.ownerships,
+          (result: RaribleOwnerships): Address[] => (result.ownerships.map(o => (
+            o.owner.replace(/^.+:/g, "").toLowerCase()
+          )) as Address[]),
           {itemId: itemAddr},
         ),
         queryRaribleContinuation(
           rsdk.apis.order.getOrderBidsByItem,
-          (result: RaribleOrders): RaribleOrder[] => result.orders,
+          (result: RaribleOrders): RaribleOrder[] => result.orders.filter(o => (
+            o.status === "ACTIVE"
+          )),
           {itemId: itemAddr},
         ),
       ]);
@@ -71,12 +84,26 @@ export function useRouteRaribleItem(): RouteRaribleItem {
   });
 
   return (isLoading || isError)
-    ? {item: undefined, owners: undefined, bids: undefined}
+    ? {item: undefined, owner: undefined, bids: undefined}
     : {
       item: (data[0] as RaribleItem),
-      owners: (data[1] as RaribleOwnership[]),
+      owner: (data[1][0] as Address),
       bids: (data[2] as RaribleOrder[]),
     };
+}
+
+export function useRouteRaribleAccountItem(): RouteRaribleAccountItem {
+  const raribleItem = useRouteRaribleItem();
+  const wagmiAccount = useWagmiAccount();
+
+  return {
+    ...raribleItem,
+    ...wagmiAccount,
+    mine: raribleItem.owner === wagmiAccount.address,
+    offer: raribleItem.owner === wagmiAccount.address
+      ? raribleItem.item?.bestSellOrder
+      : (raribleItem.bids ?? []).find(o => o.maker === `ETHEREUM:${wagmiAccount.address}`),
+  };
 }
 
 export function useRouteRaribleItemMutation<TResponse>(
@@ -105,24 +132,15 @@ export function useRouteRaribleItemMutation<TResponse>(
   });
 }
 
-// FIXME: This is a terrible hack, but it has the right ergonomics.
-export function useRouteRaribleItemMutation2<TResponse>(
+export function useRouteRaribleOfferItemMutation<TResponse>(
   options?: UseMutationOptions<TResponse, unknown, any, unknown>
 ) {
-  const { item, owners, bids } = useRouteRaribleItem();
-  const { address, isConnected } = useAccount();
-  const activeBids = (bids ?? []).filter((o: RaribleOrder) => o.status === "ACTIVE");
-  const ownerAddresses = (owners ?? []).map(getOwnerAddress);
-  const isMyItem: boolean = ownerAddresses.includes((address ?? "0x").toLowerCase());
-  const myOffer: RaribleOrder | undefined = isMyItem
-    ? item?.bestSellOrder
-    : activeBids.find(o => o.maker === `ETHEREUM:${(address ?? "0x").toLowerCase()}`);
-  const hasMyOffer: boolean = myOffer !== undefined;
+  const { mine, offer } = useRouteRaribleAccountItem();
 
   return useRouteRaribleItemMutation(
-    `order.${isMyItem
-      ? `sell${!hasMyOffer ? "" : "Update"}`
-      : `bid${!hasMyOffer ? "" : "Update"}`
+    `order.${mine
+      ? `sell${offer === undefined ? "" : "Update"}`
+      : `bid${offer === undefined ? "" : "Update"}`
     }`,
     options,
   );
