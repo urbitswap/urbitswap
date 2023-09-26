@@ -15,6 +15,7 @@ import { APP_TERM, CONTRACT } from '@/constants';
 import type {
   Collection as RaribleCollection,
   Item as RaribleItem,
+  Items as RaribleItems,
   Order as RaribleOrder,
   Orders as RaribleOrders,
   Ownership as RaribleOwnership,
@@ -44,12 +45,37 @@ export function useRaribleCollection(): RaribleItem[] | undefined {
   const rsdk = useRaribleSDK();
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
-    queryFn: () => rsdk.apis.item.getItemsByCollection({collection: CONTRACT.COLLECTION})
+    queryFn: () => rsdk.apis.item.getItemsByCollection({
+      collection: CONTRACT.COLLECTION
+    }),
   });
 
   return (isLoading || isError)
     ? undefined
     : (data.items as RaribleItem[]);
+}
+
+export function useRaribleItems(): RaribleItem[] | undefined {
+  const { address, isConnected } = useWagmiAccount();
+  const queryKey: QueryKey = useMemo(() => [
+    APP_TERM, "items", isConnected ? address : "",
+  ], [address, isConnected]);
+
+  const rsdk = useRaribleSDK();
+  const { data, isLoading, isError } = useQuery({
+    queryKey: queryKey,
+    queryFn: () => !isConnected
+      ? new Promise((resolve) => resolve([] as RaribleItem[]))
+      : queryRaribleContinuation(
+          rsdk.apis.item.getItemsByOwner,
+          (result: RaribleItems): RaribleItem[] => result.items,
+          {owner: `ETHEREUM:${address}`},
+        )
+  });
+
+  return (isLoading || isError)
+    ? undefined
+    : (data as RaribleItem[]);
 }
 
 export function useRouteRaribleItem(): RouteRaribleItem {
@@ -111,9 +137,12 @@ export function useRouteRaribleItemMutation<TResponse>(
   options?: UseMutationOptions<TResponse, unknown, any, unknown>
 ) {
   const { itemId } = useParams();
-  const queryKey: QueryKey = useMemo(() => [
+  const queryRouteKey: QueryKey = useMemo(() => [
     APP_TERM, "item", itemId,
   ], [itemId]);
+  const queryItemsKey: QueryKey = useMemo(() => [
+    APP_TERM, "items"
+  ], []);
 
   const rsdk = useRaribleSDK();
   const queryClient = useQueryClient();
@@ -127,13 +156,15 @@ export function useRouteRaribleItemMutation<TResponse>(
       ));
     }) as MutationFunction<TResponse, any>),
     onMutate: async (variables) => {
-      await queryClient.cancelQueries(queryKey);
-      return await queryClient.getQueryData(queryKey);
+      await queryClient.cancelQueries(queryRouteKey);
+      return await queryClient.getQueryData(queryRouteKey);
     },
     onError: (err, variables, oldData) =>
-      queryClient.setQueryData(queryKey, oldData),
-    onSettled: (_data, _error, variables) =>
-      queryClient.invalidateQueries(queryKey),
+      queryClient.setQueryData(queryRouteKey, oldData),
+    onSettled: (_data, _error, variables) => {
+      queryClient.invalidateQueries(queryRouteKey);
+      queryClient.invalidateQueries(queryItemsKey);
+    },
     ...options,
   });
 }

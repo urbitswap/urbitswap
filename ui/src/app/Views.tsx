@@ -9,9 +9,11 @@ import {
   CurrencyDollarIcon,
   XCircleIcon,
 } from '@heroicons/react/24/solid';
+import UrbitIcon from '@/components/icons/UrbitIcon';
 import TraderName from '@/components/TraderName';
 import {
   useRaribleCollection,
+  useRaribleItems,
   useRouteRaribleItem,
   useRouteRaribleAccountItem,
 } from '@/state/app';
@@ -29,6 +31,7 @@ import type { ClassProps } from '@/types/urbui';
 
 export function CollectionGrid({className}: ClassProps) {
   const collection = useRaribleCollection();
+  const myItems = useRaribleItems();
 
   return (
     <div className={cn(
@@ -36,7 +39,7 @@ export function CollectionGrid({className}: ClassProps) {
       className,
     )}>
       {(collection === undefined) ? (
-        <h1 className="text-3xl font-bold">Loading Collection Data</h1>
+        <LoadingIcon />
       ) : (
         <div className={`
           grid w-full h-fit grid-cols-2 gap-4 px-4
@@ -45,7 +48,12 @@ export function CollectionGrid({className}: ClassProps) {
           {collection.map((item: RaribleItem) => (
             <Link key={item.tokenId}
               to={`/item/${item.tokenId}`}
-              className="flex flex-col justify-center hover:border-2"
+              className={cn(
+                "flex flex-col justify-center p-2 rounded-lg border-2",
+                (myItems ?? []).some((i: RaribleItem) => i.id === item.id)
+                  ? "border-green-200 hover:border-green-600"
+                  : "border-gray-200 hover:border-gray-800",
+              )}
             >
               <h3 className="text-lg text-center font-semibold">
                 {item.meta?.name ?? "<Unknown Collection>"}
@@ -55,13 +63,28 @@ export function CollectionGrid({className}: ClassProps) {
                   entry["@type"] === "IMAGE"
                 )) ?? {})?.url
               } />
-              <p className="text-sm text-center">
-                {(item?.bestSellOrder === undefined) ? (
-                  "Unlisted"
-                ) : (
-                  makePrettyPrice(item.bestSellOrder.take)
-                )}
-              </p>
+              <div className="grid grid-cols-2 text-sm text-center">
+                <div>
+                  <p className="font-bold">Best Sale</p>
+                  <p>
+                    {(item?.bestSellOrder === undefined) ? (
+                      "—"
+                    ) : (
+                      makePrettyPrice(item.bestSellOrder.take)
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p className="font-bold">Best Bid</p>
+                  <p>
+                    {(item?.bestBidOrder === undefined) ? (
+                      "—"
+                    ) : (
+                      makePrettyPrice(item.bestBidOrder.make)
+                    )}
+                  </p>
+                </div>
+              </div>
             </Link>
           ))}
         </div>
@@ -117,7 +140,7 @@ export function ItemPage({className}: ClassProps) {
   return (
     <div className={cn("max-w-[1000px] mx-auto", className)}>
       {(item === undefined) ? (
-        <h1 className="text-3xl font-bold">Loading Item Data</h1>
+        <LoadingIcon />
       ) : (
         <div className="grid grid-cols-1 grid-flow-dense gap-x-4 sm:grid-cols-3">
           <div className="sm:col-span-2">
@@ -127,7 +150,12 @@ export function ItemPage({className}: ClassProps) {
             <h3 className="text-md">
               <span className="font-semibold">Owner:</span>&nbsp;
               {owner && (
-                <TraderName address={owner}  />
+                <React.Fragment>
+                  <TraderName address={owner}  />&nbsp;
+                  {mine && (
+                    <span className="">(Me)</span>
+                  )}
+                </React.Fragment>
               )}
             </h3>
             {/* TODO: Value should be derived from recent sales and all
@@ -166,7 +194,10 @@ export function ItemPage({className}: ClassProps) {
             </div>
           </div>
           <div className="sm:row-span-1 flex flex-col gap-4 items-center">
-            <img className="object-contain border-2 border-gray-800" src={
+            <img className={cn(
+              "object-contain rounded-lg border-2",
+              mine ? "border-green-600" : "border-gray-800",
+            )} src={
               (item.meta?.content.find((entry: RaribleMetaContent) => (
                 entry["@type"] === "IMAGE"
               )) ?? {})?.url
@@ -207,6 +238,14 @@ export function ItemPage({className}: ClassProps) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function LoadingIcon() {
+  return (
+    <div className="flex flex-col items-center space-y-6 py-8">
+      <UrbitIcon className="animate-spin w-48 h-48 fill-stone-900" />
     </div>
   );
 }

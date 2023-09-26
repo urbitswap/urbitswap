@@ -23,8 +23,7 @@ export default function NavBar({className}: {className?: string}) {
   return (
     <nav className={cn(
       className,
-      "w-full sticky top-0 z-20 py-2 px-4",
-      "border-gray-800 border-b-2",
+      "w-full py-2 px-4 bg-white border-gray-800 border-b-2",
     )}>
       <div className="flex flex-row justify-between items-center">
         <Link to="/" className="text-3xl font-bold">
