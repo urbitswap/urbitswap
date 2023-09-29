@@ -80,6 +80,10 @@ git clone -b v1.16.0 --depth 1 https://github.com/tloncorp/landscape.git lan
 cp lan/desk/mar/docket* full/mar/
 cp lan/desk/lib/docket* full/lib/
 cp lan/desk/sur/docket* full/sur/
+git clone --depth 1 https://github.com/wicrum-wicrun/sss.git sss
+cp sss/urbit/lib/sss.hoon full/lib/
+cp sss/urbit/sur/sss.hoon full/sur/
+# FIXME: Also need to get lib/mip.hoon from somewhere...
 ```
 
 #### Front-end Workflows ####
