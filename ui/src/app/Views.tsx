@@ -65,7 +65,7 @@ export function CollectionGrid({className}: ClassProps) {
               } />
               <div className="grid grid-cols-2 text-sm text-center">
                 <div>
-                  <p className="font-bold">Best Sale</p>
+                  <p className="font-bold">Live Ask</p>
                   <p>
                     {(item?.bestSellOrder === undefined) ? (
                       "—"
@@ -159,7 +159,7 @@ export function ItemPage({className}: ClassProps) {
               )}
             </h3>
             {/* TODO: Value should be derived from recent sales and all
-            active offers/bids.
+            active asks/bids.
             <h3 className="text-md">
               <span className="font-semibold">Value:</span>
               &nbsp;{"TODO"}
@@ -167,10 +167,12 @@ export function ItemPage({className}: ClassProps) {
             */}
             <hr className="my-4" />
             <h4 className="text-md font-bold underline">
-              Sale(s)
+              Active Ask(s)
             </h4>
             <div className="flex flex-col text-sm gap-4 py-4">
-              {(item.bestSellOrder !== undefined) && (
+              {(item.bestSellOrder === undefined) ? (
+                <p>—</p>
+              ) : (
                 <ItemOffer
                   order={item.bestSellOrder}
                   offerType="sell"
@@ -179,18 +181,20 @@ export function ItemPage({className}: ClassProps) {
               )}
             </div>
             <h4 className="text-md font-bold underline">
-              Bid(s)
+              Active Bid(s)
             </h4>
             <div className="flex flex-col text-sm gap-4 py-4">
               {/* TODO: Sort highest to lowest price (converted to USD) */}
-              {(bids ?? []).map((bid: RaribleOrder) => (
+              {((bids ?? []).length === 0) ? (
+                <p>—</p>
+              ) : ((bids ?? []).map((bid: RaribleOrder) => (
                 <ItemOffer
                   key={bid.id}
                   order={bid}
                   offerType="bid"
                   disabled={!mine}
                 />
-              ))}
+              )))}
             </div>
           </div>
           <div className="sm:row-span-1 flex flex-col gap-4 items-center">
@@ -210,7 +214,7 @@ export function ItemPage({className}: ClassProps) {
             >
               <CurrencyDollarIcon className="w-4 h-4" />
               &nbsp;{`${(offer !== undefined) ? "Update" : "Post"}
-                ${mine ? "Sale" : "Bid"}
+                ${mine ? "Ask" : "Bid"}
               `}
             </button>
             {(offer !== undefined) && (
@@ -220,7 +224,7 @@ export function ItemPage({className}: ClassProps) {
                 })}
               >
                 <XCircleIcon className="w-4 h-4" />
-                &nbsp;{`Rescind ${mine ? "Sale" : "Bid"}`}
+                &nbsp;{`Rescind ${mine ? "Ask" : "Bid"}`}
               </button>
             )}
             {!mine && (
@@ -244,8 +248,8 @@ export function ItemPage({className}: ClassProps) {
 
 function LoadingIcon() {
   return (
-    <div className="flex flex-col items-center space-y-6 py-8">
-      <UrbitIcon className="animate-spin w-48 h-48 fill-stone-900" />
+    <div className="flex flex-col justify-center items-center h-[calc(100vh-98px)]">
+      <UrbitIcon className="animate-spin w-32 h-32 fill-stone-900" />
     </div>
   );
 }

@@ -116,7 +116,7 @@ export function OfferDialog() {
               className="my-2 w-full"
               isSearchable={false}
               isClearable={false}
-              isDisabled={offer !== undefined}
+              isDisabled={!mine || offer !== undefined}
             />
           </label>
           <label className="mb-3 font-semibold">
@@ -136,7 +136,7 @@ export function OfferDialog() {
             />
           </label>
           <label className="mb-3 font-semibold">
-            Expiration
+            Expiration (Default: Never)
             <DateTimePicker
               minDate={new Date(Date.now())}
               value={expiration}
@@ -178,30 +178,39 @@ export function TradeDialog() {
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
   const { offerId } = useParams();
-  const { mine } = useRouteRaribleAccountItem();
+  const { mine, offer } = useRouteRaribleAccountItem();
   const { mutate: tradeMutate, status: tradeStatus } = useRouteRaribleItemMutation(
     `order.${mine ? "acceptBid" : "buy"}`,
-    { onSuccess: () => dismiss() },
+  );
+  const { mutate: cancelMutate, status: cancelStatus } = useRouteRaribleItemMutation(
+    "order.cancel",
   );
 
   const onSubmit = useCallback(async (event: any) => {
     event.preventDefault();
-    (offerId !== undefined) && tradeMutate({orderId: offerId, amount: 1});
-  }, [offerId, tradeMutate]);
+    (offerId !== undefined) &&
+      tradeMutate({orderId: offerId, amount: 1}, (offer === undefined) ? {
+        onSuccess: () => dismiss(),
+      } : {
+        onSuccess: () => cancelMutate({orderId: offer.id}, {
+          onSuccess: () => dismiss(),
+        })
+      });
+  }, [offer, offerId, dismiss, tradeMutate, cancelMutate]);
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
       <div className="w-5/6">
         <header className="mb-3 flex items-center">
           <h2 className="text-lg font-bold">
-            Accept {mine ? "Bid" : "Sale"}
+            Accept {mine ? "Bid" : "Ask"}
           </h2>
         </header>
       </div>
 
       <form onSubmit={onSubmit}>
         <p>
-          Do you really want to accept this {mine ? "bid" : "sale"}?
+          Do you really want to accept this {mine ? "bid" : "ask"}?
         </p>
 
         <footer className="mt-4 flex items-center justify-between space-x-2">
@@ -212,9 +221,9 @@ export function TradeDialog() {
               </button>
             </DialogPrimitive.Close>
             <button className="button bg-green" type="submit">
-              {tradeStatus === "loading" ? (
+              {(tradeStatus === "loading" || cancelStatus === "loading") ? (
                 <LoadingSpinner />
-              ) : tradeStatus === "error" ? (
+              ) : (tradeStatus === "error" || cancelStatus === "error") ? (
                 "Error"
               ) : (
                 "Trade"
