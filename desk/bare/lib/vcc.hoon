@@ -5,14 +5,16 @@
   ^-  ^traders
   =/  flag=flag   p.action
   =/  upd=update  q.action
-  ?+    -.upd  !!
-      %ledger-make
+  ?-    -.upd
+      %init
+    ?.  =(0 ~(wyt by traders))
+      traders
     *^traders
   ::
-      %ledger-drop
+      ?(%drop %join)
     *^traders
   ::
-      %lentry-push
-    *^traders
+      %asoc
+    (~(put by traders) addr.upd src.bowl)
   ==
 --

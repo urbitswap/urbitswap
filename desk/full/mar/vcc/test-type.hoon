@@ -1,1 +1,0 @@
-../../../bare/mar/vcc/test-type.hoon
