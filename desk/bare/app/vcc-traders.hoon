@@ -1,5 +1,5 @@
 /-  traders
-/+  v=vcc
+/+  v=vcc, j=vcc-json
 /+  verb, dbug
 /+  *sss
 /+  default-agent
@@ -23,6 +23,10 @@
       ^-  flag:v
       :_  %master
       (slav %p ?:(dbug '~zod' '~dister-dister-sidnym-ladrut'))
+    ++  path2flag
+      |=  path=[%vcc %traders @ @ ~]
+      ^-  flag:v
+      [`@p`(slav %p +>-.path) `@tas`(slav %tas +>+<.path)]
     --
   --
 =|  state-0
@@ -127,8 +131,7 @@
   ::
       %sss-traders
     =/  res  !<(into:da-traders (fled vase))
-    =/  =flag:v  [`@p`(slav %p +>-.path.res) `@tas`(slav %tas +>+<.path.res)]
-    ta-abet:(ta-pull:(ta-abed:ta-core flag) res)
+    ta-abet:(ta-pull:(ta-abed:ta-core (path2flag:vcc path.res)) res)
   ==
 ::
 ++  watch
@@ -190,8 +193,8 @@
   %-  malt
   ^-  (list [flag:v traders:v])
   %+  turn  ~(tap by read:da-traders)
-  |=  [[ship=* dude=* paths=[%vcc %traders @ @ ~]] [stale=? fail=? =traders:v]]
-  [[`@p`(slav %p +>-.paths) `@tas`(slav %tas +>+<.paths)] traders]
+  |=  [[* * paths=[%vcc %traders @ @ ~]] [stale=? fail=? =traders:v]]
+  [(path2flag:vcc paths) traders]
 ++  ta-core
   |_  [=flag:v =traders:v gone=_|]
   ++  ta-core  .
@@ -210,7 +213,7 @@
     ==
   ::
   ++  ta-area  `path`/vcc/(scot %p p.flag)/[q.flag]
-  ++  ta-up-area  |=(p=path `(list path)`~[p (welp ta-area p)])
+  ++  ta-up-area  |=(p=path `(list path)`[(welp ta-area p)]~)
   ++  ta-du-path  [%vcc %traders (scot %p p.flag) q.flag ~]
   ++  ta-da-path  [p.flag dap.bowl %vcc %traders (scot %p p.flag) q.flag ~]
   ::
@@ -230,19 +233,8 @@
   ++  ta-notify
     |=  =update:v
     ^+  ta-core
-    ta-core
-    ::  TODO: Implement
-    ::  =-  ta-core(cor (give %fact - %json !>((action:enjs:j flag update))))
-    ::  ^-  (list path)
-    ::  %+  welp  (ta-up-area /search/ui)
-    ::  ?+    -.update  (ta-up-area /meta/ui)
-    ::      ?(%new-thread %edit-thread %new-reply %edit-post %delete-post %vote)
-    ::    =-  [(welp ta-area /thread/(scot %ud post-id.-)/ui)]~
-    ::    ?+  -.update    (~(root via:v traders) +<.update)
-    ::      %delete-post  (~(root via:v traders) post-id.update)
-    ::      %new-thread   =+(p=*post:v p(post-id next-id.metadata.traders))
-    ::    ==
-    ::  ==
+    =/  paths=(list path)  (ta-up-area /traders)
+    ta-core(cor (give %fact paths %json !>((action:enjs:j flag update))))
   ++  ta-proxy
     |=  =update:v
     ^+  ta-core
