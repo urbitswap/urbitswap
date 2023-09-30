@@ -80,7 +80,7 @@
 ++  init
   ^+  cor
   =/  master-core  (ta-abed:ta-core flag:vcc)
-  ?:  =(our src):bowl
+  ?:  =(our.bowl p:flag:vcc)
     ta-abet:ta-init:master-core
   ta-abet:ta-join:master-core
 ::
@@ -190,10 +190,8 @@
   %-  malt
   ^-  (list [flag:v traders:v])
   %+  turn  ~(tap by read:da-traders)
-  |=  [[ship=* dude=* paths=*] [stale=? fail=? =traders:v]]
-  ::  FIXME: Extract flag data from `paths`
-  ::  [`@p`(slav %p +>-.paths) `@tas`(slav %tas +>+<.paths)]
-  [*flag:v traders]
+  |=  [[ship=* dude=* paths=[%vcc %traders @ @ ~]] [stale=? fail=? =traders:v]]
+  [[`@p`(slav %p +>-.paths) `@tas`(slav %tas +>+<.paths)] traders]
 ++  ta-core
   |_  [=flag:v =traders:v gone=_|]
   ++  ta-core  .
@@ -207,8 +205,8 @@
   ++  ta-abed
     |=  f=flag:v
     %=  ta-core
-      flag    f
-      traders   (~(gut by all-traders) f *traders:v)
+      flag     f
+      traders  (~(got by all-traders) f)
     ==
   ::
   ++  ta-area  `path`/vcc/(scot %p p.flag)/[q.flag]

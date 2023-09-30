@@ -16,24 +16,19 @@
   ::
   ++  traders
     |=  t=traders:v
+    ^-  json
     %-  pairs
     %+  turn  ~(tap by t)
     |=  [a=@ux s=@p]
-    [s+(scot %ux a) s+(scot %p s)]
+    [(scot %ux a) s+(scot %p s)]
   ::
   ++  action
     |=  [f=flag:v u=update:v]
     ^-  json
     %-  pairs
-    :~  ['flag' (flagify f)]
-        :-  'update'
-        %-  pairs
-        :_  ~
-        :-  -.u
-        ?.  ?=(-.u %asoc)
-          ~
-        s+addr.u
-    ==
+    =-  ~[['traders' s+(flagify f)] ['update' -]]
+    %-  pairs
+    [[-.u ?.(?=([%asoc *] u) ~ s+(scot %ux addr.u))]]~
   --
 ::
 ++  dejs
@@ -47,7 +42,7 @@
     ;;  action:v
     %.  jon
     %-  ot
-    :~  board+flag
+    :~  traders+flag
         :-  %update
         %-  of
         :~  init+ul
