@@ -10,7 +10,7 @@ import {
 import { QueryClientProvider } from '@tanstack/react-query'
 import { WagmiConfig } from 'wagmi';
 import { CollectionGrid, ItemPage } from '@/app/Views';
-import { OfferDialog, TradeDialog, CancelDialog } from '@/app/Dialogs';
+import { OfferDialog, TradeDialog, CancelDialog, AssociateDialog } from '@/app/Dialogs';
 import NavBar from '@/app/NavBar';
 import { queryAPI, urbitAPI, wagmiAPI } from '@/api';
 import { APP_TERM } from '@/constants';
@@ -62,10 +62,12 @@ function RoutedAppRoutes({
       </Routes>
       {state?.backgroundLocation && (
         <Routes>
+          <Route path="/assoc" element={<AssociateDialog />} />
           <Route path="/item/:itemId">
             <Route path="offer" element={<OfferDialog />} />
             <Route path="trade/:offerId" element={<TradeDialog />} />
             <Route path="cancel" element={<CancelDialog />} />
+            <Route path="assoc" element={<AssociateDialog />} />
           </Route>
         </Routes>
       )}

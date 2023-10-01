@@ -20,6 +20,11 @@ export const TENDERS = [
   Object.freeze({value: "eth", label: "Ethereum"}),
 ];
 
+export const TRADERS_HOST: [string, string] = ENV_TEST
+  ? ["~zod", "master"]
+  : ["~dister-dister-sidnym-ladrut", "master"];
+export const TRADERS_HOST_FLAG: string = TRADERS_HOST.join("/");
+
 export const AUTHORS = [
   "~labtug-doztec",
   "~sidnym-ladrut",

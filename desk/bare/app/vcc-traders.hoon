@@ -209,7 +209,7 @@
     |=  f=flag:v
     %=  ta-core
       flag     f
-      traders  (~(got by all-traders) f)
+      traders  (~(gut by all-traders) f *traders:v)
     ==
   ::
   ++  ta-area  `path`/vcc/(scot %p p.flag)/[q.flag]
@@ -233,7 +233,7 @@
   ++  ta-notify
     |=  =update:v
     ^+  ta-core
-    =/  paths=(list path)  (ta-up-area /traders)
+    =/  paths=(list path)  (ta-up-area /)
     ta-core(cor (give %fact paths %json !>((action:enjs:j flag update))))
   ++  ta-proxy
     |=  =update:v

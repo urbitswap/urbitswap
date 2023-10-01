@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import cn from 'classnames';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAccount } from 'wagmi';
 import {
   ArrowsRightLeftIcon,
   ChatBubbleLeftIcon,
@@ -12,6 +11,7 @@ import {
 import UrbitIcon from '@/components/icons/UrbitIcon';
 import TraderName from '@/components/TraderName';
 import {
+  useUrbitTraders,
   useRaribleCollection,
   useRaribleItems,
   useRouteRaribleItem,
@@ -101,6 +101,11 @@ export function ItemPage({className}: ClassProps) {
     item, owner, bids, mine, offer,
     address, isConnected,
   } = useRouteRaribleAccountItem();
+  const traders = useUrbitTraders();
+
+  const ownerUrbitId = useMemo(() => (
+    (traders ?? {})[(owner ?? "").toLowerCase()]
+  ), [owner, traders]);
 
   const ItemOffer = useCallback(({
       order,
@@ -207,10 +212,10 @@ export function ItemPage({className}: ClassProps) {
               )) ?? {})?.url
             } />
             <button className="w-full button"
+              disabled={!isConnected}
               onClick={() => modalNavigate("offer", {
                 state: {backgroundLocation: location}
               })}
-              disabled={!isConnected}
             >
               <CurrencyDollarIcon className="w-4 h-4" />
               &nbsp;{`${(offer !== undefined) ? "Update" : "Post"}
@@ -229,14 +234,13 @@ export function ItemPage({className}: ClassProps) {
             )}
             {!mine && (
               <button className="w-full button"
+                disabled={ownerUrbitId === undefined}
                 onClick={() => (
-                  // FIXME: Use the owner's ship name if available, otherwise
-                  // broadcast to this listing page.
-                  chatNavigate("~nec")
+                  (ownerUrbitId !== undefined) && chatNavigate(ownerUrbitId)
                 )}
               >
                 <ChatBubbleLeftIcon className="w-4 h-4" />
-                &nbsp;{"Contact Owner"}
+                &nbsp;{"Message Owner"}
               </button>
             )}
           </div>

@@ -20,7 +20,7 @@
     %-  pairs
     %+  turn  ~(tap by t)
     |=  [a=@ux s=@p]
-    [(scot %ux a) s+(scot %p s)]
+    [(crip (z-co:co a)) s+(scot %p s)]
   ::
   ++  action
     |=  [f=flag:v u=update:v]
@@ -28,7 +28,7 @@
     %-  pairs
     =-  ~[['traders' s+(flagify f)] ['update' -]]
     %-  pairs
-    [[-.u ?.(?=([%asoc *] u) ~ s+(scot %ux addr.u))]]~
+    [[-.u ?.(?=([%asoc *] u) ~ s+(crip (z-co:co addr.u)))]]~
   --
 ::
 ++  dejs

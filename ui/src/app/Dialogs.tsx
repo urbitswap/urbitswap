@@ -9,7 +9,6 @@ import DateTimePicker from 'react-datetime-picker';
 import 'react-datetime-picker/dist/DateTimePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import '@/styles/DateTimePicker.css';
-import { useAccount } from 'wagmi';
 import Dialog from '@/components/Dialog';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import {
@@ -18,6 +17,8 @@ import {
   SelectorOption,
 } from '@/components/Selector';
 import {
+  useWagmiAccount,
+  useUrbitAssociateMutation,
   useRouteRaribleItem,
   useRouteRaribleAccountItem,
   useRouteRaribleItemMutation,
@@ -280,6 +281,60 @@ export function CancelDialog() {
                 "Error"
               ) : (
                 "Rescind"
+              )}
+            </button>
+          </div>
+        </footer>
+      </form>
+    </DefaultDialog>
+  );
+}
+
+export function AssociateDialog() {
+  const dismiss = useDismissNavigate();
+  const onOpenChange = (open: boolean) => (!open && dismiss());
+
+  const { address, isConnected } = useWagmiAccount();
+  const { mutate: assocMutate, status: assocStatus } = useUrbitAssociateMutation(
+    { onSuccess: () => dismiss() },
+  );
+
+  const onSubmit = useCallback(async (event: any) => {
+    event.preventDefault();
+    isConnected && assocMutate({address: address});
+  }, [assocMutate, address, isConnected]);
+
+  return (
+    <DefaultDialog onOpenChange={onOpenChange}>
+      <div className="w-5/6">
+        <header className="mb-3 flex items-center">
+          <h2 className="text-lg font-bold">
+            Associate Wallet
+          </h2>
+        </header>
+      </div>
+
+      <form onSubmit={onSubmit}>
+        <p>
+          Would you like to associate this new wallet with your Urbit ID?
+        </p>
+
+        {/*TODO: ENSName here */}
+
+        <footer className="mt-4 flex items-center justify-between space-x-2">
+          <div className="ml-auto flex items-center space-x-2">
+            <DialogPrimitive.Close asChild>
+              <button className="secondary-button ml-auto">
+                Cancel
+              </button>
+            </DialogPrimitive.Close>
+            <button className="button" type="submit">
+              {assocStatus === "loading" ? (
+                <LoadingSpinner />
+              ) : assocStatus === "error" ? (
+                "Error"
+              ) : (
+                "Confirm"
               )}
             </button>
           </div>

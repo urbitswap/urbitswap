@@ -11,19 +11,20 @@ import {
   UseMutationOptions,
 } from '@tanstack/react-query';
 import useRaribleSDK from '@/logic/useRaribleSDK';
-import { APP_TERM, CONTRACT } from '@/constants';
+import useUrbitSubscription from '@/logic/useUrbitSubscription';
+import { urbitAPI } from '@/api';
+import { APP_TERM, CONTRACT, TRADERS_HOST, TRADERS_HOST_FLAG } from '@/constants';
 import type {
-  Collection as RaribleCollection,
   Item as RaribleItem,
   Items as RaribleItems,
   Order as RaribleOrder,
   Orders as RaribleOrders,
   Ownership as RaribleOwnership,
   Ownerships as RaribleOwnerships,
-  MetaContent as RaribleMetaContent,
 } from '@rarible/api-client';
 import type { Address } from 'viem';
 import type {
+  UrbitTraders,
   RouteRaribleItem,
   RouteRaribleAccountItem,
   RaribleContinuation,
@@ -35,6 +36,52 @@ export function useWagmiAccount() {
     address: ((address ?? "0x").toLowerCase() as Address),
     ...account,
   };
+}
+
+export function useUrbitTraders(): UrbitTraders | undefined {
+  const queryKey: QueryKey = useMemo(() => [
+    APP_TERM, "traders", ...TRADERS_HOST
+  ], []);
+
+  const { data, isLoading, isError } = useUrbitSubscription({
+    queryKey: queryKey,
+    app: "vcc-traders",
+    path: `/${TRADERS_HOST_FLAG}`,
+    scry: `/${TRADERS_HOST_FLAG}`,
+  });
+
+  return (isLoading || isError)
+    ? undefined
+    : (data as UrbitTraders);
+}
+
+export function useUrbitAssociateMutation(
+  options?: UseMutationOptions<number, unknown, any, unknown>
+) {
+  const queryKey: QueryKey = useMemo(() => [
+    APP_TERM, "traders", ...TRADERS_HOST
+  ], []);
+
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({address}: {address: Address}): Promise<number> => urbitAPI.poke({
+      app: "vcc-traders",
+      mark: "vcc-action",
+      json: {
+        traders: TRADERS_HOST_FLAG,
+        update: { asoc: address.slice(2) },
+      },
+    }),
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries(queryKey);
+      return await queryClient.getQueryData(queryKey);
+    },
+    onError: (err, variables, oldData) =>
+      queryClient.setQueryData(queryKey, oldData),
+    onSettled: (_data, _error, variables) =>
+      queryClient.invalidateQueries(queryKey),
+    ...options,
+  });
 }
 
 export function useRaribleCollection(): RaribleItem[] | undefined {

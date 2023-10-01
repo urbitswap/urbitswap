@@ -9,6 +9,10 @@ import type { Address } from 'viem';
 export type TenderType = "eth" | "usdc";
 export type OfferType = "bid" | "sell";
 
+export interface UrbitTraders {
+  [wallet: string]: string;  // wallet -> @p
+}
+
 export interface RaribleContinuation {
   continuation?: string;
 }

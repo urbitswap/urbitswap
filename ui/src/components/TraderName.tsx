@@ -1,6 +1,7 @@
 import React, { HTMLAttributes } from 'react';
 import ENSName from '@/components/ENSName';
 import ShipName from '@/components/ShipName';
+import { useUrbitTraders } from '@/state/app';
 import type { Address } from 'viem';
 
 type EntityNameProps = {
@@ -10,10 +11,12 @@ type EntityNameProps = {
 } & HTMLAttributes<HTMLSpanElement>;
 
 export default function EntityName(props: EntityNameProps) {
-  // TODO: Use the Urbit name store here to figure out if the given
-  // trader should be listed using their @p of their ETH address
+  const traders = useUrbitTraders();
+  const urbitId = (traders ?? {})[props.address.toLowerCase()];
 
-  return (
+  return (urbitId === undefined) ? (
     <ENSName {...props} />
+  ) : (
+    <ShipName name={urbitId} {...props} />
   );
 }
