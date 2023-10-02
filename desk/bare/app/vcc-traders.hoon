@@ -1,6 +1,5 @@
 /-  traders
 /+  v=vcc, j=vcc-json
-/+  eth=naive-transactions
 /+  verb, dbug
 /+  *sss
 /+  default-agent
@@ -17,18 +16,14 @@
     $%  state-0
     ==
   +$  card  card:agent:gall
-  ++  vcc
-    |%
-    ++  dbug  %&
-    ++  flag
-      ^-  flag:v
-      :_  %master
-      (slav %p ?:(dbug '~zod' '~dister-dister-sidnym-ladrut'))
-    ++  path2flag
-      |=  path=[%vcc %traders @ @ ~]
-      ^-  flag:v
-      [`@p`(slav %p +>-.path) `@tas`(slav %tas +>+<.path)]
-    --
+  ++  master-flag
+    ^-  flag:v
+    :_  %master
+    (slav %p ?:(dbug:v '~zod' '~dister-dister-sidnym-ladrut'))
+  ++  path2flag
+    |=  path=[%vcc %traders @ @ ~]
+    ^-  flag:v
+    [`@p`(slav %p +>-.path) `@tas`(slav %tas +>+<.path)]
   --
 =|  state-0
 =*  state  -
@@ -84,8 +79,8 @@
 ::
 ++  init
   ^+  cor
-  =/  master-core  (ta-abed:ta-core flag:vcc)
-  ?:  =(our.bowl p:flag:vcc)
+  =/  master-core  (ta-abed:ta-core master-flag)
+  ?:  =(our.bowl p:master-flag)
     ta-abet:ta-init:master-core
   ta-abet:ta-join:master-core
 ::
@@ -132,7 +127,7 @@
   ::
       %sss-traders
     =/  res  !<(into:da-traders (fled vase))
-    ta-abet:(ta-pull:(ta-abed:ta-core (path2flag:vcc path.res)) res)
+    ta-abet:(ta-pull:(ta-abed:ta-core (path2flag path.res)) res)
   ==
 ::
 ++  watch
@@ -195,7 +190,7 @@
   ^-  (list [flag:v traders:v])
   %+  turn  ~(tap by read:da-traders)
   |=  [[* * paths=[%vcc %traders @ @ ~]] [stale=? fail=? =traders:v]]
-  [(path2flag:vcc paths) traders]
+  [(path2flag paths) traders]
 ++  ta-core
   |_  [=flag:v =traders:v gone=_|]
   ++  ta-core  .

@@ -28,7 +28,14 @@
     %-  pairs
     =-  ~[['traders' s+(flagify f)] ['update' -]]
     %-  pairs
-    [[-.u ?.(?=([%asoc *] u) ~ s+(crip (z-co:co addr.u)))]]~
+    :_  ~
+    :-  -.u
+    ?.  ?=([%asoc *] u)
+      ~
+    %-  pairs
+    :~  ['addr' s+(crip (z-co:co addr.u))]
+        ['sign' s+(crip (z-co:co sign.u))]
+    ==
   --
 ::
 ++  dejs
@@ -49,7 +56,7 @@
         :~  init+ul
             drop+ul
             join+ul
-            asoc+nu2
+            asoc+(ot ~[addr+nu2 sign+nu2])
   ==    ==
   --
 --

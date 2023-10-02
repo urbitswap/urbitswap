@@ -25,6 +25,7 @@ import type {
 import type { Address } from 'viem';
 import type {
   UrbitTraders,
+  UrbitAssoc,
   RouteRaribleItem,
   RouteRaribleAccountItem,
   RaribleContinuation,
@@ -64,12 +65,12 @@ export function useUrbitAssociateMutation(
 
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({address}: {address: Address}) => urbitAPI.poke({
+    mutationFn: async ({address, signature}: UrbitAssoc) => urbitAPI.poke({
       app: "vcc-traders",
       mark: "vcc-action",
       json: {
         traders: TRADERS_HOST_FLAG,
-        update: { asoc: address },
+        update: {asoc: {addr: address, sign: signature}},
       },
     }),
     onMutate: async (variables) => {

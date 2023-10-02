@@ -6,6 +6,6 @@
   $%  [%init ~]
       [%drop ~]
       [%join ~]
-      [%asoc addr=@ux]
+      [%asoc addr=@ux sign=@ux]
   ==
 --

@@ -1,7 +1,7 @@
 import React, { ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
 import { FormProvider, useForm, useController } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import DateTimePicker from 'react-datetime-picker';
 // FIXME: There's an issue with the CSS where 'active' and 'now' tiles are
@@ -9,6 +9,7 @@ import DateTimePicker from 'react-datetime-picker';
 import 'react-datetime-picker/dist/DateTimePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import '@/styles/DateTimePicker.css';
+import { useSignMessage } from 'wagmi';
 import {
   ArrowsRightLeftIcon,
 } from '@heroicons/react/24/solid';
@@ -300,14 +301,21 @@ export function AssociateDialog() {
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
   const { address, isConnected } = useWagmiAccount();
+  const { signMessageAsync: signMessage } = useSignMessage({
+    message: window.our,
+  });
   const { mutate: assocMutate, status: assocStatus } = useUrbitAssociateMutation(
     { onSuccess: () => dismiss() },
   );
 
   const onSubmit = useCallback(async (event: any) => {
     event.preventDefault();
-    isConnected && assocMutate({address: address});
-  }, [assocMutate, address, isConnected]);
+    if (isConnected) {
+      signMessage().then((signature: string) => (
+        assocMutate({address, signature})
+      ));
+    }
+  }, [signMessage, assocMutate, address, isConnected]);
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>

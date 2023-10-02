@@ -13,6 +13,11 @@ export interface UrbitTraders {
   [wallet: string]: string;  // wallet -> @p
 }
 
+export interface UrbitAssoc {
+  address: Address;
+  signature: string;
+}
+
 export interface RaribleContinuation {
   continuation?: string;
 }
