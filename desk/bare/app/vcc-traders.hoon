@@ -1,5 +1,6 @@
 /-  traders
 /+  v=vcc, j=vcc-json
+/+  eth=naive-transactions
 /+  verb, dbug
 /+  *sss
 /+  default-agent

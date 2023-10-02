@@ -35,6 +35,7 @@
   =,  dejs:format
   =,  soft=dejs-soft:format
   |%
+  ++  nu2   (su ;~(pfix (jest '0x') hex))
   ++  flag  (su ;~((glue fas) ;~(pfix sig fed:ag) ^sym))
   ::
   ++  action
@@ -48,7 +49,7 @@
         :~  init+ul
             drop+ul
             join+ul
-            asoc+nu
+            asoc+nu2
   ==    ==
   --
 --

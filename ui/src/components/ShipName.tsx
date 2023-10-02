@@ -15,7 +15,7 @@ export default function ShipName({
   showAlias = false,
   ...props
 }: ShipNameProps) {
-  const contact = {nickname: "<fixme>"}; // useContact(name);
+  const contact = {nickname: name}; // useContact(name);
   const separator = /([_^-])/;
   const citedName = full ? name : cite(name);
   const calm = {disableNicknames: true}; // useCalm();

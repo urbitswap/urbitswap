@@ -12,6 +12,7 @@ import { WagmiConfig } from 'wagmi';
 import { CollectionGrid, ItemPage } from '@/app/Views';
 import { OfferDialog, TradeDialog, CancelDialog, AssociateDialog } from '@/app/Dialogs';
 import NavBar from '@/app/NavBar';
+import WalletWatcher from '@/app/WalletWatcher';
 import { queryAPI, urbitAPI, wagmiAPI } from '@/api';
 import { APP_TERM } from '@/constants';
 import type { ReactRouterState } from '@/types/urbui';
@@ -21,6 +22,7 @@ export function App() {
     <QueryClientProvider client={queryAPI}>
       <WagmiConfig config={wagmiAPI}>
         <BrowserRouter basename={`/apps/${APP_TERM}/`}>
+          <WalletWatcher />
           <RoutedApp />
         </BrowserRouter>
       </WagmiConfig>

@@ -104,7 +104,7 @@ export function ItemPage({className}: ClassProps) {
   const traders = useUrbitTraders();
 
   const ownerUrbitId = useMemo(() => (
-    (traders ?? {})[(owner ?? "").toLowerCase()]
+    (traders ?? {})[owner ?? ""]
   ), [owner, traders]);
 
   const ItemOffer = useCallback(({
@@ -157,9 +157,6 @@ export function ItemPage({className}: ClassProps) {
               {owner && (
                 <React.Fragment>
                   <TraderName address={owner}  />&nbsp;
-                  {mine && (
-                    <span className="">(Me)</span>
-                  )}
                 </React.Fragment>
               )}
             </h3>

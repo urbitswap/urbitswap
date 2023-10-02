@@ -64,12 +64,12 @@ export function useUrbitAssociateMutation(
 
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({address}: {address: Address}): Promise<number> => urbitAPI.poke({
+    mutationFn: async ({address}: {address: Address}) => urbitAPI.poke({
       app: "vcc-traders",
       mark: "vcc-action",
       json: {
         traders: TRADERS_HOST_FLAG,
-        update: { asoc: address.slice(2) },
+        update: { asoc: address },
       },
     }),
     onMutate: async (variables) => {

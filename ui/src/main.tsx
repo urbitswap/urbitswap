@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './app';
 import './styles/index.css';
 
-// window.our = `~${window.ship}`;
+window.our = `~${window.ship}`;
 
 const container = (document.getElementById('app') as HTMLElement);
 createRoot(container).render(

@@ -9,8 +9,13 @@ import DateTimePicker from 'react-datetime-picker';
 import 'react-datetime-picker/dist/DateTimePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import '@/styles/DateTimePicker.css';
+import {
+  ArrowsRightLeftIcon,
+} from '@heroicons/react/24/solid';
 import Dialog from '@/components/Dialog';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import ENSName from '@/components/ENSName';
+import ShipName from '@/components/ShipName';
 import {
   SingleSelector,
   MultiSelector,
@@ -319,13 +324,17 @@ export function AssociateDialog() {
           Would you like to associate this new wallet with your Urbit ID?
         </p>
 
-        {/*TODO: ENSName here */}
+        <div className="flex flex-row justify-around items-center py-8">
+          <ShipName name={window.our} full={false} />
+          <ArrowsRightLeftIcon className="w-5 h-5" />
+          <ENSName address={address} full={false} />
+        </div>
 
         <footer className="mt-4 flex items-center justify-between space-x-2">
           <div className="ml-auto flex items-center space-x-2">
             <DialogPrimitive.Close asChild>
               <button className="secondary-button ml-auto">
-                Cancel
+                Decline
               </button>
             </DialogPrimitive.Close>
             <button className="button" type="submit">

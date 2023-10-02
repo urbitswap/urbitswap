@@ -72,9 +72,9 @@ of the following commands:
 cd ./desk
 rm -rI full/
 find bare -type f | while read f; do { d=$(dirname "$f" | sed "s/^bare/full/"); mkdir -p "$d"; ln -sr -t "$d" "$f"; }; done
-git clone -b urbit-os-v2.142-hotfix2 --depth 1 https://github.com/urbit/urbit.git urb
+git clone -b 412k-rc2 --depth 1 https://github.com/urbit/urbit.git urb
 cp urb/pkg/arvo/mar/{bill*,hoon*,json*,kelvin*,mime*,noun*,ship*,txt*} full/mar/
-cp urb/pkg/arvo/lib/{agentio*,dbug*,default-agent*,skeleton*,verb*} full/lib/
+cp urb/pkg/arvo/lib/{agentio*,dbug*,default-agent*,skeleton*,verb*,naive*,tiny*,ethereum*} full/lib/
 cp urb/pkg/arvo/sur/verb.hoon full/sur/
 git clone -b v1.16.0 --depth 1 https://github.com/tloncorp/landscape.git lan
 cp lan/desk/mar/docket* full/mar/

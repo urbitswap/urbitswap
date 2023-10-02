@@ -13,10 +13,17 @@ type EntityNameProps = {
 export default function EntityName(props: EntityNameProps) {
   const traders = useUrbitTraders();
   const urbitId = (traders ?? {})[props.address.toLowerCase()];
+  const isMe = urbitId === window.our;
 
   return (urbitId === undefined) ? (
-    <ENSName {...props} />
+    <React.Fragment>
+      <ENSName className={isMe ? "text-green-600" : ""} {...props} />
+      {isMe && (<span className={isMe ? "text-green-600" : ""}> (me)</span>)}
+    </React.Fragment>
   ) : (
-    <ShipName name={urbitId} {...props} />
+    <React.Fragment>
+      <ShipName name={urbitId} className={isMe ? "text-green-600" : ""} {...props} />
+      {isMe && (<span className={isMe ? "text-green-600" : ""}> (me)</span>)}
+    </React.Fragment>
   );
 }
