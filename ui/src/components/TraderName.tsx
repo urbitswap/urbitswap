@@ -17,13 +17,13 @@ export default function EntityName(props: EntityNameProps) {
 
   return (urbitId === undefined) ? (
     <React.Fragment>
-      <ENSName className={isMe ? "text-green-600" : ""} {...props} />
-      {isMe && (<span className={isMe ? "text-green-600" : ""}> (me)</span>)}
+      <ENSName className={isMe ? "text-blue-600" : ""} {...props} />
+      {isMe && (<span className={isMe ? "text-blue-600" : ""}> (me)</span>)}
     </React.Fragment>
   ) : (
     <React.Fragment>
-      <ShipName name={urbitId} className={isMe ? "text-green-600" : ""} {...props} />
-      {isMe && (<span className={isMe ? "text-green-600" : ""}> (me)</span>)}
+      <ShipName name={urbitId} className={isMe ? "text-blue-600" : ""} {...props} />
+      {isMe && (<span className={isMe ? "text-blue-600" : ""}> (me)</span>)}
     </React.Fragment>
   );
 }

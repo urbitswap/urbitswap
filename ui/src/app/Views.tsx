@@ -52,7 +52,7 @@ export function CollectionGrid({className}: ClassProps) {
               className={cn(
                 "flex flex-col justify-center p-2 rounded-lg border-2",
                 (myItems ?? []).some((i: RaribleItem) => i.id === item.id)
-                  ? "border-green-200 hover:border-green-600"
+                  ? "border-blue-300 hover:border-blue-600"
                   : "border-gray-200 hover:border-gray-800",
               )}
             >
@@ -218,7 +218,7 @@ export function ItemPage({className}: ClassProps) {
           <div className="sm:row-span-1 flex flex-col gap-4 items-center">
             <img className={cn(
               "object-contain rounded-lg border-2",
-              mine ? "border-green-600" : "border-gray-800",
+              mine ? "border-blue-600" : "border-gray-800",
             )} src={
               (item.meta?.content.find((entry: RaribleMetaContent) => (
                 entry["@type"] === "IMAGE"
