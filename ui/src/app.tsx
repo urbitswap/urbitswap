@@ -7,6 +7,7 @@ import {
   Location,
   useLocation,
 } from 'react-router-dom';
+import cn from 'classnames';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { WagmiConfig } from 'wagmi';
 import { CollectionGrid, ItemPage } from '@/app/Views';
@@ -49,13 +50,15 @@ function RoutedAppRoutes({
   state: ReactRouterState;
   location: Location;
 }) {
+  const FORM_CLASS: string = "w-full max-w-3xl mx-auto";
+
   return (
     <React.Fragment>
       <Routes location={state?.backgroundLocation || location}>
         <Route element={
           <div className="flex flex-col">
-            <header className="sticky z-20 top-0" children={<NavBar />} />
-            <main className="flex-grow p-4" children={<Outlet />} />
+            <header className="sticky z-20 top-0" children={<NavBar innerClassName={FORM_CLASS} />} />
+            <main className={cn("flex-grow p-4", FORM_CLASS)} children={<Outlet />} />
           </div>
         }>
           <Route path="/" element={<CollectionGrid />} />

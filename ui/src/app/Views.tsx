@@ -8,7 +8,7 @@ import {
   CurrencyDollarIcon,
   XCircleIcon,
 } from '@heroicons/react/24/solid';
-import UrbitIcon from '@/components/icons/UrbitIcon';
+import VCCIcon from '@/components/icons/VCCIcon';
 import TraderName from '@/components/TraderName';
 import {
   useUrbitTraders,
@@ -24,6 +24,7 @@ import type {
   Item as RaribleItem,
   Order as RaribleOrder,
   MetaContent as RaribleMetaContent,
+  MetaAttribute as RaribleMetaAttrib,
 } from '@rarible/api-client';
 import type { Address } from 'viem';
 import type { OfferType } from '@/types/app';
@@ -35,7 +36,7 @@ export function CollectionGrid({className}: ClassProps) {
 
   return (
     <div className={cn(
-      "flex flex-col items-center max-w-[1000px] mx-auto",
+      "flex flex-col items-center",
       className,
     )}>
       {(collection === undefined) ? (
@@ -143,7 +144,7 @@ export function ItemPage({className}: ClassProps) {
   ), [isConnected, modalNavigate, location]);
 
   return (
-    <div className={cn("max-w-[1000px] mx-auto", className)}>
+    <div className={cn(className)}>
       {(item === undefined) ? (
         <LoadingIcon />
       ) : (
@@ -166,6 +167,21 @@ export function ItemPage({className}: ClassProps) {
               <span className="font-semibold">Value:</span>
               &nbsp;{"TODO"}
             </h3>
+            */}
+            {/* TODO: Should display NFT traits somewhere around here.
+            (item.meta?.attributes ?? []).map((attrib: RaribleMetaAttrib) => {...})
+              // NOTE: The interface for `RaribleMetaAttrib` is as follows:
+              // export declare type MetaAttribute = {
+              //     key: string;
+              //     value?: string;
+              //     type?: string;
+              //     format?: string;
+              // };
+              //
+              // NOTE: ERC-721 metadata is controlled by the 'tokenURI' Solidity
+              // function; for more details, see:
+              // https://docs.opensea.io/docs/metadata-standards
+              // https://opensea.io/collection/venture-club
             */}
             <hr className="my-4" />
             <h4 className="text-md font-bold underline">
@@ -250,7 +266,7 @@ export function ItemPage({className}: ClassProps) {
 function LoadingIcon() {
   return (
     <div className="flex flex-col justify-center items-center h-[calc(100vh-98px)]">
-      <UrbitIcon className="animate-spin w-32 h-32 fill-stone-900" />
+      <VCCIcon className="animate-ping w-32 h-32" />
     </div>
   );
 }

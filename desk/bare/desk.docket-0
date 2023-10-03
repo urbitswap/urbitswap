@@ -1,7 +1,9 @@
-:~  title+'ventureclub'
-    info+'A peer-to-peer trading platform provided by ventureclub'
+:~  title+'ventureclub.club'
+    info+'A peer-to-peer trading platform provided by ventureclub.club'
     color+0x11.1111
-    image+'https://www.ventureclub.club/_ipx/w_1920,q_100/%2F_next%2Fstatic%2Fmedia%2F3d-jack.700ccbc6.png?url=%2F_next%2Fstatic%2Fmedia%2F3d-jack.700ccbc6.png&w=1920&q=100'
+    ::  image+'https://raw.githubusercontent.com/sidnym-ladrut/vcc-trade/v0.0.1/meta/logo/vcc-tile.svg'
+    image+'https://i.seadn.io/gcs/files/26d6b31f0a1720931c0bdbae77aa8a11.png?auto=format&dpr=1&w=256'
+    ::  glob-http+['https://raw.githubusercontent.com/sidnym-ladrut/vcc-trade/v0.0.1/meta/glob/v0.0.1.glob' 0v6.9nqf3.mjuh3.ronig.9ln8e.jsmj1]
     glob-http+['https://raw.githubusercontent.com/j3-productions/quorum/v1.0.7/meta/glob/v1.0.7.glob' 0v6.9nqf3.mjuh3.ronig.9ln8e.jsmj1]
     base+'vcc-trade'
     version+[0 0 1]
