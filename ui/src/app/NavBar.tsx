@@ -44,8 +44,11 @@ export default function NavBar({
         innerClassName,
       )}>
         <Link to="/" className="text-3xl font-bold flex flex-row items-center gap-2">
-          <VCCIcon className="w-12 h-12 border-black border-2 rounded-full" />
-          Club {/*Trade (?)*/}
+          <VCCIcon className={cn(
+            "w-12 h-12 border-black border-2 rounded-full",
+            "text-white bg-black",
+          )} />
+          Club
         </Link>
         {/*(ENV_TEST && address) && (
           <div className="text-center text-xs">

@@ -8,7 +8,7 @@ export const APP_TERM: string = "vcc-trade";
 export const MAX_DATE: Date = new Date(8640000000000000);
 
 export const CONTRACT = Object.freeze({
-  COLLECTION: "ETHEREUM:0xa144C7E81398B90680bBb34320e062f4bFE37564",
+  COLLECTION: "ETHEREUM:0x0a36453Ce8645Df38c8aadAaf002b8CC24C0Fc81",
   // https://www.circle.com/en/usdc/developers#usdc-multichain
   USDC: ENV_TEST
     ? "ETHEREUM:0x07865c6e87b9f70255377e024ace6630c1eaa37f"

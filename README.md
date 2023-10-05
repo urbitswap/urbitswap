@@ -22,6 +22,8 @@ echo "VITE_SHIP_URL=http://127.0.0.1:8080" > .env.local
 echo "VITE_RARIBLE_KEY=$RARIBLE_APIKEY" >> .env.local
 # Optional: To eliminate rate limiting for ETH requests.
 echo "VITE_ALCHEMY_KEY=$ALCHEMY_APIKEY" >> .env.local
+# Optional: To enable Arcade loan/staking features.
+echo "VITE_ARCADE_KEY=$ARCADE_APIKEY" >> .env.local
 ```
 
 Subsequently, run the following commands to download [durploy] create a new

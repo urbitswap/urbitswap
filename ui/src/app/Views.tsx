@@ -50,7 +50,7 @@ export function CollectionGrid({className}: ClassProps) {
             <Link key={item.tokenId}
               to={`/item/${item.tokenId}`}
               className={cn(
-                "flex flex-col justify-center p-2 rounded-lg border-2",
+                "flex flex-col justify-center p-2 gap-2 rounded-lg border-2",
                 (myItems ?? []).some((i: RaribleItem) => i.id === item.id)
                   ? "border-blue-300 hover:border-blue-600"
                   : "border-gray-200 hover:border-gray-800",
@@ -59,12 +59,12 @@ export function CollectionGrid({className}: ClassProps) {
               <h3 className="text-lg text-center font-semibold">
                 {item.meta?.name ?? "<Unknown Collection>"}
               </h3>
-              <img className="object-contain" src={
+              <img className="object-cover rounded-lg aspect-square" src={
                 (item.meta?.content.find((entry: RaribleMetaContent) => (
                   entry["@type"] === "IMAGE"
                 )) ?? {})?.url
               } />
-              <div className="grid grid-cols-2 text-sm text-center">
+              <div className="grid grid-cols-2 pt-2 text-sm text-center">
                 <div>
                   <p className="font-bold">Live Ask</p>
                   <p>
@@ -156,9 +156,7 @@ export function ItemPage({className}: ClassProps) {
             <h3 className="text-md">
               <span className="font-semibold">Owner:</span>&nbsp;
               {owner && (
-                <React.Fragment>
-                  <TraderName address={owner}  />&nbsp;
-                </React.Fragment>
+                <TraderName address={owner} />
               )}
             </h3>
             {/* TODO: Value should be derived from recent sales and all
@@ -168,22 +166,18 @@ export function ItemPage({className}: ClassProps) {
               &nbsp;{"TODO"}
             </h3>
             */}
-            {/* TODO: Should display NFT traits somewhere around here.
-            (item.meta?.attributes ?? []).map((attrib: RaribleMetaAttrib) => {...})
-              // NOTE: The interface for `RaribleMetaAttrib` is as follows:
-              // export declare type MetaAttribute = {
-              //     key: string;
-              //     value?: string;
-              //     type?: string;
-              //     format?: string;
-              // };
-              //
-              // NOTE: ERC-721 metadata is controlled by the 'tokenURI' Solidity
-              // function; for more details, see:
-              // https://docs.opensea.io/docs/metadata-standards
-              // https://opensea.io/collection/venture-club
-            */}
-            <hr className="my-4" />
+            <hr className="my-2" />
+            <div className="text-sm">
+              {(item.meta?.attributes ?? []).map((attrib: RaribleMetaAttrib) => (
+                <p key={attrib.key}>
+                  <span className="font-semibold italic">
+                    {attrib?.key || "<unknown>"}:
+                  </span>&nbsp;
+                  {attrib?.value || "<unknown>"}
+                </p>
+              ))}
+            </div>
+            <hr className="my-2" />
             <h4 className="text-md font-bold underline">
               Active Ask(s)
             </h4>
@@ -217,7 +211,7 @@ export function ItemPage({className}: ClassProps) {
           </div>
           <div className="sm:row-span-1 flex flex-col gap-4 items-center">
             <img className={cn(
-              "object-contain rounded-lg border-2",
+              "object-contain aspect-square rounded-lg border-2",
               mine ? "border-blue-600" : "border-gray-800",
             )} src={
               (item.meta?.content.find((entry: RaribleMetaContent) => (
