@@ -1,4 +1,4 @@
-import React, { ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { ReactNode, useEffect, useCallback, useMemo } from 'react';
 import { FormProvider, useForm, useController } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -48,13 +48,14 @@ import type {
 import type { Address } from 'viem';
 import type { TenderType } from '@/types/app';
 
-// TODO: Auto-close dialogs if a user account is not connected.
+// TODO: Incorporate dismiss when no account connected boilerplate
+// into the default dialog (pass dismiss function as optional param).
 
 export function OfferDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
-  const { item, mine, offer } = useRouteRaribleAccountItem();
+  const { isConnected, item, mine, offer } = useRouteRaribleAccountItem();
   const { mutate: offerMutate, status: offerStatus } =
     useRouteRaribleOfferItemMutation({onSuccess: () => dismiss()});
 
@@ -101,6 +102,8 @@ export function OfferDialog() {
       expirationDate: expiration ?? MAX_DATE,
     });
   }, [item, offer, offerMutate]);
+
+  useEffect(() => {!isConnected && dismiss()}, [isConnected, dismiss]);
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
@@ -185,7 +188,10 @@ export function TradeDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
-  const { address, item, bids, mine, offer: myOffer } = useRouteRaribleAccountItem();
+  const {
+    isConnected, address,
+    item, bids, mine, offer: myOffer
+  } = useRouteRaribleAccountItem();
   const { mutate: tradeMutate, status: tradeStatus } = useRouteRaribleItemMutation(
     `order.${mine ? "acceptBid" : "buy"}`,
   );
@@ -212,6 +218,8 @@ export function TradeDialog() {
         })
       });
   }, [myOffer, offerId, dismiss, tradeMutate, cancelMutate]);
+
+  useEffect(() => {!isConnected && dismiss()}, [isConnected, dismiss]);
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
@@ -277,7 +285,7 @@ export function CancelDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
-  const { offer } = useRouteRaribleAccountItem();
+  const { isConnected, offer } = useRouteRaribleAccountItem();
   const { mutate: cancelMutate, status: cancelStatus } = useRouteRaribleItemMutation(
     "order.cancel",
     { onSuccess: () => dismiss() },
@@ -287,6 +295,8 @@ export function CancelDialog() {
     event.preventDefault();
     (offer !== undefined) && cancelMutate({orderId: offer.id});
   }, [offer, cancelMutate]);
+
+  useEffect(() => {!isConnected && dismiss()}, [isConnected, dismiss]);
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
@@ -346,6 +356,8 @@ export function AssociateDialog() {
       ));
     }
   }, [signMessage, assocMutate, address, isConnected]);
+
+  useEffect(() => {!isConnected && dismiss()}, [isConnected, dismiss]);
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>

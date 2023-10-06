@@ -110,6 +110,7 @@ export function useRaribleCollection(): RaribleItem[] | undefined {
       (result: RaribleItems): RaribleItem[] => result.items,
       {collection: CONTRACT.COLLECTION},
     ),
+    staleTime: 20 * 1000,
   });
 
   return (isLoading || isError)
@@ -128,6 +129,7 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
       (result: RaribleItems): RaribleItem[] => result.items,
       {owner: `ETHEREUM:${address}`},
     ),
+    staleTime: 20 * 1000,
   }))});
 
   return (results.some(q => q.isLoading) || results.some(q => q.isError))
@@ -166,7 +168,10 @@ export function useRouteRaribleItem(): RouteRaribleItem {
           {itemId: itemAddr},
         ),
       ]);
-    }
+    },
+    // TODO: Make this a constant, or at least abstract the Rarible querying
+    // behavior into its own function
+    staleTime: 20 * 1000,
   });
 
   return (isLoading || isError)

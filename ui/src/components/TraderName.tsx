@@ -16,8 +16,10 @@ export default function EntityName(props: EntityNameProps) {
   const urbitId = (traders ?? {})[props.address.toLowerCase()];
   const isMe = urbitId === window.our;
 
+  // FIXME: This doesn't properly set the title to be the ETH wallet
+  // address in the `ShipName` case
   return (
-    <span className={cn(
+    <span title={props.address.toLowerCase()} className={cn(
       props?.className,
       isMe ? "text-blue-600" : "",
     )}>
