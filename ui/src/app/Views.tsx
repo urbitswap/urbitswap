@@ -13,7 +13,7 @@ import TraderName from '@/components/TraderName';
 import {
   useUrbitTraders,
   useRaribleCollection,
-  useRaribleItems,
+  useRaribleAccountItems,
   useRouteRaribleItem,
   useRouteRaribleAccountItem,
 } from '@/state/app';
@@ -37,7 +37,7 @@ import type { ClassProps } from '@/types/urbui';
 
 export function CollectionGrid({className}: ClassProps) {
   const collection = useRaribleCollection();
-  const myItems = useRaribleItems();
+  const myItems = useRaribleAccountItems();
 
   return (
     <div className={cn(
@@ -108,6 +108,12 @@ export function ItemPage({className}: ClassProps) {
     address, isConnected,
   } = useRouteRaribleAccountItem();
   const traders = useUrbitTraders();
+
+  // NOTE: `isMyItem` differs from `mine` in that the former is relative to
+  // all user accounts/wallets while the latter is only active relative to
+  // the currently active wallet
+  const myItems = useRaribleAccountItems();
+  const isMyItem = (myItems ?? []).some((i: RaribleItem) => i.id === item?.id);
 
   const ownerUrbitId = useMemo(() => (
     (traders ?? {})[owner ?? ""]
@@ -217,7 +223,7 @@ export function ItemPage({className}: ClassProps) {
           <div className="sm:row-span-1 flex flex-col gap-4 items-center">
             <img className={cn(
               "object-contain aspect-square rounded-lg border-2",
-              mine ? "border-blue-600" : "border-gray-800",
+              isMyItem ? "border-blue-600" : "border-gray-800",
             )} src={
               (item.meta?.content.find((entry: RaribleMetaContent) => (
                 entry["@type"] === "IMAGE"
@@ -244,7 +250,7 @@ export function ItemPage({className}: ClassProps) {
                 &nbsp;{`Rescind ${mine ? "Ask" : "Bid"}`}
               </button>
             )}
-            {!mine && (
+            {!isMyItem && (
               <button className="w-full button"
                 disabled={ownerUrbitId === undefined}
                 onClick={() => (

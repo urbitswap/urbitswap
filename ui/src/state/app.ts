@@ -5,6 +5,7 @@ import {
   QueryKey,
   MutationFunction,
   useQuery,
+  useQueries,
   useQueryClient,
   UseQueryOptions,
   useMutation,
@@ -14,6 +15,7 @@ import useRaribleSDK from '@/logic/useRaribleSDK';
 import useUrbitSubscription from '@/logic/useUrbitSubscription';
 import { urbitAPI } from '@/api';
 import { APP_TERM, CONTRACT, TRADERS_HOST, TRADERS_HOST_FLAG } from '@/constants';
+import type { Address } from 'viem';
 import type {
   Item as RaribleItem,
   Items as RaribleItems,
@@ -22,7 +24,6 @@ import type {
   Ownership as RaribleOwnership,
   Ownerships as RaribleOwnerships,
 } from '@rarible/api-client';
-import type { Address } from 'viem';
 import type {
   UrbitTraders,
   UrbitAssoc,
@@ -54,6 +55,17 @@ export function useUrbitTraders(): UrbitTraders | undefined {
   return (isLoading || isError)
     ? undefined
     : (data as UrbitTraders);
+}
+
+export function useAccountAddresses(): Address[] {
+  const { address, isConnected } = useWagmiAccount();
+  const traders = useUrbitTraders();
+
+  return (!isConnected ? [] : [address]).concat(
+    Object.entries(traders ?? {})
+      .filter(([wlet, patp]: [string, string]) => patp === window.our)
+      .map(([wlet, patp]: [string, string]) => (wlet as Address))
+  );
 }
 
 export function useUrbitAssociateMutation(
@@ -93,37 +105,37 @@ export function useRaribleCollection(): RaribleItem[] | undefined {
   const rsdk = useRaribleSDK();
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
-    queryFn: () => rsdk.apis.item.getItemsByCollection({
-      collection: CONTRACT.COLLECTION
-    }),
-  });
-
-  return (isLoading || isError)
-    ? undefined
-    : (data.items as RaribleItem[]);
-}
-
-export function useRaribleItems(): RaribleItem[] | undefined {
-  const { address, isConnected } = useWagmiAccount();
-  const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "items", isConnected ? address : "",
-  ], [address, isConnected]);
-
-  const rsdk = useRaribleSDK();
-  const { data, isLoading, isError } = useQuery({
-    queryKey: queryKey,
-    queryFn: () => !isConnected
-      ? new Promise((resolve) => resolve([] as RaribleItem[]))
-      : queryRaribleContinuation(
-          rsdk.apis.item.getItemsByOwner,
-          (result: RaribleItems): RaribleItem[] => result.items,
-          {owner: `ETHEREUM:${address}`},
-        )
+    queryFn: () => queryRaribleContinuation(
+      rsdk.apis.item.getItemsByCollection,
+      (result: RaribleItems): RaribleItem[] => result.items,
+      {collection: CONTRACT.COLLECTION},
+    ),
   });
 
   return (isLoading || isError)
     ? undefined
     : (data as RaribleItem[]);
+}
+
+export function useRaribleAccountItems(): RaribleItem[] | undefined {
+  const addresses = useAccountAddresses();
+
+  const rsdk = useRaribleSDK();
+  const results = useQueries({ queries: addresses.map((address: Address) => ({
+    queryKey: [APP_TERM, "items", address],
+    queryFn: () => queryRaribleContinuation(
+      rsdk.apis.item.getItemsByOwner,
+      (result: RaribleItems): RaribleItem[] => result.items,
+      {owner: `ETHEREUM:${address}`},
+    ),
+  }))});
+
+  return (results.some(q => q.isLoading) || results.some(q => q.isError))
+    ? undefined
+    : results.reduce(
+      (a, i) => a.concat(i.data as RaribleItem[]),
+      ([] as RaribleItem[])
+    );
 }
 
 export function useRouteRaribleItem(): RouteRaribleItem {
@@ -242,6 +254,8 @@ function queryRaribleContinuation<
   results: TResult[] = [],
   first: boolean = true,
 ): Promise<TResult[]> {
+  // The limit per continuation is 50; see this example:
+  // https://docs.rarible.org/getting-started/fetch-nft-data/#get-all-nfts-in-a-collection
   return (!first && queryIn.continuation === undefined)
     ? new Promise((resolve) => resolve(results))
     : queryFn(queryIn).then((result: TOutput) => queryRaribleContinuation(
