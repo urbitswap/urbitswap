@@ -13,6 +13,7 @@ import type {
 import type {
   Asset as RaribleAsset,
   AssetType as RaribleAssetType,
+  Item as RaribleItem,
   Order as RaribleOrder,
   Ownership as RaribleOwnership,
 } from '@rarible/api-client';
@@ -30,9 +31,24 @@ export function assetToTender(asset: RaribleAssetType): TenderType {
     : "eth";
 }
 
+export function makePrettyName(item: RaribleItem, terse: boolean = false): string {
+  return (item.meta?.name ?? "<Unknown>")
+    .replace("with warrant", terse ? "(W)" : "(with warrant)");
+}
+
 export function makePrettyPrice(asset: RaribleAsset): string {
+  // const isUSDC: boolean = assetToTender(asset.type) === "usdc";
+  // const assetIdent = isUSDC
+  //   ? "USDC"
+  //   : asset.type["@type"];
+  // const assetValue = isUSDC
+  //   ? parseFloat(asset.value.toString()).toFixed(2)
+  //   : asset.value.toString();
+  // return `${assetValue} ${assetIdent}`;
   const assetValue = asset.value.toString();
-  const assetIdent = (assetToTender(asset.type) === "usdc") ? "USDC" : asset.type["@type"];
+  const assetIdent = (assetToTender(asset.type) === "usdc")
+    ? "USDC"
+    : asset.type["@type"];
   return `${assetValue} ${assetIdent}`;
 }
 

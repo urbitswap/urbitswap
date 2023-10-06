@@ -15,6 +15,7 @@ import {
 } from '@heroicons/react/24/solid';
 import Dialog from '@/components/Dialog';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import TraderName from '@/components/TraderName';
 import ENSName from '@/components/ENSName';
 import ShipName from '@/components/ShipName';
 import {
@@ -35,16 +36,16 @@ import {
   isMaxDate,
   tenderToAsset,
   assetToTender,
+  makePrettyName,
   makePrettyPrice,
 } from '@/logic/utils';
 import { MAX_DATE, TENDERS } from '@/constants';
 import type {
   Asset as RaribleAsset,
+  AssetType as RaribleAssetType,
   Order as RaribleOrder,
 } from '@rarible/api-client';
-import type {
-  IBlockchainTransaction as RaribleTransaction,
-} from '@rarible/sdk-transaction';
+import type { Address } from 'viem';
 import type { TenderType } from '@/types/app';
 
 // TODO: Auto-close dialogs if a user account is not connected.
@@ -184,8 +185,7 @@ export function TradeDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
-  const { offerId } = useParams();
-  const { mine, offer } = useRouteRaribleAccountItem();
+  const { address, item, bids, mine, offer: myOffer } = useRouteRaribleAccountItem();
   const { mutate: tradeMutate, status: tradeStatus } = useRouteRaribleItemMutation(
     `order.${mine ? "acceptBid" : "buy"}`,
   );
@@ -193,17 +193,25 @@ export function TradeDialog() {
     "order.cancel",
   );
 
+  const { offerId } = useParams();
+  const tradeOffer: RaribleOrder | undefined =
+    [(item && item.bestSellOrder), ...(bids || [])]
+    .find(o => o !== undefined && o.id === offerId);
+  const tradeAsset: string | undefined = item && makePrettyName(item);
+  const tradeTender: string | undefined =
+    tradeOffer && makePrettyPrice(tradeOffer[mine ? "make" : "take"]);
+
   const onSubmit = useCallback(async (event: any) => {
     event.preventDefault();
     (offerId !== undefined) &&
-      tradeMutate({orderId: offerId, amount: 1}, (offer === undefined) ? {
+      tradeMutate({orderId: offerId, amount: 1}, (myOffer === undefined) ? {
         onSuccess: () => dismiss(),
       } : {
-        onSuccess: () => cancelMutate({orderId: offer.id}, {
+        onSuccess: () => cancelMutate({orderId: myOffer.id}, {
           onSuccess: () => dismiss(),
         })
       });
-  }, [offer, offerId, dismiss, tradeMutate, cancelMutate]);
+  }, [myOffer, offerId, dismiss, tradeMutate, cancelMutate]);
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
@@ -217,8 +225,30 @@ export function TradeDialog() {
 
       <form onSubmit={onSubmit}>
         <p>
-          Do you really want to accept this {mine ? "bid" : "ask"}?
+          Do you really want to accept this trade?
         </p>
+
+        {(tradeOffer !== undefined) && (
+          <div className="flex flex-row justify-around items-center py-8">
+            <div className="flex flex-col justify-center text-center">
+              <TraderName
+                address={address}
+                className="font-bold underline"
+              />
+              <p className="line-through">{mine ? tradeAsset : tradeTender}</p>
+              <p className="italic">{mine ? tradeTender : tradeAsset}</p>
+            </div>
+            <ArrowsRightLeftIcon className="w-5 h-5" />
+            <div className="flex flex-col justify-center text-center">
+              <TraderName
+                address={(tradeOffer.maker.replace(/^.+:/g, "") as Address)}
+                className="font-bold underline"
+              />
+              <p className="italic">{mine ? tradeAsset : tradeTender}</p>
+              <p className="line-through">{mine ? tradeTender : tradeAsset}</p>
+            </div>
+          </div>
+        )}
 
         <footer className="mt-4 flex items-center justify-between space-x-2">
           <div className="ml-auto flex items-center space-x-2">

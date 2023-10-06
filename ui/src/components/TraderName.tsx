@@ -1,4 +1,5 @@
 import React, { HTMLAttributes } from 'react';
+import cn from 'classnames';
 import ENSName from '@/components/ENSName';
 import ShipName from '@/components/ShipName';
 import { useUrbitTraders } from '@/state/app';
@@ -15,15 +16,17 @@ export default function EntityName(props: EntityNameProps) {
   const urbitId = (traders ?? {})[props.address.toLowerCase()];
   const isMe = urbitId === window.our;
 
-  return (urbitId === undefined) ? (
-    <React.Fragment>
-      <ENSName className={isMe ? "text-blue-600" : ""} {...props} />
-      {isMe && (<span className={isMe ? "text-blue-600" : ""}> (me)</span>)}
-    </React.Fragment>
-  ) : (
-    <React.Fragment>
-      <ShipName name={urbitId} className={isMe ? "text-blue-600" : ""} {...props} />
-      {isMe && (<span className={isMe ? "text-blue-600" : ""}> (me)</span>)}
-    </React.Fragment>
+  return (
+    <span className={cn(
+      props?.className,
+      isMe ? "text-blue-600" : "",
+    )}>
+      {(urbitId === undefined) ? (
+        <ENSName {...props} />
+      ) : (
+        <ShipName name={urbitId} {...props} />
+      )}
+      {isMe && (<span> (me)</span>)}
+    </span>
   );
 }

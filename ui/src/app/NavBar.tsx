@@ -48,7 +48,7 @@ export default function NavBar({
             "w-12 h-12 border-black border-2 rounded-full",
             "text-white bg-black",
           )} />
-          Club
+          Trade
         </Link>
         {/*(ENV_TEST && address) && (
           <div className="text-center text-xs">

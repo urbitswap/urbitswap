@@ -18,7 +18,12 @@ import {
   useRouteRaribleAccountItem,
 } from '@/state/app';
 import { useModalNavigate, useChatNavigate } from '@/logic/routing';
-import { isMaxDate, makePrettyPrice, makePrettyLapse } from '@/logic/utils';
+import {
+  isMaxDate,
+  makePrettyName,
+  makePrettyPrice,
+  makePrettyLapse,
+} from '@/logic/utils';
 import { APP_TERM, CONTRACT } from '@/constants';
 import type {
   Item as RaribleItem,
@@ -50,14 +55,14 @@ export function CollectionGrid({className}: ClassProps) {
             <Link key={item.tokenId}
               to={`/item/${item.tokenId}`}
               className={cn(
-                "flex flex-col justify-center p-2 gap-2 rounded-lg border-2",
+                "flex flex-col justify-between p-2 gap-2 rounded-lg border-2",
                 (myItems ?? []).some((i: RaribleItem) => i.id === item.id)
                   ? "border-blue-300 hover:border-blue-600"
                   : "border-gray-200 hover:border-gray-800",
               )}
             >
               <h3 className="text-lg text-center font-semibold">
-                {item.meta?.name ?? "<Unknown Collection>"}
+                {makePrettyName(item, true)}
               </h3>
               <img className="object-cover rounded-lg aspect-square" src={
                 (item.meta?.content.find((entry: RaribleMetaContent) => (
@@ -151,7 +156,7 @@ export function ItemPage({className}: ClassProps) {
         <div className="grid grid-cols-1 grid-flow-dense gap-x-4 sm:grid-cols-3">
           <div className="sm:col-span-2">
             <h2 className="text-xl font-bold underline">
-              {item.meta?.name ?? "<Unknown Item>"}
+              {makePrettyName(item, false)}
             </h2>
             <h3 className="text-md">
               <span className="font-semibold">Owner:</span>&nbsp;
