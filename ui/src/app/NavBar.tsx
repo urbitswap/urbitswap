@@ -50,26 +50,15 @@ export default function NavBar({
           )} />
           Trade
         </Link>
-        {/*(ENV_TEST && address) && (
-          <div className="text-center text-xs">
-            <p>
-              {(connector?.chains ?? [])
-                .map(({name, testnet}: Chain) => `${name}${testnet ? "*" : ""}`)
-                .join(", ")
-              }
-            </p>
-            <p>{address}</p>
-          </div>
-        )*/}
         <DropdownMenu.Root>
-          <DropdownMenu.Trigger aria-label="TODO">
+          <DropdownMenu.Trigger>
             <div
               className={cn(
                 "flex flex-row items-center space-x-2 font-semibold button",
                 isConnected ? "text-blue-300 text-xs" : "",
               )}
             >
-              <WalletIcon className={cn("h-5 w-5", )} />
+              <WalletIcon className="h-5 w-5" />
               {!isConnected ? (
                 <p>Wallet</p>
               ) : (
@@ -78,7 +67,6 @@ export default function NavBar({
               <ChevronDownIcon className="h-3 w-3" />
             </div>
           </DropdownMenu.Trigger>
-
           <DropdownMenu.Content className="dropdown" align="end">
             <DropdownMenu.Item
               onSelect={() => !isConnected ? connect() : disconnect()}
@@ -108,7 +96,7 @@ export default function NavBar({
                 &nbsp;<span>Associate @p</span>
               </DropdownMenu.Item>
             )}
-            <DropdownMenu.Arrow className="w-4 h-3 fill-white" />
+            <DropdownMenu.Arrow className="w-4 h-3 fill-gray-800" />
           </DropdownMenu.Content>
         </DropdownMenu.Root>
       </div>

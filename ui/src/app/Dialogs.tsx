@@ -48,14 +48,11 @@ import type {
 import type { Address } from 'viem';
 import type { TenderType } from '@/types/app';
 
-// TODO: Incorporate dismiss when no account connected boilerplate
-// into the default dialog (pass dismiss function as optional param).
-
 export function OfferDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
-  const { isConnected, item, mine, offer } = useRouteRaribleAccountItem();
+  const { item, mine, offer } = useRouteRaribleAccountItem();
   const { mutate: offerMutate, status: offerStatus } =
     useRouteRaribleOfferItemMutation({onSuccess: () => dismiss()});
 
@@ -103,10 +100,8 @@ export function OfferDialog() {
     });
   }, [item, offer, offerMutate]);
 
-  useEffect(() => {!isConnected && dismiss()}, [isConnected, dismiss]);
-
   return (
-    <DefaultDialog onOpenChange={onOpenChange}>
+    <DefaultDialog onOpenChange={onOpenChange} dismiss={dismiss}>
       <FormProvider {...form}>
         <div className="w-5/6">
           <header className="mb-3 flex items-center">
@@ -188,10 +183,7 @@ export function TradeDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
-  const {
-    isConnected, address,
-    item, bids, mine, offer: myOffer
-  } = useRouteRaribleAccountItem();
+  const { address, item, bids, mine, offer: myOffer } = useRouteRaribleAccountItem();
   const { mutate: tradeMutate, status: tradeStatus } = useRouteRaribleItemMutation(
     `order.${mine ? "acceptBid" : "buy"}`,
   );
@@ -219,10 +211,8 @@ export function TradeDialog() {
       });
   }, [myOffer, offerId, dismiss, tradeMutate, cancelMutate]);
 
-  useEffect(() => {!isConnected && dismiss()}, [isConnected, dismiss]);
-
   return (
-    <DefaultDialog onOpenChange={onOpenChange}>
+    <DefaultDialog onOpenChange={onOpenChange} dismiss={dismiss}>
       <div className="w-5/6">
         <header className="mb-3 flex items-center">
           <h2 className="text-lg font-bold">
@@ -285,7 +275,7 @@ export function CancelDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
-  const { isConnected, offer } = useRouteRaribleAccountItem();
+  const { offer } = useRouteRaribleAccountItem();
   const { mutate: cancelMutate, status: cancelStatus } = useRouteRaribleItemMutation(
     "order.cancel",
     { onSuccess: () => dismiss() },
@@ -296,10 +286,8 @@ export function CancelDialog() {
     (offer !== undefined) && cancelMutate({orderId: offer.id});
   }, [offer, cancelMutate]);
 
-  useEffect(() => {!isConnected && dismiss()}, [isConnected, dismiss]);
-
   return (
-    <DefaultDialog onOpenChange={onOpenChange}>
+    <DefaultDialog onOpenChange={onOpenChange} dismiss={dismiss}>
       <div className="w-5/6">
         <header className="mb-3 flex items-center">
           <h2 className="text-lg font-bold">
@@ -357,10 +345,8 @@ export function AssociateDialog() {
     }
   }, [signMessage, assocMutate, address, isConnected]);
 
-  useEffect(() => {!isConnected && dismiss()}, [isConnected, dismiss]);
-
   return (
-    <DefaultDialog onOpenChange={onOpenChange}>
+    <DefaultDialog onOpenChange={onOpenChange} dismiss={dismiss}>
       <div className="w-5/6">
         <header className="mb-3 flex items-center">
           <h2 className="text-lg font-bold">
@@ -413,10 +399,15 @@ interface DialogContentProps extends DialogPrimitive.DialogContentProps {
 type DialogProps = DialogPrimitive.DialogProps &
   DialogContentProps & {
     trigger?: ReactNode;
+    dismiss?: () => void;
   };
 
 function DefaultDialog(props: DialogProps) {
+  const { dismiss, ...dprops } = props;
+  const { isConnected } = useWagmiAccount();
+  useEffect(() => {!isConnected && dismiss && dismiss()}, [isConnected, dismiss]);
+
   return (
-    <Dialog defaultOpen modal containerClass="w-full sm:max-w-lg" {...props} />
+    <Dialog defaultOpen modal containerClass="w-full sm:max-w-lg" {...dprops} />
   );
 }
