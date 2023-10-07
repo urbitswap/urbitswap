@@ -8,6 +8,7 @@ import {
   WalletIcon,
   ChevronDownIcon,
   LinkIcon,
+  IdentificationIcon,
   BoltIcon,
   BoltSlashIcon,
 } from '@heroicons/react/24/solid';
@@ -83,6 +84,16 @@ export default function NavBar({
                   &nbsp;<span>Disconnect Wallet</span>
                 </React.Fragment>
               )}
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              onSelect={() => modalNavigate("kyc", {
+                relative: "path",
+                state: {backgroundLocation: location},
+              })}
+              className="dropdown-item flex items-center"
+            >
+              <IdentificationIcon className="w-4 h-4" />
+              &nbsp;<span>Submit KYC</span>
             </DropdownMenu.Item>
             {(isConnected && ((traders ?? {})[address.toLowerCase()] === undefined)) && (
               <DropdownMenu.Item

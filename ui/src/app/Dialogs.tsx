@@ -1,6 +1,6 @@
 import React, { ReactNode, useEffect, useCallback, useMemo } from 'react';
 import { FormProvider, useForm, useController } from 'react-hook-form';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import DateTimePicker from 'react-datetime-picker';
@@ -317,6 +317,54 @@ export function CancelDialog() {
                 "Rescind"
               )}
             </button>
+          </div>
+        </footer>
+      </form>
+    </DefaultDialog>
+  );
+}
+
+export function KYCDialog() {
+  const dismiss = useDismissNavigate();
+  const onOpenChange = (open: boolean) => (!open && dismiss());
+
+  const onSubmit = useCallback(async (event: any) => {
+    event.preventDefault();
+  }, []);
+
+  return (
+    <DefaultDialog onOpenChange={onOpenChange}>
+      <div className="w-5/6">
+        <header className="mb-3 flex items-center">
+          <h2 className="text-lg font-bold">
+            Submit KYC Forms
+          </h2>
+        </header>
+      </div>
+
+      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+        <p>
+          In order to exchange assets, you'll first need to go through Venture
+          Club's <Link to="https://en.wikipedia.org/wiki/Know_your_customer">KYC</Link> process.
+          Visit our website to get started:
+        </p>
+
+        <Link to="https://ventureclub.club" className="text-2xl underline text-center">
+          Venture Club KYC
+        </Link>
+
+        <footer className="mt-4 flex items-center justify-between space-x-2">
+          <div className="ml-auto flex items-center space-x-2">
+            <DialogPrimitive.Close asChild>
+              <button className="secondary-button ml-auto">
+                Decline
+              </button>
+            </DialogPrimitive.Close>
+            <DialogPrimitive.Close asChild>
+              <button className="button">
+                Acknowledge
+              </button>
+            </DialogPrimitive.Close>
           </div>
         </footer>
       </form>
