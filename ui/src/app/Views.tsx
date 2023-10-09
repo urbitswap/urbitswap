@@ -146,7 +146,7 @@ export function ItemPage({className}: ClassProps) {
           onClick={() => modalNavigate(`trade/${order?.id}`, {
             state: {backgroundLocation: location}
           })}
-          disabled={!isConnected || disabled}
+          disabled={disabled}
         >
           <ArrowsRightLeftIcon className="w-4 h-4" />
           &nbsp;{"Trade"}
@@ -230,14 +230,13 @@ export function ItemPage({className}: ClassProps) {
               )) ?? {})?.url
             } />
             <button className="w-full button"
-              disabled={!isConnected}
               onClick={() => modalNavigate("offer", {
                 state: {backgroundLocation: location}
               })}
             >
               <CurrencyDollarIcon className="w-4 h-4" />
               &nbsp;{`${(offer !== undefined) ? "Update" : "Post"}
-                ${mine ? "Ask" : "Bid"}
+                ${isMyItem ? "Ask" : "Bid"}
               `}
             </button>
             {(offer !== undefined) && (
@@ -247,7 +246,7 @@ export function ItemPage({className}: ClassProps) {
                 })}
               >
                 <XCircleIcon className="w-4 h-4" />
-                &nbsp;{`Rescind ${mine ? "Ask" : "Bid"}`}
+                &nbsp;{`Rescind ${isMyItem ? "Ask" : "Bid"}`}
               </button>
             )}
             {!isMyItem && (

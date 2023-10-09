@@ -15,7 +15,7 @@ import {
   OfferDialog,
   TradeDialog,
   CancelDialog,
-  KYCDialog,
+  PretradeDialog,
   AssociateDialog,
 } from '@/app/Dialogs';
 import NavBar from '@/app/NavBar';
@@ -77,10 +77,10 @@ function RoutedAppRoutes({
       </Routes>
       {state?.backgroundLocation && (
         <Routes>
-          <Route path="/kyc" element={<KYCDialog />} />
+          <Route path="/pretrade" element={<PretradeDialog />} />
           <Route path="/assoc" element={<AssociateDialog />} />
           <Route path="/item/:itemId">
-            <Route path="kyc" element={<KYCDialog />} />
+            <Route path="pretrade" element={<PretradeDialog />} />
             <Route path="assoc" element={<AssociateDialog />} />
 
             <Route path="offer" element={<OfferDialog />} />

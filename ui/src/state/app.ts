@@ -32,6 +32,9 @@ import type {
   RaribleContinuation,
 } from '@/types/app';
 
+const RARIBLE_STALE_TIME = 20 * 1000;
+const VENTURECLUB_STALE_TIME = 5 * 1000;
+
 export function useWagmiAccount() {
   const { address, ...account } = useAccount();
   return {
@@ -110,7 +113,7 @@ export function useRaribleCollection(): RaribleItem[] | undefined {
       (result: RaribleItems): RaribleItem[] => result.items,
       {collection: CONTRACT.COLLECTION},
     ),
-    staleTime: 20 * 1000,
+    staleTime: RARIBLE_STALE_TIME,
   });
 
   return (isLoading || isError)
@@ -129,7 +132,7 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
       (result: RaribleItems): RaribleItem[] => result.items,
       {owner: `ETHEREUM:${address}`},
     ),
-    staleTime: 20 * 1000,
+    staleTime: RARIBLE_STALE_TIME,
   }))});
 
   return (results.some(q => q.isLoading) || results.some(q => q.isError))
@@ -169,9 +172,7 @@ export function useRouteRaribleItem(): RouteRaribleItem {
         ),
       ]);
     },
-    // TODO: Make this a constant, or at least abstract the Rarible querying
-    // behavior into its own function
-    staleTime: 20 * 1000,
+    staleTime: RARIBLE_STALE_TIME,
   });
 
   return (isLoading || isError)
@@ -268,4 +269,24 @@ function queryRaribleContinuation<
       Object.assign({}, queryIn, {continuation: result.continuation}),
       results.concat(resultFn(result)), false,
     ));
+}
+
+export function useVentureIsAccountKYCd(): boolean | undefined {
+  const { address } = useWagmiAccount();
+  const queryKey: QueryKey = useMemo(() => [
+    APP_TERM, "venture", "kyc", address,
+  ], [address]);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: queryKey,
+    queryFn: () => new Promise((resolve, reject) => {
+      const isAccountApproved = address !== "0x0";
+      resolve(isAccountApproved);
+    }),
+    staleTime: VENTURECLUB_STALE_TIME,
+  });
+
+  return (isLoading || isError)
+    ? undefined
+    : (data as boolean);
 }

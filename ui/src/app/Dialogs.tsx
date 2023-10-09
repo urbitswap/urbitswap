@@ -1,6 +1,6 @@
-import React, { ReactNode, useEffect, useCallback, useMemo } from 'react';
+import React, { ReactNode, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { FormProvider, useForm, useController } from 'react-hook-form';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import DateTimePicker from 'react-datetime-picker';
@@ -30,6 +30,7 @@ import {
   useRouteRaribleAccountItem,
   useRouteRaribleItemMutation,
   useRouteRaribleOfferItemMutation,
+  useVentureIsAccountKYCd,
 } from '@/state/app';
 import { useDismissNavigate } from '@/logic/routing';
 import {
@@ -101,7 +102,7 @@ export function OfferDialog() {
   }, [item, offer, offerMutate]);
 
   return (
-    <DefaultDialog onOpenChange={onOpenChange} dismiss={dismiss}>
+    <DefaultDialog onOpenChange={onOpenChange}>
       <FormProvider {...form}>
         <div className="w-5/6">
           <header className="mb-3 flex items-center">
@@ -212,7 +213,7 @@ export function TradeDialog() {
   }, [myOffer, offerId, dismiss, tradeMutate, cancelMutate]);
 
   return (
-    <DefaultDialog onOpenChange={onOpenChange} dismiss={dismiss}>
+    <DefaultDialog onOpenChange={onOpenChange}>
       <div className="w-5/6">
         <header className="mb-3 flex items-center">
           <h2 className="text-lg font-bold">
@@ -287,7 +288,7 @@ export function CancelDialog() {
   }, [offer, cancelMutate]);
 
   return (
-    <DefaultDialog onOpenChange={onOpenChange} dismiss={dismiss}>
+    <DefaultDialog onOpenChange={onOpenChange}>
       <div className="w-5/6">
         <header className="mb-3 flex items-center">
           <h2 className="text-lg font-bold">
@@ -324,54 +325,6 @@ export function CancelDialog() {
   );
 }
 
-export function KYCDialog() {
-  const dismiss = useDismissNavigate();
-  const onOpenChange = (open: boolean) => (!open && dismiss());
-
-  const onSubmit = useCallback(async (event: any) => {
-    event.preventDefault();
-  }, []);
-
-  return (
-    <DefaultDialog onOpenChange={onOpenChange}>
-      <div className="w-5/6">
-        <header className="mb-3 flex items-center">
-          <h2 className="text-lg font-bold">
-            Submit KYC Forms
-          </h2>
-        </header>
-      </div>
-
-      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-        <p>
-          In order to exchange assets, you'll first need to go through Venture
-          Club's <Link to="https://en.wikipedia.org/wiki/Know_your_customer">KYC</Link> process.
-          Visit our website to get started:
-        </p>
-
-        <Link to="https://ventureclub.club" className="text-2xl underline text-center">
-          Venture Club KYC
-        </Link>
-
-        <footer className="mt-4 flex items-center justify-between space-x-2">
-          <div className="ml-auto flex items-center space-x-2">
-            <DialogPrimitive.Close asChild>
-              <button className="secondary-button ml-auto">
-                Decline
-              </button>
-            </DialogPrimitive.Close>
-            <DialogPrimitive.Close asChild>
-              <button className="button">
-                Acknowledge
-              </button>
-            </DialogPrimitive.Close>
-          </div>
-        </footer>
-      </form>
-    </DefaultDialog>
-  );
-}
-
 export function AssociateDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
@@ -394,7 +347,7 @@ export function AssociateDialog() {
   }, [signMessage, assocMutate, address, isConnected]);
 
   return (
-    <DefaultDialog onOpenChange={onOpenChange} dismiss={dismiss}>
+    <DefaultDialog onOpenChange={onOpenChange}>
       <div className="w-5/6">
         <header className="mb-3 flex items-center">
           <h2 className="text-lg font-bold">
@@ -437,6 +390,71 @@ export function AssociateDialog() {
   );
 }
 
+export function PretradeDialog() {
+  const dismiss = useDismissNavigate();
+  const onOpenChange = (open: boolean) => (!open && dismiss());
+
+  const { isConnected } = useWagmiAccount();
+
+  const onSubmit = useCallback(async (event: any) => {
+    event.preventDefault();
+  }, []);
+
+  return (
+    <DefaultDialog onOpenChange={onOpenChange}>
+      <div className="w-5/6">
+        <header className="mb-3 flex items-center">
+          <h2 className="text-lg font-bold">
+            Before You Trade
+          </h2>
+        </header>
+      </div>
+
+      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+        {!isConnected ? (
+          <React.Fragment>
+            <p>
+              Please connect your crypto wallet
+              via <Link to="https://metamask.io/">Metamask</Link> in order to
+              start trading. If you don't have Metamask installed, visit their
+              website to get started:
+            </p>
+            <Link to="https://metamask.io/download/" className="text-2xl underline text-center">
+              Install Metamask
+            </Link>
+          </React.Fragment>
+        ) : (
+          <React.Fragment>
+            <p>
+              In order to exchange assets, you'll first need to go through Venture
+              Club's <Link to="https://en.wikipedia.org/wiki/Know_your_customer">KYC</Link> process.
+              Visit our website to get started:
+            </p>
+            <Link to="https://ventureclub.club" className="text-2xl underline text-center">
+              Venture Club KYC
+            </Link>
+          </React.Fragment>
+        )}
+
+        <footer className="mt-4 flex items-center justify-between space-x-2">
+          <div className="ml-auto flex items-center space-x-2">
+            <DialogPrimitive.Close asChild>
+              <button className="secondary-button ml-auto">
+                Decline
+              </button>
+            </DialogPrimitive.Close>
+            <DialogPrimitive.Close asChild>
+              <button className="button">
+                Acknowledge
+              </button>
+            </DialogPrimitive.Close>
+          </div>
+        </footer>
+      </form>
+    </DefaultDialog>
+  );
+}
+
 // FIXME: Gross duplication of '@/components/Dialog' content, but needed in
 // order to minimize edits to 'landscape-apps' files.
 type DialogCloseLocation = 'default' | 'none' | 'lightbox' | 'app' | 'header';
@@ -447,15 +465,30 @@ interface DialogContentProps extends DialogPrimitive.DialogContentProps {
 type DialogProps = DialogPrimitive.DialogProps &
   DialogContentProps & {
     trigger?: ReactNode;
-    dismiss?: () => void;
   };
 
 function DefaultDialog(props: DialogProps) {
-  const { dismiss, ...dprops } = props;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams();
+
   const { isConnected } = useWagmiAccount();
-  useEffect(() => {!isConnected && dismiss && dismiss()}, [isConnected, dismiss]);
+  const isKYCd = useVentureIsAccountKYCd();
+
+  // FIXME: This doesn't work when refreshing the page (the redirect to the
+  // KYC URL does work, but it renders the initial dialog somehow), but this
+  // is only really a problem in the development environment.
+  useLayoutEffect(() => {
+    if ((!isConnected || (isKYCd !== undefined && !isKYCd))
+        && !location.pathname.endsWith("/pretrade")) {
+      navigate(`/item/${params?.itemId}/pretrade`, {
+        replace: true,
+        state: location.state,
+      });
+    }
+  }, [isConnected, isKYCd, params?.itemId, location.pathname, location.state, navigate]);
 
   return (
-    <Dialog defaultOpen modal containerClass="w-full sm:max-w-lg" {...dprops} />
+    <Dialog defaultOpen modal containerClass="w-full sm:max-w-lg" {...props} />
   );
 }

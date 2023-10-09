@@ -15,7 +15,7 @@ import {
 import ENSName from '@/components/ENSName';
 import VCCIcon from '@/components/icons/VCCIcon';
 import { useModalNavigate } from '@/logic/routing';
-import { useWagmiAccount, useUrbitTraders } from '@/state/app';
+import { useWagmiAccount, useUrbitTraders, useVentureIsAccountKYCd } from '@/state/app';
 import { APP_NAME, ENV_TEST } from '@/constants';
 import type { Chain } from 'viem'; // vcc/ui/node_modules/viem/types/chain.ts
 
@@ -32,8 +32,11 @@ export default function NavBar({
   const { connect } = useConnect({connector: new InjectedConnector()});
   const { disconnect } = useDisconnect();
   const traders = useUrbitTraders();
+  const isVCCKYCd = useVentureIsAccountKYCd();
 
-  const isConnected = address !== "0x";
+  const isConnected: boolean = address !== "0x";
+  const isAssociated: boolean = (traders ?? {})[address.toLowerCase()] !== undefined;
+  const isKYCd = isVCCKYCd !== undefined && isVCCKYCd;
 
   return (
     <nav className={cn(
@@ -61,9 +64,13 @@ export default function NavBar({
             >
               <WalletIcon className="h-5 w-5" />
               {!isConnected ? (
-                <p>Wallet</p>
+                <p>No Wallet</p>
               ) : (
-                <ENSName address={address} />
+                <React.Fragment>
+                  <ENSName address={address} />
+                  {(isKYCd && (<IdentificationIcon className="w-3 h-3" />))}
+                  {(isAssociated && (<LinkIcon className="w-3 h-3" />))}
+                </React.Fragment>
               )}
               <ChevronDownIcon className="h-3 w-3" />
             </div>
@@ -85,17 +92,19 @@ export default function NavBar({
                 </React.Fragment>
               )}
             </DropdownMenu.Item>
-            <DropdownMenu.Item
-              onSelect={() => modalNavigate("kyc", {
-                relative: "path",
-                state: {backgroundLocation: location},
-              })}
-              className="dropdown-item flex items-center"
-            >
-              <IdentificationIcon className="w-4 h-4" />
-              &nbsp;<span>Submit KYC</span>
-            </DropdownMenu.Item>
-            {(isConnected && ((traders ?? {})[address.toLowerCase()] === undefined)) && (
+            {(isConnected && !isKYCd) && (
+              <DropdownMenu.Item
+                onSelect={() => modalNavigate("pretrade", {
+                  relative: "path",
+                  state: {backgroundLocation: location},
+                })}
+                className="dropdown-item flex items-center"
+              >
+                <IdentificationIcon className="w-4 h-4" />
+                &nbsp;<span>Submit KYC</span>
+              </DropdownMenu.Item>
+            )}
+            {(isConnected && !isAssociated) && (
               <DropdownMenu.Item
                 onSelect={() => modalNavigate("assoc", {
                   relative: "path",
