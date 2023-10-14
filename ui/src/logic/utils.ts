@@ -1,5 +1,5 @@
 import { format, formatDistance } from 'date-fns';
-import { MAX_DATE, CONTRACT } from '@/constants';
+import { ENV_TEST, MAX_DATE, CONTRACT } from '@/constants';
 import { Blockchain } from '@rarible/api-client';
 import {
   toContractAddress,
@@ -18,6 +18,31 @@ import type {
   Ownership as RaribleOwnership,
 } from '@rarible/api-client';
 import type { TenderType, OfferType } from '@/types/app';
+import type { Callable } from '@/types/utils';
+
+export function genRateLimiter(maxReqs: number, perSecs: number) {
+  let frameStart: number = 0;
+  let frameCount: number = 0;
+  let frameQueue: Callable[] = [];
+  let untilNext: number = 0;
+
+  // https://stackoverflow.com/a/33946793
+  return function limiter(func: Callable) {
+    func && frameQueue.push(func);
+    untilNext = perSecs * 1000 - (Date.now() - frameStart);
+    if (untilNext <= 0) {
+      frameStart = Date.now();
+      frameCount = 0;
+    }
+    if (++frameCount <= maxReqs) {
+      (frameQueue.shift() ?? (() => null))();
+    } else {
+      ENV_TEST && func &&
+        console.log(`deferring ${func.name} for ${untilNext/ 1000}s`);
+      setTimeout(limiter, untilNext);
+    }
+  };
+}
 
 export function tenderToAsset(tender: TenderType): RaribleAssetType {
   return tender === "eth"
@@ -31,9 +56,8 @@ export function assetToTender(asset: RaribleAssetType): TenderType {
     : "eth";
 }
 
-export function makePrettyName(item: RaribleItem, terse: boolean = false): string {
-  return (item.meta?.name ?? "<Unknown>")
-    .replace("with warrant", terse ? "(W)" : "(with warrant)");
+export function makePrettyName(item: RaribleItem,): string {
+  return item.meta?.name ?? "<Unknown>";
 }
 
 export function makePrettyPrice(asset: RaribleAsset): string {

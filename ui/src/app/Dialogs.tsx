@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
+import React, { ReactNode, useState, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { FormProvider, useForm, useController } from 'react-hook-form';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -181,15 +181,16 @@ export function OfferDialog() {
 }
 
 export function TradeDialog() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
+  const [hasBeenWarned, setHasBeenWarned] = useState<boolean>(false);
   const { address, item, bids, mine, offer: myOffer } = useRouteRaribleAccountItem();
   const { mutate: tradeMutate, status: tradeStatus } = useRouteRaribleItemMutation(
     `order.${mine ? "acceptBid" : "buy"}`,
-  );
-  const { mutate: cancelMutate, status: cancelStatus } = useRouteRaribleItemMutation(
-    "order.cancel",
+    { onSuccess: () => dismiss() },
   );
 
   const { offerId } = useParams();
@@ -202,15 +203,17 @@ export function TradeDialog() {
 
   const onSubmit = useCallback(async (event: any) => {
     event.preventDefault();
-    (offerId !== undefined) &&
-      tradeMutate({orderId: offerId, amount: 1}, (myOffer === undefined) ? {
-        onSuccess: () => dismiss(),
-      } : {
-        onSuccess: () => cancelMutate({orderId: myOffer.id}, {
-          onSuccess: () => dismiss(),
-        })
-      });
-  }, [myOffer, offerId, dismiss, tradeMutate, cancelMutate]);
+    (offerId !== undefined) && tradeMutate({orderId: offerId, amount: 1});
+  }, [hasBeenWarned, offerId, tradeMutate]);
+  const onKeep = useCallback(async (event: any) => {
+    setHasBeenWarned(true);
+  }, [setHasBeenWarned]);
+  const onCancel = useCallback(async (event: any) => {
+    navigate(`../cancel`, {
+      replace: true,
+      state: location.state,
+    });
+  }, [navigate, location.state]);
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
@@ -222,52 +225,73 @@ export function TradeDialog() {
         </header>
       </div>
 
-      <form onSubmit={onSubmit}>
-        <p>
-          Do you really want to accept this trade?
-        </p>
+      {(myOffer !== undefined && !hasBeenWarned) ? (
+        <React.Fragment>
+          <p>
+            You have an open {mine ? "ask" : "bid"} for this item. Would you
+            like to rescind it before proceeding? If kept open, it will
+            reactivate if/when you transfer this item.
+          </p>
 
-        {(tradeOffer !== undefined) && (
-          <div className="flex flex-row justify-around items-center py-8">
-            <div className="flex flex-col justify-center text-center">
-              <TraderName
-                address={address}
-                className="font-bold underline"
-              />
-              <p className="line-through">{mine ? tradeAsset : tradeTender}</p>
-              <p className="italic">{mine ? tradeTender : tradeAsset}</p>
-            </div>
-            <ArrowsRightLeftIcon className="w-5 h-5" />
-            <div className="flex flex-col justify-center text-center">
-              <TraderName
-                address={(tradeOffer.maker.replace(/^.+:/g, "") as Address)}
-                className="font-bold underline"
-              />
-              <p className="italic">{mine ? tradeAsset : tradeTender}</p>
-              <p className="line-through">{mine ? tradeTender : tradeAsset}</p>
-            </div>
-          </div>
-        )}
-
-        <footer className="mt-4 flex items-center justify-between space-x-2">
-          <div className="ml-auto flex items-center space-x-2">
-            <DialogPrimitive.Close asChild>
-              <button className="secondary-button ml-auto">
-                Cancel
+          <footer className="mt-4 flex items-center justify-between space-x-2">
+            <div className="ml-auto flex items-center space-x-2">
+              <button className="secondary-button ml-auto" onClick={onKeep}>
+                Keep Open
               </button>
-            </DialogPrimitive.Close>
-            <button className="button bg-green" type="submit">
-              {(tradeStatus === "loading" || cancelStatus === "loading") ? (
-                <LoadingSpinner />
-              ) : (tradeStatus === "error" || cancelStatus === "error") ? (
-                "Error"
-              ) : (
-                "Trade"
-              )}
-            </button>
-          </div>
-        </footer>
-      </form>
+              <button className="button" onClick={onCancel}>
+                Rescind It
+              </button>
+            </div>
+          </footer>
+        </React.Fragment>
+      ) : (
+        <form onSubmit={onSubmit}>
+          <p>
+            Do you really want to accept this trade?
+          </p>
+
+          {(tradeOffer !== undefined) && (
+            <div className="flex flex-row justify-around items-center py-8">
+              <div className="flex flex-col justify-center text-center">
+                <TraderName
+                  address={address}
+                  className="font-bold underline"
+                />
+                <p className="line-through">{mine ? tradeAsset : tradeTender}</p>
+                <p className="italic">{mine ? tradeTender : tradeAsset}</p>
+              </div>
+              <ArrowsRightLeftIcon className="w-5 h-5" />
+              <div className="flex flex-col justify-center text-center">
+                <TraderName
+                  address={(tradeOffer.maker.replace(/^.+:/g, "") as Address)}
+                  className="font-bold underline"
+                />
+                <p className="italic">{mine ? tradeAsset : tradeTender}</p>
+                <p className="line-through">{mine ? tradeTender : tradeAsset}</p>
+              </div>
+            </div>
+          )}
+
+          <footer className="mt-4 flex items-center justify-between space-x-2">
+            <div className="ml-auto flex items-center space-x-2">
+              <DialogPrimitive.Close asChild>
+                <button className="secondary-button ml-auto">
+                  Cancel
+                </button>
+              </DialogPrimitive.Close>
+              <button className="button bg-green" type="submit">
+                {(tradeStatus === "loading") ? (
+                  <LoadingSpinner />
+                ) : (tradeStatus === "error") ? (
+                  "Error"
+                ) : (
+                  "Trade"
+                )}
+              </button>
+            </div>
+          </footer>
+        </form>
+      )}
     </DefaultDialog>
   );
 }

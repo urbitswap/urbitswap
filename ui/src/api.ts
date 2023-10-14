@@ -7,7 +7,19 @@ import { publicProvider } from 'wagmi/providers/public';
 import { mainnet, goerli } from 'viem/chains';
 import { ENV_TEST } from '@/constants';
 
-export const queryAPI = new QueryClient();
+export const queryAPI = new QueryClient({
+  defaultOptions: {
+    queries: {
+      cacheTime: Infinity,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchInterval: false,
+      retry: false,
+      // retryDelay: (attempt: number): number =>
+      //   Math.min(attempt > 1 ? 2 ** attempt * 1000 : 1000, 30 * 1000),
+    },
+  },
+});
 
 export const urbitAPI = new Urbit('', '', window.desk);
 urbitAPI.ship = window.ship;

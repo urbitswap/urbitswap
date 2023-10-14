@@ -32,9 +32,6 @@ import type {
   RaribleContinuation,
 } from '@/types/app';
 
-const RARIBLE_STALE_TIME = 20 * 1000;
-const VENTURECLUB_STALE_TIME = 5 * 1000;
-
 export function useWagmiAccount() {
   const { address, ...account } = useAccount();
   return {
@@ -89,13 +86,13 @@ export function useUrbitAssociateMutation(
       },
     }),
     onMutate: async (variables) => {
-      await queryClient.cancelQueries(queryKey);
+      await queryClient.cancelQueries({ queryKey: queryKey });
       return await queryClient.getQueryData(queryKey);
     },
     onError: (err, variables, oldData) =>
       queryClient.setQueryData(queryKey, oldData),
     onSettled: (_data, _error, variables) =>
-      queryClient.invalidateQueries(queryKey),
+      queryClient.invalidateQueries({ queryKey: queryKey }),
     ...options,
   });
 }
@@ -110,10 +107,8 @@ export function useRaribleCollection(): RaribleItem[] | undefined {
     queryKey: queryKey,
     queryFn: () => queryRaribleContinuation(
       rsdk.apis.item.getItemsByCollection,
-      (result: RaribleItems): RaribleItem[] => result.items,
       {collection: CONTRACT.COLLECTION},
     ),
-    staleTime: RARIBLE_STALE_TIME,
   });
 
   return (isLoading || isError)
@@ -129,10 +124,8 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
     queryKey: [APP_TERM, "items", address],
     queryFn: () => queryRaribleContinuation(
       rsdk.apis.item.getItemsByOwner,
-      (result: RaribleItems): RaribleItem[] => result.items,
       {owner: `ETHEREUM:${address}`},
     ),
-    staleTime: RARIBLE_STALE_TIME,
   }))});
 
   return (results.some(q => q.isLoading) || results.some(q => q.isError))
@@ -158,29 +151,24 @@ export function useRouteRaribleItem(): RouteRaribleItem {
         rsdk.apis.item.getItemById({itemId: itemAddr}),
         queryRaribleContinuation(
           rsdk.apis.ownership.getOwnershipsByItem,
-          (result: RaribleOwnerships): Address[] => (result.ownerships.map(o => (
-            o.owner.replace(/^.+:/g, "").toLowerCase()
-          )) as Address[]),
           {itemId: itemAddr},
         ),
         queryRaribleContinuation(
           rsdk.apis.order.getOrderBidsByItem,
-          (result: RaribleOrders): RaribleOrder[] => result.orders.filter(o => (
-            o.status === "ACTIVE"
-          )),
           {itemId: itemAddr},
         ),
       ]);
     },
-    staleTime: RARIBLE_STALE_TIME,
   });
 
   return (isLoading || isError)
     ? {item: undefined, owner: undefined, bids: undefined}
     : {
       item: (data[0] as RaribleItem),
-      owner: (data[1][0] as Address),
-      bids: (data[2] as RaribleOrder[]),
+      // @ts-ignore
+      owner: (data[1].map((o: RaribleOwnership) => o.owner.replace(/^.+:/g, "").toLowerCase())[0] as Address),
+      // @ts-ignore
+      bids: (data[2].filter((o: RaribleOrder) => o.status === "ACTIVE") as RaribleOrder[]),
     };
 }
 
@@ -203,12 +191,9 @@ export function useRouteRaribleItemMutation<TResponse>(
   options?: UseMutationOptions<TResponse, unknown, any, unknown>
 ) {
   const { itemId } = useParams();
-  const queryRouteKey: QueryKey = useMemo(() => [
+  const queryKey: QueryKey = useMemo(() => [
     APP_TERM, "item", itemId,
   ], [itemId]);
-  const queryItemsKey: QueryKey = useMemo(() => [
-    APP_TERM, "items"
-  ], []);
 
   const rsdk = useRaribleSDK();
   const queryClient = useQueryClient();
@@ -218,18 +203,32 @@ export function useRouteRaribleItemMutation<TResponse>(
       const mutate: MutationFunction<TResponse, any> = raribleFn.split(".").reduce((p,c) => p && p[c] || null, rsdk);
       return mutate(...args).then((result: TResponse) => (
         // @ts-ignore
-        (result?.wait && typeof(result.wait) === "function") ? result.wait() : result
+        (result?.wait === undefined || typeof(result!.wait) !== "function")
+          ? result
+          // @ts-ignore
+          : result.wait().then((rsdkResult: any) =>
+            // FIXME: The Rarible Ownership API tends to follow a confirmed
+            // blockchain action with a slight delay, so we just wait a bit
+            // to avoid weird desyncs this can cause with the UI (e.g. a user
+            // not being listed as an NFT owner after purchase).
+            new Promise(resolve => setTimeout(() => {
+              resolve(rsdkResult);
+            }, 10 * 1000))
+          )
       ));
     }) as MutationFunction<TResponse, any>),
     onMutate: async (variables) => {
-      await queryClient.cancelQueries(queryRouteKey);
-      return await queryClient.getQueryData(queryRouteKey);
+      await queryClient.cancelQueries({ queryKey: queryKey });
+      return await queryClient.getQueryData(queryKey);
     },
     onError: (err, variables, oldData) =>
-      queryClient.setQueryData(queryRouteKey, oldData),
+      queryClient.setQueryData(queryKey, oldData),
     onSettled: (_data, _error, variables) => {
-      queryClient.invalidateQueries(queryRouteKey);
-      queryClient.invalidateQueries(queryItemsKey);
+      queryClient.invalidateQueries({ queryKey: queryKey });
+      if (["order.acceptBid", "order.buy"].includes(raribleFn)) {
+        console.log("canceling items ownership queries");
+        queryClient.invalidateQueries({ queryKey: [APP_TERM, "items"] });
+      }
     },
     ...options,
   });
@@ -255,20 +254,24 @@ function queryRaribleContinuation<
   TResult,
 >(
   queryFn: (params: TInput) => Promise<TOutput>,
-  resultFn: (result: TOutput) => TResult[],
   queryIn: TInput,
   results: TResult[] = [],
-  first: boolean = true,
+  isFinalCall: boolean = false,
 ): Promise<TResult[]> {
   // The limit per continuation is 50; see this example:
   // https://docs.rarible.org/getting-started/fetch-nft-data/#get-all-nfts-in-a-collection
-  return (!first && queryIn.continuation === undefined)
+  return isFinalCall
     ? new Promise((resolve) => resolve(results))
-    : queryFn(queryIn).then((result: TOutput) => queryRaribleContinuation(
-      queryFn, resultFn,
-      Object.assign({}, queryIn, {continuation: result.continuation}),
-      results.concat(resultFn(result)), false,
-    ));
+    : queryFn(queryIn).then((output: TOutput) => {
+      const newResults: TResult[] =
+        (Object.values(output).find(Array.isArray) as TResult[]);
+      return queryRaribleContinuation(
+        queryFn,
+        Object.assign({}, queryIn, {continuation: output.continuation}),
+        results.concat(newResults),
+        newResults.length < 50 || output.continuation === undefined,
+      );
+    });
 }
 
 export function useVentureIsAccountKYCd(): boolean | undefined {
@@ -279,11 +282,9 @@ export function useVentureIsAccountKYCd(): boolean | undefined {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
-    queryFn: () => new Promise((resolve, reject) => {
-      const isAccountApproved = address !== "0x0";
-      resolve(isAccountApproved);
-    }),
-    staleTime: VENTURECLUB_STALE_TIME,
+    queryFn: async () => {
+      return address !== "0x0";
+    },
   });
 
   return (isLoading || isError)

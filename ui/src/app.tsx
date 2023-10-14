@@ -62,14 +62,14 @@ function RoutedAppRoutes({
     <React.Fragment>
       <Routes location={state?.backgroundLocation || location}>
         <Route element={
-          <React.Fragment>
+          <div className="flex flex-col h-screen">
             <header className="sticky z-20 top-0">
               <NavBar innerClassName={FORM_CLASS} />
             </header>
-            <main className={cn("p-4 max-h-[88vh] overflow-y-scroll", FORM_CLASS)}>
+            <main className={cn("p-4 flex-grow overflow-y-scroll", FORM_CLASS)}>
               <Outlet />
             </main>
-          </React.Fragment>
+          </div>
         }>
           <Route path="/" element={<CollectionGrid />} />
           <Route path="/item/:itemId" element={<ItemPage />} />

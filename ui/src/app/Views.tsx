@@ -61,8 +61,8 @@ export function CollectionGrid({className}: ClassProps) {
                   : "border-gray-200 hover:border-gray-800",
               )}
             >
-              <h3 className="text-lg text-center font-semibold">
-                {makePrettyName(item, true)}
+              <h3 className="text-lg text-center font-semibold line-clamp-1">
+                {makePrettyName(item)}
               </h3>
               <img className="object-cover rounded-lg aspect-square" src={
                 (item.meta?.content.find((entry: RaribleMetaContent) => (
@@ -146,7 +146,7 @@ export function ItemPage({className}: ClassProps) {
           onClick={() => modalNavigate(`trade/${order?.id}`, {
             state: {backgroundLocation: location}
           })}
-          disabled={disabled}
+          disabled={!isConnected || disabled}
         >
           <ArrowsRightLeftIcon className="w-4 h-4" />
           &nbsp;{"Trade"}
@@ -162,7 +162,7 @@ export function ItemPage({className}: ClassProps) {
         <div className="grid grid-cols-1 grid-flow-dense gap-x-4 sm:grid-cols-3">
           <div className="sm:col-span-2">
             <h2 className="text-xl font-bold underline">
-              {makePrettyName(item, false)}
+              {makePrettyName(item)}
             </h2>
             <h3 className="text-md">
               <span className="font-semibold">Owner:</span>&nbsp;

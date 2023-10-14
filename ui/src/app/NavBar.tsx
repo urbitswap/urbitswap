@@ -47,10 +47,13 @@ export default function NavBar({
         "flex flex-row justify-between items-center",
         innerClassName,
       )}>
-        <Link to="/" className="text-3xl font-bold flex flex-row items-center gap-2">
+        <Link to="/" className={cn(
+          "flex flex-row items-center gap-2 font-bold",
+          "text-xl sm:text-3xl",
+        )}>
           <VCCIcon className={cn(
-            "w-12 h-12 border-black border-2 rounded-full",
-            "text-white bg-black",
+            "text-white bg-black border-black border-2 rounded-full",
+            "w-8 h-8 sm:w-12 sm:h-12",
           )} />
           Trade
         </Link>
@@ -68,14 +71,14 @@ export default function NavBar({
               ) : (
                 <React.Fragment>
                   <ENSName address={address} />
-                  {(isKYCd && (<IdentificationIcon className="w-3 h-3" />))}
-                  {(isAssociated && (<LinkIcon className="w-3 h-3" />))}
+                  {(isKYCd && (<IdentificationIcon className="w-3 h-3 hidden sm:block" />))}
+                  {(isAssociated && (<LinkIcon className="w-3 h-3 hidden sm:block" />))}
                 </React.Fragment>
               )}
               <ChevronDownIcon className="h-3 w-3" />
             </div>
           </DropdownMenu.Trigger>
-          <DropdownMenu.Content className="dropdown" align="end">
+          <DropdownMenu.Content className="dropdown">
             <DropdownMenu.Item
               onSelect={() => !isConnected ? connect() : disconnect()}
               className="dropdown-item flex items-center"
