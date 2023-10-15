@@ -226,7 +226,6 @@ export function useRouteRaribleItemMutation<TResponse>(
     onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKey });
       if (["order.acceptBid", "order.buy"].includes(raribleFn)) {
-        console.log("canceling items ownership queries");
         queryClient.invalidateQueries({ queryKey: [APP_TERM, "items"] });
       }
     },

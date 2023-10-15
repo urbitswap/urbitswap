@@ -99,6 +99,7 @@ npm run build
 cd ..
 ./durploy desk -g zod vcc-trade ./ui/dist/
 cp "$(ls -dtr1 "${XDG_CACHE_HOME:-$HOME/.cache}/durploy/glob"/* | tail -1)" ./meta/glob
+./meta/exec/release "1.2.3" "$(ls -dtr1 ./meta/glob/* | tail -1)"
 ```
 
 

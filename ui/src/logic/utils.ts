@@ -1,5 +1,5 @@
 import { format, formatDistance } from 'date-fns';
-import { ENV_TEST, MAX_DATE, CONTRACT } from '@/constants';
+import { APP_DBUG, MAX_DATE, CONTRACT } from '@/constants';
 import { Blockchain } from '@rarible/api-client';
 import {
   toContractAddress,
@@ -37,7 +37,7 @@ export function genRateLimiter(maxReqs: number, perSecs: number) {
     if (++frameCount <= maxReqs) {
       (frameQueue.shift() ?? (() => null))();
     } else {
-      ENV_TEST && func &&
+      APP_DBUG && func &&
         console.log(`deferring ${func.name} for ${untilNext/ 1000}s`);
       setTimeout(limiter, untilNext);
     }

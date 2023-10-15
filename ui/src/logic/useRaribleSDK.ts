@@ -3,7 +3,7 @@ import { ethers } from 'ethers'
 import { useAccount, useWalletClient, usePublicClient } from 'wagmi';
 import { createRaribleSdk } from '@rarible/sdk';
 import { genRateLimiter } from '@/logic/utils';
-import { ENV_TEST } from '@/constants';
+import { APP_DBUG } from '@/constants';
 import type { WalletClient } from '@wagmi/core'
 import type { IRaribleSdk as RaribleSdk } from '@rarible/sdk';
 import type { Callable, Args } from '@/types/utils'
@@ -19,7 +19,7 @@ export default function useRaribleSDK(): RaribleSdk {
 
   return useMemo(() => createRaribleSdk(
     (isConnected && walletClient) ? walletClientToSigner(walletClient) : undefined,
-    ENV_TEST ? "testnet" : "prod",
+    APP_DBUG ? "testnet" : "prod",
     {
       logs: 0,
       apiKey: import.meta.env.VITE_RARIBLE_KEY,
@@ -36,11 +36,11 @@ async function reportRaribleCall(fn: Callable, args: Args): MiddlewarePromise
 {
   return [
     (...argz: any[]) => {
-      ENV_TEST && console.log(fn.name);
+      APP_DBUG && console.log(fn.name);
       return fn(...argz);
     },
     async (res: Promise<any>) => {
-      // ENV_TEST && console.log(await res);
+      // APP_DBUG && console.log(await res);
       return res;
     },
   ];

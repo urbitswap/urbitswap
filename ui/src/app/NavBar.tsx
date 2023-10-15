@@ -16,7 +16,7 @@ import ENSName from '@/components/ENSName';
 import VCCIcon from '@/components/icons/VCCIcon';
 import { useModalNavigate } from '@/logic/routing';
 import { useWagmiAccount, useUrbitTraders, useVentureIsAccountKYCd } from '@/state/app';
-import { APP_NAME, ENV_TEST } from '@/constants';
+import { APP_NAME } from '@/constants';
 import type { Chain } from 'viem'; // vcc/ui/node_modules/viem/types/chain.ts
 
 export default function NavBar({
