@@ -30,7 +30,7 @@ import {
   useRouteRaribleAccountItem,
   useRouteRaribleItemMutation,
   useRouteRaribleOfferItemMutation,
-  useVentureIsAccountKYCd,
+  useAccountVentureKYC,
 } from '@/state/app';
 import { useDismissNavigate } from '@/logic/routing';
 import {
@@ -497,20 +497,22 @@ function DefaultDialog(props: DialogProps) {
   const params = useParams();
 
   const { isConnected } = useWagmiAccount();
-  const isKYCd = useVentureIsAccountKYCd();
+  const vccKYC = useAccountVentureKYC();
 
   // FIXME: This doesn't work when refreshing the page (the redirect to the
   // KYC URL does work, but it renders the initial dialog somehow), but this
   // is only really a problem in the development environment.
   useLayoutEffect(() => {
-    if ((!isConnected || (isKYCd !== undefined && !isKYCd))
+    const isKYCd = vccKYC !== undefined && vccKYC.kyc;
+    // TODO: Pass KYC reason to 'pretrade' dialog for display
+    if ((!isConnected || !isKYCd)
         && !location.pathname.endsWith("/pretrade")) {
       navigate(`/item/${params?.itemId}/pretrade`, {
         replace: true,
         state: location.state,
       });
     }
-  }, [isConnected, isKYCd, params?.itemId, location.pathname, location.state, navigate]);
+  }, [isConnected, vccKYC, params?.itemId, location.pathname, location.state, navigate]);
 
   return (
     <Dialog defaultOpen modal containerClass="w-full sm:max-w-lg" {...props} />

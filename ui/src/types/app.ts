@@ -9,6 +9,28 @@ import type { Address } from 'viem';
 export type TenderType = "eth" | "usdc";
 export type OfferType = "bid" | "sell";
 
+export type GetWagmiAccountResult = Omit<GetAccountResult, "address"> & {
+  address: Address;
+};
+
+export interface VentureKYC {
+  kyc: boolean;
+  details?: string;
+}
+
+export type VentureTransfer = VentureTransferDenial | VentureTransferGrant;
+export interface VentureTransferDenial {
+  state: "failed";
+  details: string;
+}
+export interface VentureTransferGrant {
+  state: "success";
+  callId: string;
+  signature: string;
+  nonce: string;
+  expiryBlock: string;
+}
+
 export interface UrbitTraders {
   [wallet: string]: string;  // wallet -> @p
 }
@@ -27,10 +49,6 @@ export interface RouteRaribleItem {
   owner: Address | undefined;
   bids: RaribleOrder[] | undefined;
 }
-
-export type GetWagmiAccountResult = Omit<GetAccountResult, "address"> & {
-  address: Address;
-};
 
 export interface RouteRaribleAccountItem extends RouteRaribleItem, GetWagmiAccountResult {
   mine: boolean;

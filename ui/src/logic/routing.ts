@@ -4,7 +4,6 @@ import {
   To,
   useLocation,
   useNavigate,
-  matchPath,
 } from 'react-router';
 import { ReactRouterState } from '@/types/urbui';
 

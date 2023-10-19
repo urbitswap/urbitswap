@@ -38,10 +38,14 @@ export default ({ mode }) => {
         output: {
           manualChunks: {
             'ethers': ['ethers'],
+            '@rarible/sdk': ['@rarible/sdk'],
             'urbit': ['@urbit/api', '@urbit/http-api', '@tlon/sigil-js'],
             'react-ui': ['react-select', 'react-datetime-picker'],
-            'radix-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
-            '@rarible/sdk': ['@rarible/sdk'],
+            'radix-ui': [
+              '@radix-ui/react-dialog',
+              '@radix-ui/react-dropdown-menu',
+              '@radix-ui/react-popover',
+            ],
           },
           // FIXME: The following has better size chunks, but splitting
           // up '@rarible/sdk' doesn't seem to work very easily (even if

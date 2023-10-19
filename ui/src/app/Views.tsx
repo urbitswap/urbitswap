@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
-import { Link, useParams, useLocation } from 'react-router-dom';
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import cn from 'classnames';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/solid';
 import VCCIcon from '@/components/icons/VCCIcon';
 import TraderName from '@/components/TraderName';
+import ItemBadges from '@/components/ItemBadges';
 import {
   useUrbitTraders,
   useRaribleCollection,
@@ -36,8 +37,8 @@ import type { OfferType } from '@/types/app';
 import type { ClassProps } from '@/types/urbui';
 
 export function CollectionGrid({className}: ClassProps) {
+  const navigate = useNavigate();
   const collection = useRaribleCollection();
-  const myItems = useRaribleAccountItems();
 
   return (
     <div className={cn(
@@ -52,14 +53,14 @@ export function CollectionGrid({className}: ClassProps) {
           justify-center sm:grid-cols-[repeat(auto-fit,minmax(auto,200px))]
         `}>
           {collection.map((item: RaribleItem) => (
-            <Link key={item.tokenId}
-              to={`/item/${item.tokenId}`}
+            <div
+              key={item.tokenId}
+              role="link"
               className={cn(
                 "flex flex-col justify-between p-2 gap-2 rounded-lg border-2",
-                (myItems ?? []).some((i: RaribleItem) => i.id === item.id)
-                  ? "border-blue-300 hover:border-blue-600"
-                  : "border-gray-200 hover:border-gray-800",
+                "border-gray-200 hover:border-gray-800",
               )}
+              onClick={() => navigate(`/item/${item.tokenId}`)}
             >
               <h3 className="text-lg text-center font-semibold line-clamp-1">
                 {makePrettyName(item)}
@@ -69,7 +70,8 @@ export function CollectionGrid({className}: ClassProps) {
                   entry["@type"] === "IMAGE"
                 )) ?? {})?.url
               } />
-              <div className="grid grid-cols-2 pt-2 text-sm text-center">
+              <ItemBadges item={item} badgeClassName="w-5 h-5" />
+              <div className="grid grid-cols-2 text-sm text-center">
                 <div>
                   <p className="font-bold">Live Ask</p>
                   <p>
@@ -91,7 +93,7 @@ export function CollectionGrid({className}: ClassProps) {
                   </p>
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}
@@ -222,13 +224,13 @@ export function ItemPage({className}: ClassProps) {
           </div>
           <div className="sm:row-span-1 flex flex-col gap-4 items-center">
             <img className={cn(
-              "object-contain aspect-square rounded-lg border-2",
-              isMyItem ? "border-blue-600" : "border-gray-800",
+              "object-contain aspect-square rounded-lg border-2 border-gray-800",
             )} src={
               (item.meta?.content.find((entry: RaribleMetaContent) => (
                 entry["@type"] === "IMAGE"
               )) ?? {})?.url
             } />
+            <ItemBadges item={item} badgeClassName="w-6 h-6" />
             <button className="w-full button"
               onClick={() => modalNavigate("offer", {
                 state: {backgroundLocation: location}
@@ -268,8 +270,11 @@ export function ItemPage({className}: ClassProps) {
 }
 
 function LoadingIcon() {
+  // FIXME: The height value given here is a hack that assumes working in the
+  // main content area under the navbar and obviously won't work in all
+  // embedding contexts.
   return (
-    <div className="flex flex-col justify-center items-center h-[calc(100vh-98px)]">
+    <div className="flex flex-col justify-center items-center h-[75vh]">
       <VCCIcon className="animate-ping w-32 h-32" />
     </div>
   );

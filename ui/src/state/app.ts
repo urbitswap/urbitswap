@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 import { useAccount } from 'wagmi';
+import { add as offsetDate } from 'date-fns';
 import {
   QueryKey,
   MutationFunction,
@@ -19,12 +20,14 @@ import type { Address } from 'viem';
 import type {
   Item as RaribleItem,
   Items as RaribleItems,
+  Meta as RaribleItemMeta,
   Order as RaribleOrder,
   Orders as RaribleOrders,
   Ownership as RaribleOwnership,
   Ownerships as RaribleOwnerships,
 } from '@rarible/api-client';
 import type {
+  VentureKYC,
   UrbitTraders,
   UrbitAssoc,
   RouteRaribleItem,
@@ -38,6 +41,29 @@ export function useWagmiAccount() {
     address: ((address ?? "0x").toLowerCase() as Address),
     ...account,
   };
+}
+
+export function useAccountVentureKYC(): VentureKYC | undefined {
+  const { address } = useWagmiAccount();
+  const queryKey: QueryKey = useMemo(() => [
+    APP_TERM, "venture", "kyc", address,
+  ], [address]);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: queryKey,
+    queryFn: async () => {
+      return {
+        kyc: address !== "0x0",
+        details: (address !== "0x0")
+          ? undefined
+          : "Address not Registered w/ Venture Club",
+      };
+    },
+  });
+
+  return (isLoading || isError)
+    ? undefined
+    : (data as VentureKYC);
 }
 
 export function useUrbitTraders(): UrbitTraders | undefined {
@@ -113,7 +139,7 @@ export function useRaribleCollection(): RaribleItem[] | undefined {
 
   return (isLoading || isError)
     ? undefined
-    : (data as RaribleItem[]);
+    : (data as RaribleItem[]).map(addVentureUnlockAttribs);
 }
 
 export function useRaribleAccountItems(): RaribleItem[] | undefined {
@@ -126,6 +152,11 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
       rsdk.apis.item.getItemsByOwner,
       {owner: `ETHEREUM:${address}`},
     ),
+    // FIXME: Applying a more strict throttle on ownership because the
+    // query can be expensive (esp. if a user has multiple addresses).
+    // It would be better to not retry on fetch/mount and to rely on a
+    // ethers/web3 for invalidation event listener.
+    staleTime: 2 * 60 * 1000,
   }))});
 
   return (results.some(q => q.isLoading) || results.some(q => q.isError))
@@ -133,7 +164,7 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
     : results.reduce(
       (a, i) => a.concat(i.data as RaribleItem[]),
       ([] as RaribleItem[])
-    );
+    ).map(addVentureUnlockAttribs);
 }
 
 export function useRouteRaribleItem(): RouteRaribleItem {
@@ -164,7 +195,7 @@ export function useRouteRaribleItem(): RouteRaribleItem {
   return (isLoading || isError)
     ? {item: undefined, owner: undefined, bids: undefined}
     : {
-      item: (data[0] as RaribleItem),
+      item: addVentureUnlockAttribs(data[0] as RaribleItem),
       // @ts-ignore
       owner: (data[1].map((o: RaribleOwnership) => o.owner.replace(/^.+:/g, "").toLowerCase())[0] as Address),
       // @ts-ignore
@@ -273,20 +304,20 @@ function queryRaribleContinuation<
     });
 }
 
-export function useVentureIsAccountKYCd(): boolean | undefined {
-  const { address } = useWagmiAccount();
-  const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "venture", "kyc", address,
-  ], [address]);
+// TODO: Remove this function once VCC unlock periods are advertised explicitly
+// in the ETH NFT attributes.
+function addVentureUnlockAttribs(item: RaribleItem): RaribleItem {
+  const itemId: number = Number(item.tokenId ?? 0);
+  const itemOffset: number = (itemId + 1) * ((itemId % 2 == 0) ? -1 : 1);
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: queryKey,
-    queryFn: async () => {
-      return address !== "0x0";
-    },
-  });
-
-  return (isLoading || isError)
-    ? undefined
-    : (data as boolean);
+  return {
+    ...item,
+    meta: ({
+      ...(item.meta ?? {}),
+      attributes: (item.meta?.attributes ?? []).concat([{
+        key: "Unlock Date",
+        value: offsetDate(Date.now(), {days: itemOffset}).toISOString(),
+      }]),
+    } as RaribleItemMeta),
+  };
 }

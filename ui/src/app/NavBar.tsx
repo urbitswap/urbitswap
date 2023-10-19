@@ -15,7 +15,11 @@ import {
 import ENSName from '@/components/ENSName';
 import VCCIcon from '@/components/icons/VCCIcon';
 import { useModalNavigate } from '@/logic/routing';
-import { useWagmiAccount, useUrbitTraders, useVentureIsAccountKYCd } from '@/state/app';
+import {
+  useWagmiAccount,
+  useAccountVentureKYC,
+  useUrbitTraders,
+} from '@/state/app';
 import { APP_NAME } from '@/constants';
 import type { Chain } from 'viem'; // vcc/ui/node_modules/viem/types/chain.ts
 
@@ -32,11 +36,11 @@ export default function NavBar({
   const { connect } = useConnect({connector: new InjectedConnector()});
   const { disconnect } = useDisconnect();
   const traders = useUrbitTraders();
-  const isVCCKYCd = useVentureIsAccountKYCd();
+  const vccKYC = useAccountVentureKYC();
 
   const isConnected: boolean = address !== "0x";
   const isAssociated: boolean = (traders ?? {})[address.toLowerCase()] !== undefined;
-  const isKYCd = isVCCKYCd !== undefined && isVCCKYCd;
+  const isKYCd = vccKYC !== undefined && vccKYC.kyc;
 
   return (
     <nav className={cn(

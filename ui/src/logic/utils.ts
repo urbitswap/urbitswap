@@ -14,6 +14,7 @@ import type {
   Asset as RaribleAsset,
   AssetType as RaribleAssetType,
   Item as RaribleItem,
+  MetaAttribute as RaribleMetaAttrib,
   Order as RaribleOrder,
   Ownership as RaribleOwnership,
 } from '@rarible/api-client';
@@ -110,4 +111,13 @@ export function makeTerseLapse(date: Date): string {
     .replace(/day(s)?/, 'D')
     .replace(/month(s)?/, 'M')
     .replace(/year(s)?/, 'Y');
+}
+
+export function getItemUnlock(item: RaribleItem): Date {
+  const itemUnlockAttrib: string | undefined = (item.meta?.attributes ?? []).find(
+    (m: RaribleMetaAttrib) => m.key.match(/[uU]nlock/)
+  )?.value;
+  return (itemUnlockAttrib === undefined)
+    ? MAX_DATE
+    : new Date(Date.parse(itemUnlockAttrib));
 }
