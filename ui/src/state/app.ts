@@ -16,6 +16,7 @@ import useRaribleSDK from '@/logic/useRaribleSDK';
 import useUrbitSubscription from '@/logic/useUrbitSubscription';
 import { urbitAPI } from '@/api';
 import { APP_TERM, CONTRACT, TRADERS_HOST, TRADERS_HOST_FLAG } from '@/constants';
+import { OrderStatus as RaribleOrderStatus } from '@rarible/api-client';
 import type { Address } from 'viem';
 import type {
   Item as RaribleItem,
@@ -68,7 +69,7 @@ export function useAccountVentureKYC(): VentureKYC | undefined {
 
 export function useUrbitTraders(): UrbitTraders | undefined {
   const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "traders", ...TRADERS_HOST
+    APP_TERM, "urbit", "traders", ...TRADERS_HOST
   ], []);
 
   const { data, isLoading, isError } = useUrbitSubscription({
@@ -98,7 +99,7 @@ export function useUrbitAssociateMutation(
   options?: UseMutationOptions<number, unknown, any, unknown>
 ) {
   const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "traders", ...TRADERS_HOST
+    APP_TERM, "urbit", "traders", ...TRADERS_HOST
   ], []);
 
   const queryClient = useQueryClient();
@@ -125,7 +126,7 @@ export function useUrbitAssociateMutation(
 
 export function useRaribleCollection(): RaribleItem[] | undefined {
   const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "collection",
+    APP_TERM, "rarible", "collection",
   ], []);
 
   const rsdk = useRaribleSDK();
@@ -147,7 +148,7 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
 
   const rsdk = useRaribleSDK();
   const results = useQueries({ queries: addresses.map((address: Address) => ({
-    queryKey: [APP_TERM, "items", address],
+    queryKey: [APP_TERM, "rarible", "account", address, "items"],
     queryFn: () => queryRaribleContinuation(
       rsdk.apis.item.getItemsByOwner,
       {owner: `ETHEREUM:${address}`},
@@ -167,10 +168,32 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
     ).map(addVentureUnlockAttribs);
 }
 
+export function useRaribleAccountBids(): RaribleOrder[] | undefined {
+  const addresses = useAccountAddresses();
+
+  const rsdk = useRaribleSDK();
+  const results = useQueries({ queries: addresses.map((address: Address) => ({
+    queryKey: [APP_TERM, "rarible", "account", address, "bids"],
+    queryFn: () => queryRaribleContinuation(
+      rsdk.apis.order.getOrderBidsByMaker,
+      {maker: [`ETHEREUM:${address}`], status: [RaribleOrderStatus.ACTIVE]},
+    ),
+    // FIXME: See `useRaribleAccountItems`
+    staleTime: 2 * 60 * 1000,
+  }))});
+
+  return (results.some(q => q.isLoading) || results.some(q => q.isError))
+    ? undefined
+    : results.reduce(
+      (a, i) => a.concat(i.data as RaribleOrder[]),
+      ([] as RaribleOrder[])
+    );
+}
+
 export function useRouteRaribleItem(): RouteRaribleItem {
   const { itemId } = useParams();
   const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "item", itemId,
+    APP_TERM, "rarible", "item", itemId,
   ], [itemId]);
 
   const rsdk = useRaribleSDK();
@@ -186,7 +209,7 @@ export function useRouteRaribleItem(): RouteRaribleItem {
         ),
         queryRaribleContinuation(
           rsdk.apis.order.getOrderBidsByItem,
-          {itemId: itemAddr},
+          {itemId: itemAddr, status: [RaribleOrderStatus.ACTIVE]},
         ),
       ]);
     },
@@ -198,8 +221,7 @@ export function useRouteRaribleItem(): RouteRaribleItem {
       item: addVentureUnlockAttribs(data[0] as RaribleItem),
       // @ts-ignore
       owner: (data[1].map((o: RaribleOwnership) => o.owner.replace(/^.+:/g, "").toLowerCase())[0] as Address),
-      // @ts-ignore
-      bids: (data[2].filter((o: RaribleOrder) => o.status === "ACTIVE") as RaribleOrder[]),
+      bids: (data[2] as RaribleOrder[]),
     };
 }
 
@@ -223,7 +245,7 @@ export function useRouteRaribleItemMutation<TResponse>(
 ) {
   const { itemId } = useParams();
   const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "item", itemId,
+    APP_TERM, "rarible", "item", itemId,
   ], [itemId]);
 
   const rsdk = useRaribleSDK();
@@ -256,8 +278,11 @@ export function useRouteRaribleItemMutation<TResponse>(
       queryClient.setQueryData(queryKey, oldData),
     onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKey });
+      // FIXME: For the sake of efficiency, it would be better to void only
+      // the information for the currently active account (instead of all user
+      // accounts, as is done currently).
       if (["order.acceptBid", "order.buy"].includes(raribleFn)) {
-        queryClient.invalidateQueries({ queryKey: [APP_TERM, "items"] });
+        queryClient.invalidateQueries({ queryKey: [APP_TERM, "rarible", "account"] });
       }
     },
     ...options,

@@ -21,7 +21,6 @@ export default function EntityName(props: EntityNameProps) {
   return (
     <span title={props.address.toLowerCase()} className={cn(
       props?.className,
-      isMe ? "text-blue-600" : "",
     )}>
       {(urbitId === undefined) ? (
         <ENSName {...props} />
