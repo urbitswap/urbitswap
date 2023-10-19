@@ -255,19 +255,19 @@ export function TradeDialog() {
               <div className="flex flex-col justify-center text-center">
                 <TraderName
                   address={address}
-                  className="font-bold underline"
+                  className="mx-auto font-bold underline"
                 />
-                <p className="line-through">{mine ? tradeAsset : tradeTender}</p>
-                <p className="italic">{mine ? tradeTender : tradeAsset}</p>
+                <p className="line-through text-sm">{mine ? tradeAsset : tradeTender}</p>
+                <p className="italic text-sm">{mine ? tradeTender : tradeAsset}</p>
               </div>
               <ArrowsRightLeftIcon className="w-5 h-5" />
               <div className="flex flex-col justify-center text-center">
                 <TraderName
                   address={(tradeOffer.maker.replace(/^.+:/g, "") as Address)}
-                  className="font-bold underline"
+                  className="mx-auto font-bold underline"
                 />
-                <p className="italic">{mine ? tradeAsset : tradeTender}</p>
-                <p className="line-through">{mine ? tradeTender : tradeAsset}</p>
+                <p className="italic text-sm">{mine ? tradeAsset : tradeTender}</p>
+                <p className="line-through text-sm">{mine ? tradeTender : tradeAsset}</p>
               </div>
             </div>
           )}

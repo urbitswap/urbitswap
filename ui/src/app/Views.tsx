@@ -166,7 +166,7 @@ export function ItemPage({className}: ClassProps) {
             <h2 className="text-xl font-bold underline">
               {makePrettyName(item)}
             </h2>
-            <h3 className="text-md">
+            <h3 className="flex flex-row text-md">
               <span className="font-semibold">Owner:</span>&nbsp;
               {owner && (
                 <TraderName address={owner} />
