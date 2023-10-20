@@ -31,7 +31,7 @@ export default function EntityName(props: EntityNameProps) {
         <ShipName name={urbitId} {...props} />
       )}
       {isMe && (<span>(me)</span>)}
-      <a href={ethUrl} className={cn(
+      <a href={ethUrl} target="_blank" rel="noopener noreferrer" className={cn(
         "p-0.5 rounded-md hover:bg-gray-200",
       )}>
         <EthereumIcon className="h-4 w-4" />

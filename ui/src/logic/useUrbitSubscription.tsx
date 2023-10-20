@@ -24,7 +24,7 @@ export default function useUrbitSubscription({
   options?: UseQueryOptions;
 }): ReturnType<typeof useQuery> {
   const queryClient = useQueryClient();
-  const invalidate = useRef(() => {
+  const invalidate = useRef(
     debounce(
       () => {
         queryClient.invalidateQueries(queryKey);
@@ -32,7 +32,7 @@ export default function useUrbitSubscription({
       300,
       { leading: true, trailing: true }
     )
-  });
+  );
 
   const fetchData = async () => (
     urbitAPI.scry({

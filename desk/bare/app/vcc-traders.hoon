@@ -134,7 +134,7 @@
   |=  path=(pole knot)
   ^+  cor
   ?+    path  ~|(bad-watch-path/path !!)
-      [ship=@ name=@ ~]
+      [%vcc ship=@ name=@ ~]
     =/  ship=@p    (slav %p ship.path)
     =/  name=term  (slav %tas name.path)
     ?>(=(our src):bowl cor)
@@ -160,6 +160,7 @@
   |=  [path=(pole knot) =sign:agent:gall]
   ^+  cor
   ?+    path  cor
+  :: sss responses ::
       [~ %sss %on-rock @ @ @ %vcc %traders @ @ ~]
     (pull ~ (chit:da-traders |3:path sign))
   ::
@@ -168,7 +169,7 @@
   ::
       [~ %sss %scry-response @ @ @ %vcc %traders @ @ ~]
     (push (tell:du-traders |3:path sign))
-  ::
+  :: vcc proxy response ::
       [%vcc ship=@ name=@ ~]
     =/  ship=@p    (slav %p ship.path)
     =/  name=term  (slav %tas name.path)
@@ -255,6 +256,8 @@
   ++  ta-push
     |=  =update:v
     ^+  ta-core
+    ::  NOTE: Notify *before* state change to avoid errors during deletions.
+    =.  ta-core  (ta-notify update)
     ?:  ?=(%drop -.update)
       =.  cor  (push (kill:du-traders [ta-du-path]~))
       ta-core(gone &)

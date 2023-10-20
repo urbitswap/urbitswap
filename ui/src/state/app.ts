@@ -75,7 +75,7 @@ export function useUrbitTraders(): UrbitTraders | undefined {
   const { data, isLoading, isError } = useUrbitSubscription({
     queryKey: queryKey,
     app: "vcc-traders",
-    path: `/${TRADERS_HOST_FLAG}`,
+    path: `/vcc/${TRADERS_HOST_FLAG}`,
     scry: `/${TRADERS_HOST_FLAG}`,
   });
 
@@ -178,8 +178,11 @@ export function useRaribleAccountBids(): RaribleOrder[] | undefined {
       rsdk.apis.order.getOrderBidsByMaker,
       {maker: [`ETHEREUM:${address}`], status: [RaribleOrderStatus.ACTIVE]},
     ),
-    // FIXME: See `useRaribleAccountItems`
-    staleTime: 2 * 60 * 1000,
+    // FIXME: We can query account bids even less frequently because all
+    // modifications will come through this interface (but we still need
+    // a clean way to invalidate expired bids, which could probably be done
+    // by looking at expiration values instead of requerying the API).
+    staleTime: 10 * 60 * 1000,
   }))});
 
   return (results.some(q => q.isLoading) || results.some(q => q.isError))
