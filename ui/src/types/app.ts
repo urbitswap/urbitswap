@@ -20,11 +20,11 @@ export interface VentureKYC {
 
 export type VentureTransfer = VentureTransferDenial | VentureTransferGrant;
 export interface VentureTransferDenial {
-  state: "failed";
+  status: "failed";
   details: string;
 }
 export interface VentureTransferGrant {
-  state: "success";
+  status: "success";
   callId: string;
   signature: string;
   nonce: string;

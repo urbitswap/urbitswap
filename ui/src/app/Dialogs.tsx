@@ -30,7 +30,7 @@ import {
   useRouteRaribleAccountItem,
   useRouteRaribleItemMutation,
   useRouteRaribleOfferItemMutation,
-  useAccountVentureKYC,
+  useVentureAccountKYC,
 } from '@/state/app';
 import { useDismissNavigate } from '@/logic/routing';
 import {
@@ -497,7 +497,8 @@ function DefaultDialog(props: DialogProps) {
   const params = useParams();
 
   const { isConnected } = useWagmiAccount();
-  const vccKYC = useAccountVentureKYC();
+  const vccKYC = useVentureAccountKYC();
+  // const vccGrant = useVentureAccountGrant(params?.itemId ?? "");
 
   // FIXME: This doesn't work when refreshing the page (the redirect to the
   // KYC URL does work, but it renders the initial dialog somehow), but this
@@ -512,7 +513,14 @@ function DefaultDialog(props: DialogProps) {
         state: location.state,
       });
     }
-  }, [isConnected, vccKYC, params?.itemId, location.pathname, location.state, navigate]);
+  }, [
+    isConnected,
+    vccKYC,
+    params?.itemId,
+    location.pathname,
+    location.state,
+    navigate,
+  ]);
 
   return (
     <Dialog defaultOpen modal containerClass="w-full sm:max-w-lg" {...props} />

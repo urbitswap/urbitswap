@@ -9,6 +9,7 @@ import {
   StarIcon,
 } from '@heroicons/react/24/solid';
 import {
+  useVentureAccountGrant,
   useRaribleAccountItems,
   useRaribleAccountBids,
 } from '@/state/app';
@@ -33,41 +34,48 @@ export default function ItemBadges({
 }) {
   const myItems = useRaribleAccountItems();
   const myBids = useRaribleAccountBids();
+  const myItemGrant = useVentureAccountGrant(item.tokenId ?? "");
 
-  const itemUnlock = getItemUnlock(item);
+  const itemUnlock: Date = getItemUnlock(item);
+  const itemTransferable: boolean = myItemGrant !== undefined
+    && myItemGrant?.status === "success";
 
   return (
     <div className={cn(className, "flex flex-row justify-center gap-2 items")}>
-      {(myItems === undefined) ? (
+      {(myItems === undefined || myBids === undefined) ? (
         <ArrowPathIcon className={cn(badgeClassName, "text-black animate-spin")} />
       ) : (
         <React.Fragment>
-          {(myItems ?? []).some((i: RaribleItem) => i.id === item.id) && (
+          {myItems.some((i: RaribleItem) => i.id === item.id) && (
             <BadgePopover
               message="Owned by Me"
-              children={<StarIcon className={cn(badgeClassName, "text-blue-300")} />}
+              children={<StarIcon className={cn(badgeClassName, "text-blue-400")} />}
             />
           )}
           {(itemUnlock < new Date(Date.now())) ? (
             <BadgePopover
               message="Available for General Purchase"
-              children={<LockOpenIcon className={badgeClassName} />}
+              children={<LockOpenIcon className={
+                cn(badgeClassName, itemTransferable && "text-blue-400")
+              } />}
             />
           ) : (
             <BadgePopover
               message={`Lockup Period Ends ${
                 isMaxDate(itemUnlock) ? "???" : makePrettyLapse(itemUnlock)
-              }`}
-              children={<LockClosedIcon className={badgeClassName} />}
+              } (${itemTransferable ? "A" : "Una"}vailable to You)`}
+              children={<LockClosedIcon className={
+                cn(badgeClassName, itemTransferable && "text-blue-400")
+              } />}
             />
           )}
-          {(myBids ?? []).some((o: RaribleOrder) =>
+          {myBids.some((o: RaribleOrder) =>
             (o.take.type["@type"] === "ERC721" || o.take.type["@type"] === "ERC721_Lazy")
             && `${o.take.type?.contract}:${o.take.type?.tokenId}` === item.id
           ) && (
             <BadgePopover
               message="Has my Bid"
-              children={<TagIcon className={cn(badgeClassName, "text-blue-300")} />}
+              children={<TagIcon className={cn(badgeClassName, "text-blue-400")} />}
             />
           )}
         </React.Fragment>

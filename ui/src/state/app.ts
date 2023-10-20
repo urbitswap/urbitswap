@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 import { useAccount } from 'wagmi';
-import { add as offsetDate } from 'date-fns';
 import {
   QueryKey,
   MutationFunction,
@@ -14,6 +13,11 @@ import {
 } from '@tanstack/react-query';
 import useRaribleSDK from '@/logic/useRaribleSDK';
 import useUrbitSubscription from '@/logic/useUrbitSubscription';
+import {
+  requestVentureKYC,
+  requestVentureTransfer,
+  addVentureAttribs,
+} from '@/logic/ventureclub';
 import { urbitAPI } from '@/api';
 import { APP_TERM, CONTRACT, TRADERS_HOST, TRADERS_HOST_FLAG } from '@/constants';
 import { OrderStatus as RaribleOrderStatus } from '@rarible/api-client';
@@ -21,7 +25,6 @@ import type { Address } from 'viem';
 import type {
   Item as RaribleItem,
   Items as RaribleItems,
-  Meta as RaribleItemMeta,
   Order as RaribleOrder,
   Orders as RaribleOrders,
   Ownership as RaribleOwnership,
@@ -29,6 +32,7 @@ import type {
 } from '@rarible/api-client';
 import type {
   VentureKYC,
+  VentureTransfer,
   UrbitTraders,
   UrbitAssoc,
   RouteRaribleItem,
@@ -42,29 +46,6 @@ export function useWagmiAccount() {
     address: ((address ?? "0x").toLowerCase() as Address),
     ...account,
   };
-}
-
-export function useAccountVentureKYC(): VentureKYC | undefined {
-  const { address } = useWagmiAccount();
-  const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "venture", "kyc", address,
-  ], [address]);
-
-  const { data, isLoading, isError } = useQuery({
-    queryKey: queryKey,
-    queryFn: async () => {
-      return {
-        kyc: address !== "0x0",
-        details: (address !== "0x0")
-          ? undefined
-          : "Address not Registered w/ Venture Club",
-      };
-    },
-  });
-
-  return (isLoading || isError)
-    ? undefined
-    : (data as VentureKYC);
 }
 
 export function useUrbitTraders(): UrbitTraders | undefined {
@@ -84,7 +65,7 @@ export function useUrbitTraders(): UrbitTraders | undefined {
     : (data as UrbitTraders);
 }
 
-export function useAccountAddresses(): Address[] {
+export function useUrbitAccountAddresses(): Address[] {
   const { address, isConnected } = useWagmiAccount();
   const traders = useUrbitTraders();
 
@@ -124,6 +105,42 @@ export function useUrbitAssociateMutation(
   });
 }
 
+export function useVentureAccountKYC(): VentureKYC | undefined {
+  const { address } = useWagmiAccount();
+  const queryKey: QueryKey = useMemo(() => [
+    APP_TERM, "venture", "kyc", address,
+  ], [address]);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: queryKey,
+    queryFn: async () => requestVentureKYC(address),
+  });
+
+  return (isLoading || isError)
+    ? undefined
+    : (data as VentureKYC);
+}
+
+export function useVentureAccountGrant(itemId: string): VentureTransfer | undefined {
+  const { address } = useWagmiAccount();
+  const queryKey: QueryKey = useMemo(() => [
+    APP_TERM, "venture", "grant", address, itemId,
+  ], [address, itemId]);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: queryKey,
+    queryFn: async () => requestVentureTransfer(
+      address,
+      (CONTRACT.COLLECTION.slice("ETHEREUM:".length) as Address),
+      itemId,
+    ),
+  });
+
+  return (isLoading || isError)
+    ? undefined
+    : (data as VentureTransfer);
+}
+
 export function useRaribleCollection(): RaribleItem[] | undefined {
   const queryKey: QueryKey = useMemo(() => [
     APP_TERM, "rarible", "collection",
@@ -140,11 +157,11 @@ export function useRaribleCollection(): RaribleItem[] | undefined {
 
   return (isLoading || isError)
     ? undefined
-    : (data as RaribleItem[]).map(addVentureUnlockAttribs);
+    : (data as RaribleItem[]).map(addVentureAttribs);
 }
 
 export function useRaribleAccountItems(): RaribleItem[] | undefined {
-  const addresses = useAccountAddresses();
+  const addresses = useUrbitAccountAddresses();
 
   const rsdk = useRaribleSDK();
   const results = useQueries({ queries: addresses.map((address: Address) => ({
@@ -165,11 +182,11 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
     : results.reduce(
       (a, i) => a.concat(i.data as RaribleItem[]),
       ([] as RaribleItem[])
-    ).map(addVentureUnlockAttribs);
+    ).map(addVentureAttribs);
 }
 
 export function useRaribleAccountBids(): RaribleOrder[] | undefined {
-  const addresses = useAccountAddresses();
+  const addresses = useUrbitAccountAddresses();
 
   const rsdk = useRaribleSDK();
   const results = useQueries({ queries: addresses.map((address: Address) => ({
@@ -221,7 +238,7 @@ export function useRouteRaribleItem(): RouteRaribleItem {
   return (isLoading || isError)
     ? {item: undefined, owner: undefined, bids: undefined}
     : {
-      item: addVentureUnlockAttribs(data[0] as RaribleItem),
+      item: addVentureAttribs(data[0] as RaribleItem),
       // @ts-ignore
       owner: (data[1].map((o: RaribleOwnership) => o.owner.replace(/^.+:/g, "").toLowerCase())[0] as Address),
       bids: (data[2] as RaribleOrder[]),
@@ -330,22 +347,4 @@ function queryRaribleContinuation<
         newResults.length < 50 || output.continuation === undefined,
       );
     });
-}
-
-// TODO: Remove this function once VCC unlock periods are advertised explicitly
-// in the ETH NFT attributes.
-function addVentureUnlockAttribs(item: RaribleItem): RaribleItem {
-  const itemId: number = Number(item.tokenId ?? 0);
-  const itemOffset: number = (itemId + 1) * ((itemId % 2 == 0) ? -1 : 1);
-
-  return {
-    ...item,
-    meta: ({
-      ...(item.meta ?? {}),
-      attributes: (item.meta?.attributes ?? []).concat([{
-        key: "Unlock Date",
-        value: offsetDate(Date.now(), {days: itemOffset}).toISOString(),
-      }]),
-    } as RaribleItemMeta),
-  };
 }

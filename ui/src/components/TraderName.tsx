@@ -22,7 +22,7 @@ export default function EntityName(props: EntityNameProps) {
   return (
     <span className={cn(
       "flex flex-row items-center space-x-0.5",
-      isMe && "text-blue-300",
+      isMe && "text-blue-400",
       props?.className,
     )}>
       {(urbitId === undefined) ? (

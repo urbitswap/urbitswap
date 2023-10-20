@@ -17,7 +17,7 @@ import VCCIcon from '@/components/icons/VCCIcon';
 import { useModalNavigate } from '@/logic/routing';
 import {
   useWagmiAccount,
-  useAccountVentureKYC,
+  useVentureAccountKYC,
   useUrbitTraders,
 } from '@/state/app';
 import { APP_NAME } from '@/constants';
@@ -36,7 +36,7 @@ export default function NavBar({
   const { connect } = useConnect({connector: new InjectedConnector()});
   const { disconnect } = useDisconnect();
   const traders = useUrbitTraders();
-  const vccKYC = useAccountVentureKYC();
+  const vccKYC = useVentureAccountKYC();
 
   const isConnected: boolean = address !== "0x";
   const isAssociated: boolean = (traders ?? {})[address.toLowerCase()] !== undefined;
@@ -66,7 +66,7 @@ export default function NavBar({
             <div
               className={cn(
                 "flex flex-row items-center space-x-2 font-semibold button",
-                isConnected ? "text-blue-300 text-xs" : "",
+                isConnected ? "text-blue-400 text-xs" : "",
               )}
             >
               <WalletIcon className="h-5 w-5" />
