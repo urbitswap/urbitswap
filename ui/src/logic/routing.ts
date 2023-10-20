@@ -32,15 +32,11 @@ export function useDismissNavigate() {
   const location = useLocation();
   const state = location.state as ReactRouterState | null;
 
-  return useCallback((payload?: string) => {
+  return useCallback(() => {
     if (state?.backgroundLocation) {
-      const {backgroundLocation, ...oldState} = state;
-      const newPayload = (payload !== undefined) ? {foregroundPayload: payload} : {};
-      const newState: ReactRouterState = {...Object.assign({}, oldState, newPayload)};
-      navigate(backgroundLocation, {
-        replace: true,
-        state: Object.keys(newState).length === 0 ? undefined : newState,
-      });
+      // we want to replace the current location with the background location
+      // so that the user won't navigate back to the modal if they hit the back button
+      navigate(state.backgroundLocation, { replace: true });
     }
   }, [navigate, state]);
 }

@@ -26,11 +26,12 @@ import {
 import {
   useWagmiAccount,
   useUrbitAssociateMutation,
+  useVentureAccountKYC,
+  useVentureAccountGrant,
   useRouteRaribleItem,
   useRouteRaribleAccountItem,
   useRouteRaribleItemMutation,
   useRouteRaribleOfferItemMutation,
-  useVentureAccountKYC,
 } from '@/state/app';
 import { useDismissNavigate } from '@/logic/routing';
 import {
@@ -209,6 +210,8 @@ export function TradeDialog() {
     setHasBeenWarned(true);
   }, [setHasBeenWarned]);
   const onCancel = useCallback(async (event: any) => {
+    // NOTE: Okay not to go through "pretrade" form here because we just
+    // went through it
     navigate(`../cancel`, {
       replace: true,
       state: location.state,
@@ -415,10 +418,33 @@ export function AssociateDialog() {
 }
 
 export function PretradeDialog() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams();
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
   const { isConnected } = useWagmiAccount();
+  const vccKYC = useVentureAccountKYC();
+  const vccGrant = useVentureAccountGrant(params?.itemId ?? "");
+  const isKYCd: boolean = vccKYC !== undefined && vccKYC.kyc;
+  const isTransferable: boolean = vccGrant !== undefined && vccGrant?.status === "success";
+
+  useLayoutEffect(() => {
+    const { thenTo, ...newLocationState } = location.state;
+    if (isConnected && isKYCd && isTransferable) {
+      navigate(`../${thenTo}`, {
+        replace: true,
+        state: newLocationState,
+      });
+    }
+  }, [
+    isConnected,
+    isKYCd,
+    isTransferable,
+    navigate,
+    location.state,
+  ]);
 
   const onSubmit = useCallback(async (event: any) => {
     event.preventDefault();
@@ -426,55 +452,67 @@ export function PretradeDialog() {
 
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
-      <div className="w-5/6">
-        <header className="mb-3 flex items-center">
-          <h2 className="text-lg font-bold">
-            Before You Trade
-          </h2>
-        </header>
-      </div>
-
-      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-        {!isConnected ? (
-          <React.Fragment>
-            <p>
-              Please connect your crypto wallet
-              via <Link to="https://metamask.io/">Metamask</Link> in order to
-              start trading. If you don't have Metamask installed, visit their
-              website to get started:
-            </p>
-            <Link to="https://metamask.io/download/" className="text-2xl underline text-center">
-              Install Metamask
-            </Link>
-          </React.Fragment>
-        ) : (
-          <React.Fragment>
-            <p>
-              In order to exchange assets, you'll first need to go through Venture
-              Club's <Link to="https://en.wikipedia.org/wiki/Know_your_customer">KYC</Link> process.
-              Visit our website to get started:
-            </p>
-            <Link to="https://ventureclub.club" className="text-2xl underline text-center">
-              Venture Club KYC
-            </Link>
-          </React.Fragment>
-        )}
-
-        <footer className="mt-4 flex items-center justify-between space-x-2">
-          <div className="ml-auto flex items-center space-x-2">
-            <DialogPrimitive.Close asChild>
-              <button className="secondary-button ml-auto">
-                Decline
-              </button>
-            </DialogPrimitive.Close>
-            <DialogPrimitive.Close asChild>
-              <button className="button">
-                Acknowledge
-              </button>
-            </DialogPrimitive.Close>
+      {(vccKYC === undefined || vccGrant === undefined) ? (
+        <LoadingSpinner />
+      ) : (
+        <React.Fragment>
+          <div className="w-5/6">
+            <header className="mb-3 flex items-center">
+              <h2 className="text-lg font-bold">
+                Before You Trade
+              </h2>
+            </header>
           </div>
-        </footer>
-      </form>
+
+          <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+            {!isConnected ? (
+              <React.Fragment>
+                <p>
+                  Please connect your crypto wallet
+                  via <Link to="https://metamask.io/">Metamask</Link> in order to
+                  start trading. If you don't have Metamask installed, visit their
+                  website to get started:
+                </p>
+                <Link to="https://metamask.io/download/" className="text-2xl underline text-center">
+                  Install Metamask
+                </Link>
+              </React.Fragment>
+            ) : !isKYCd ? (
+              <React.Fragment>
+                <p>
+                  In order to exchange assets, you'll first need to go through Venture
+                  Club's <Link to="https://en.wikipedia.org/wiki/Know_your_customer">KYC</Link> process.
+                  Visit our website to get started:
+                </p>
+                <Link to="https://ventureclub.club" className="text-2xl underline text-center">
+                  Venture Club KYC
+                </Link>
+              </React.Fragment>
+            ) : (
+              <React.Fragment>
+                <p>
+                  TODO: Cannot transfer error message here.
+                </p>
+              </React.Fragment>
+            )}
+
+            <footer className="mt-4 flex items-center justify-between space-x-2">
+              <div className="ml-auto flex items-center space-x-2">
+                <DialogPrimitive.Close asChild>
+                  <button className="secondary-button ml-auto">
+                    Decline
+                  </button>
+                </DialogPrimitive.Close>
+                <DialogPrimitive.Close asChild>
+                  <button className="button">
+                    Acknowledge
+                  </button>
+                </DialogPrimitive.Close>
+              </div>
+            </footer>
+          </form>
+        </React.Fragment>
+      )}
     </DefaultDialog>
   );
 }
@@ -492,36 +530,6 @@ type DialogProps = DialogPrimitive.DialogProps &
   };
 
 function DefaultDialog(props: DialogProps) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const params = useParams();
-
-  const { isConnected } = useWagmiAccount();
-  const vccKYC = useVentureAccountKYC();
-  // const vccGrant = useVentureAccountGrant(params?.itemId ?? "");
-
-  // FIXME: This doesn't work when refreshing the page (the redirect to the
-  // KYC URL does work, but it renders the initial dialog somehow), but this
-  // is only really a problem in the development environment.
-  useLayoutEffect(() => {
-    const isKYCd = vccKYC !== undefined && vccKYC.kyc;
-    // TODO: Pass KYC reason to 'pretrade' dialog for display
-    if ((!isConnected || !isKYCd)
-        && !location.pathname.endsWith("/pretrade")) {
-      navigate(`/item/${params?.itemId}/pretrade`, {
-        replace: true,
-        state: location.state,
-      });
-    }
-  }, [
-    isConnected,
-    vccKYC,
-    params?.itemId,
-    location.pathname,
-    location.state,
-    navigate,
-  ]);
-
   return (
     <Dialog defaultOpen modal containerClass="w-full sm:max-w-lg" {...props} />
   );

@@ -77,12 +77,10 @@ function RoutedAppRoutes({
       </Routes>
       {state?.backgroundLocation && (
         <Routes>
-          <Route path="/pretrade" element={<PretradeDialog />} />
           <Route path="/assoc" element={<AssociateDialog />} />
           <Route path="/item/:itemId">
-            <Route path="pretrade" element={<PretradeDialog />} />
             <Route path="assoc" element={<AssociateDialog />} />
-
+            <Route path="pretrade" element={<PretradeDialog />} />
             <Route path="offer" element={<OfferDialog />} />
             <Route path="trade/:offerId" element={<TradeDialog />} />
             <Route path="cancel" element={<CancelDialog />} />

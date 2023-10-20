@@ -40,7 +40,7 @@ export default function NavBar({
 
   const isConnected: boolean = address !== "0x";
   const isAssociated: boolean = (traders ?? {})[address.toLowerCase()] !== undefined;
-  const isKYCd = vccKYC !== undefined && vccKYC.kyc;
+  const isKYCd: boolean = vccKYC !== undefined && vccKYC.kyc;
 
   return (
     <nav className={cn(

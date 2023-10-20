@@ -145,8 +145,8 @@ export function ItemPage({className}: ClassProps) {
           : makePrettyLapse(new Date(order?.endedAt || ""))
         } />
         <button className="button"
-          onClick={() => modalNavigate(`trade/${order?.id}`, {
-            state: {backgroundLocation: location}
+          onClick={() => modalNavigate("pretrade", {
+            state: {backgroundLocation: location, thenTo: `trade/${order?.id}`}
           })}
           disabled={!isConnected || disabled}
         >
@@ -232,8 +232,8 @@ export function ItemPage({className}: ClassProps) {
             } />
             <ItemBadges item={item} badgeClassName="w-6 h-6" />
             <button className="w-full button"
-              onClick={() => modalNavigate("offer", {
-                state: {backgroundLocation: location}
+              onClick={() => modalNavigate("pretrade", {
+                state: {backgroundLocation: location, thenTo: "offer"}
               })}
             >
               <CurrencyDollarIcon className="w-4 h-4" />
@@ -243,8 +243,8 @@ export function ItemPage({className}: ClassProps) {
             </button>
             {(offer !== undefined) && (
               <button className="w-full button"
-                onClick={() => modalNavigate("cancel", {
-                  state: {backgroundLocation: location}
+                onClick={() => modalNavigate("pretrade", {
+                  state: {backgroundLocation: location, thenTo: "cancel"}
                 })}
               >
                 <XCircleIcon className="w-4 h-4" />
