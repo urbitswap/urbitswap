@@ -5,6 +5,7 @@ import {
   QueryKey,
   MutationFunction,
   useQuery,
+  useInfiniteQuery,
   useQueries,
   useQueryClient,
   UseQueryOptions,
@@ -131,7 +132,7 @@ export function useVentureAccountGrant(itemId: string): VentureTransfer | undefi
     queryKey: queryKey,
     queryFn: async () => requestVentureTransfer(
       address,
-      (CONTRACT.COLLECTION.slice("ETHEREUM:".length) as Address),
+      (CONTRACT.AZIMUTH.slice("ETHEREUM:".length) as Address),
       itemId,
     ),
   });
@@ -151,7 +152,7 @@ export function useRaribleCollection(): RaribleItem[] | undefined {
     queryKey: queryKey,
     queryFn: () => queryRaribleContinuation(
       rsdk.apis.item.getItemsByCollection,
-      {collection: CONTRACT.COLLECTION},
+      {collection: CONTRACT.AZIMUTH},
     ),
   });
 
@@ -159,6 +160,25 @@ export function useRaribleCollection(): RaribleItem[] | undefined {
     ? undefined
     : (data as RaribleItem[]).map(addVentureAttribs);
 }
+
+// export function useRariblePagedCollection() {
+//   const queryKey: QueryKey = useMemo(() => [
+//     APP_TERM, "rarible", "paged-collection",
+//   ], []);
+//
+//   const rsdk = useRaribleSDK();
+//   const { data, isLoading, isError } = useInfiniteQuery({
+//     queryKey: queryKey,
+//     queryFn: () => queryRaribleContinuation(
+//       rsdk.apis.item.getItemsByCollection,
+//       {collection: CONTRACT.AZIMUTH},
+//     ),
+//   });
+//
+//   return (isLoading || isError)
+//     ? undefined
+//     : (data as RaribleItem[]).map(addVentureAttribs);
+// }
 
 export function useRaribleAccountItems(): RaribleItem[] | undefined {
   const addresses = useUrbitAccountAddresses();
@@ -220,7 +240,7 @@ export function useRouteRaribleItem(): RouteRaribleItem {
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
     queryFn: () => {
-      const itemAddr: string = `${CONTRACT.COLLECTION}:${itemId}`;
+      const itemAddr: string = `${CONTRACT.AZIMUTH}:${itemId}`;
       return Promise.all([
         rsdk.apis.item.getItemById({itemId: itemAddr}),
         queryRaribleContinuation(

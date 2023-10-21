@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useEffect, useCallback } from 'react';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import cn from 'classnames';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -7,8 +7,10 @@ import {
   ChatBubbleLeftIcon,
   CurrencyDollarIcon,
   XCircleIcon,
+  EllipsisHorizontalIcon,
 } from '@heroicons/react/24/solid';
 import VCCIcon from '@/components/icons/VCCIcon';
+import ErrorIcon from '@/components/icons/ErrorIcon';
 import TraderName from '@/components/TraderName';
 import ItemBadges from '@/components/ItemBadges';
 import {
@@ -27,6 +29,7 @@ import {
 } from '@/logic/utils';
 import { APP_TERM, CONTRACT } from '@/constants';
 import type {
+  CollectionId as RaribleCollectionId,
   Item as RaribleItem,
   Order as RaribleOrder,
   MetaContent as RaribleMetaContent,
@@ -36,66 +39,133 @@ import type { Address } from 'viem';
 import type { OfferType } from '@/types/app';
 import type { ClassProps } from '@/types/urbui';
 
+import { useInView } from 'react-intersection-observer'
+import {
+  useInfiniteQuery,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
+import useRaribleSDK from '@/logic/useRaribleSDK';
+import { ItemsSearchSort as RaribleItemsSort } from '@rarible/api-client';
+
 export function CollectionGrid({className}: ClassProps) {
   const navigate = useNavigate();
-  const collection = useRaribleCollection();
+  // const collection = useRaribleCollection();
+  const rsdk = useRaribleSDK();
+  const { ref, inView } = useInView();
+  const {
+    status,
+    data,
+    error,
+    isFetching,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery(
+    ['projects'],
+    async ({ pageParam = undefined }) => {
+      const res = await rsdk.apis.item.searchItems({ itemsSearchRequest: {
+        size: 20,
+        sort: RaribleItemsSort.EARLIEST,
+        continuation: pageParam,
+        filter: {
+          collections: ([CONTRACT.AZIMUTH] as RaribleCollectionId[]),
+          // names?: Array<string>;
+          // traits?: Array<TraitProperty>;
+          // sellPriceFrom?: number;
+          // sellPriceTo?: number;
+          // sellCurrency?: string;
+          // sellPlatforms?: Array<Platform>;
+          // bidPriceFrom?: number;
+          // bidPriceTo?: number;
+          // bidCurrency?: string;
+          // bidPlatforms?: Array<Platform>;
+        },
+      }});
+      return {
+        previousId: undefined,
+        nextId: res.continuation,
+        data: res.items,
+      };
+    },
+    {
+      getPreviousPageParam: (firstPage) => firstPage.previousId ?? undefined,
+      getNextPageParam: (lastPage) => lastPage.nextId ?? undefined,
+    },
+  );
+
+  useEffect(() => {
+    inView && fetchNextPage();
+  }, [inView]);
 
   return (
     <div className={cn(
       "flex flex-col items-center",
       className,
     )}>
-      {(collection === undefined) ? (
+      {(status === "loading") ? (
         <LoadingIcon />
+      ) : (status === "error") ? (
+        <FailureIcon />
       ) : (
-        <div className={`
-          grid w-full h-fit grid-cols-2 gap-4 px-4
-          justify-center sm:grid-cols-[repeat(auto-fit,minmax(auto,200px))]
-        `}>
-          {collection.map((item: RaribleItem) => (
-            <div
-              key={item.tokenId}
-              role="link"
-              className={cn(
-                "flex flex-col justify-between p-2 gap-2 rounded-lg border-2",
-                "border-gray-200 hover:border-gray-800",
-              )}
-              onClick={() => navigate(`/item/${item.tokenId}`)}
-            >
-              <h3 className="text-lg text-center font-semibold line-clamp-1">
-                {makePrettyName(item)}
-              </h3>
-              <img className="object-cover rounded-lg aspect-square" src={
-                (item.meta?.content.find((entry: RaribleMetaContent) => (
-                  entry["@type"] === "IMAGE"
-                )) ?? {})?.url
-              } />
-              <ItemBadges item={item} badgeClassName="w-5 h-5" />
-              <div className="grid grid-cols-2 text-sm text-center">
-                <div>
-                  <p className="font-bold">Live Ask</p>
-                  <p>
-                    {(item?.bestSellOrder === undefined) ? (
-                      "—"
-                    ) : (
-                      makePrettyPrice(item.bestSellOrder.take)
+        <React.Fragment>
+          <div className={`
+            grid w-full h-fit grid-cols-2 gap-4 px-4
+            justify-center sm:grid-cols-[repeat(auto-fit,minmax(auto,200px))]
+          `}>
+            {data.pages.map((page) => (
+              <React.Fragment key={page.nextId}>
+                {page.data.map((item: RaribleItem) => (
+                  <div
+                    key={item.tokenId}
+                    role="link"
+                    className={cn(
+                      "flex flex-col justify-between p-2 gap-2 rounded-lg border-2",
+                      "border-gray-200 hover:border-gray-800",
                     )}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-bold">Best Bid</p>
-                  <p>
-                    {(item?.bestBidOrder === undefined) ? (
-                      "—"
-                    ) : (
-                      makePrettyPrice(item.bestBidOrder.make)
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                    onClick={() => navigate(`/item/${item.tokenId}`)}
+                  >
+                    <h3 className="text-lg text-center font-semibold line-clamp-1">
+                      {makePrettyName(item)}
+                    </h3>
+                    <img className="object-cover rounded-lg aspect-square" src={
+                      (item.meta?.content.find((entry: RaribleMetaContent) => (
+                        entry["@type"] === "IMAGE"
+                      )) ?? {})?.url
+                    } />
+                    <ItemBadges item={item} badgeClassName="w-5 h-5" />
+                    <div className="grid grid-cols-2 text-sm text-center">
+                      <div>
+                        <p className="font-bold">Live Ask</p>
+                        <p>
+                          {(item?.bestSellOrder === undefined) ? (
+                            "—"
+                          ) : (
+                            makePrettyPrice(item.bestSellOrder.take)
+                          )}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-bold">Best Bid</p>
+                        <p>
+                          {(item?.bestBidOrder === undefined) ? (
+                            "—"
+                          ) : (
+                            makePrettyPrice(item.bestBidOrder.make)
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </React.Fragment>
+            ))}
+          </div>
+          <EllipsisHorizontalIcon ref={ref} className={cn(
+            "animate-ping mt-6 h-8 w-8",
+            (isFetching || isFetchingNextPage) ? "visible" : "invisible"
+          )} />
+        </React.Fragment>
       )}
     </div>
   );
@@ -276,6 +346,17 @@ function LoadingIcon() {
   return (
     <div className="flex flex-col justify-center items-center h-[75vh]">
       <VCCIcon className="animate-ping w-32 h-32" />
+    </div>
+  );
+}
+
+function FailureIcon() {
+  // FIXME: The height value given here is a hack that assumes working in the
+  // main content area under the navbar and obviously won't work in all
+  // embedding contexts.
+  return (
+    <div className="flex flex-col justify-center items-center h-[75vh]">
+      <ErrorIcon className="text-red-400 w-32 h-32" />
     </div>
   );
 }
