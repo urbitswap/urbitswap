@@ -21,6 +21,7 @@
     "@tlon/sigil-js": "^1.4.5",
     "@urbit/api": "2.2",
     "@urbit/http-api": "^2.4.5-debug",
+    "axios": "^1.5.1",
     "classnames": "^2.3.1",
     "date-fns": "^2.30.0",
     "ethers": "^5.6.2",

@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useCallback } from 'react';
-import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import cn from 'classnames';
+import { Link, useParams, useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowsRightLeftIcon,
@@ -15,6 +15,7 @@ import TraderName from '@/components/TraderName';
 import ItemBadges from '@/components/ItemBadges';
 import {
   useUrbitTraders,
+  useUrbitAccountAddresses,
   useRaribleCollection,
   useRaribleAccountItems,
   useRouteRaribleItem,
@@ -26,6 +27,8 @@ import {
   makePrettyName,
   makePrettyPrice,
   makePrettyLapse,
+  encodeQuery,
+  decodeQuery,
 } from '@/logic/utils';
 import { APP_TERM, CONTRACT } from '@/constants';
 import type {
@@ -47,11 +50,22 @@ import {
 } from '@tanstack/react-query'
 import useRaribleSDK from '@/logic/useRaribleSDK';
 import { ItemsSearchSort as RaribleItemsSort } from '@rarible/api-client';
+import { OrderStatus as RaribleOrderStatus } from '@rarible/api-client';
+import {
+  EthErc721AssetType as RaribleERC721,
+  EthErc721LazyAssetType as RaribleERC721Lazy,
+} from '@rarible/api-client';
+import { ItemId as RaribleItemId } from "@rarible/types";
 
 export function CollectionGrid({className}: ClassProps) {
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   // const collection = useRaribleCollection();
+
+  const addresses = useUrbitAccountAddresses();
   const rsdk = useRaribleSDK();
+  const query = decodeQuery(params);
+  // https://tanstack.com/query/v4/docs/react/examples/react/load-more-infinite-scroll
   const { ref, inView } = useInView();
   const {
     status,
@@ -62,35 +76,80 @@ export function CollectionGrid({className}: ClassProps) {
     fetchNextPage,
     hasNextPage,
   } = useInfiniteQuery(
-    ['projects'],
+    // TODO: Need to include address list in the query (or at least invalidate
+    // relevant queries when new personal addresses are added).
+    [APP_TERM, "rarible", "paged-collection", query?.base, query?.name, query?.type],
     async ({ pageParam = undefined }) => {
-      const res = await rsdk.apis.item.searchItems({ itemsSearchRequest: {
-        size: 20,
-        sort: RaribleItemsSort.EARLIEST,
-        continuation: pageParam,
-        filter: {
-          collections: ([CONTRACT.AZIMUTH] as RaribleCollectionId[]),
-          // names?: Array<string>;
-          // traits?: Array<TraitProperty>;
-          // sellPriceFrom?: number;
-          // sellPriceTo?: number;
-          // sellCurrency?: string;
-          // sellPlatforms?: Array<Platform>;
-          // bidPriceFrom?: number;
-          // bidPriceTo?: number;
-          // bidCurrency?: string;
-          // bidPlatforms?: Array<Platform>;
-        },
-      }});
-      return {
-        previousId: undefined,
-        nextId: res.continuation,
-        data: res.items,
-      };
+      if (query?.base === "mine") {
+        // TODO: Need to further filter by name and traits
+        // TODO: Need to get items for all addresses (ideally sequentially;
+        // will require some finessing with continuations)
+        const res = await rsdk.apis.item.getItemsByOwner({
+          owner: `ETHEREUM:${(addresses ?? [])[0]}`,
+          continuation: pageParam,
+        });
+        return {
+          prevCursor: undefined,
+          nextCursor: res.continuation,
+          data: res.items.filter((item) => item.collection === CONTRACT.AZIMUTH),
+        };
+      } else if (query?.base === "bids") {
+        // TODO: Need to further filter by name and traits
+        const res = await rsdk.apis.order.getOrderBidsByMaker({
+          maker: addresses!.map((address) => `ETHEREUM:${address}`),
+          status: [RaribleOrderStatus.ACTIVE],
+          continuation: pageParam,
+        });
+        const res2 = await rsdk.apis.item.getItemByIds({
+          itemIds: { ids: res.orders
+            .filter((o) => (
+              (o.take.type["@type"] === "ERC721" || o.take.type["@type"] === "ERC721_Lazy")
+              && o.take.type.contract === CONTRACT.AZIMUTH
+            ))
+            .map((o: RaribleOrder) => (o.take.type as RaribleERC721 | RaribleERC721Lazy))
+            .map((t) => `${CONTRACT.AZIMUTH}:${t.tokenId}` as RaribleItemId)
+          },
+        });
+        return {
+          prevCursor: undefined,
+          nextCursor: res.continuation,
+          data: res2.items,
+        };
+      } else { /* fall back to "all" */
+        const res = await rsdk.apis.item.searchItems({ itemsSearchRequest: {
+          size: 20,
+          sort: RaribleItemsSort.LATEST,
+          continuation: pageParam,
+          filter: {
+            collections: ([CONTRACT.AZIMUTH] as RaribleCollectionId[]),
+            deleted: false,
+            names: query?.name ? [query?.name] : undefined,
+            traits: query?.type ? [{key: "size", value: query?.type}] : undefined,
+            // sellPriceFrom: (queryBase !== "active") ? undefined : Number.MIN_VALUE,
+            // sellPriceTo: (queryBase !== "active") ? undefined : Number.MAX_VALUE,
+            // sellCurrency?: string;
+            // bidPriceFrom: (queryBase !== "active") ? undefined : Number.MIN_VALUE,
+            // bidPriceTo: (queryBase !== "active") ? undefined : Number.MAX_VALUE,
+            // bidCurrency?: string;
+            // bidPlatforms?: Array<Platform>;
+          },
+        }});
+        // FIXME: This causes the first and last pages to use the same ID value
+        // (i.e. undefined), which can cause issues in React.
+        return {
+          prevCursor: undefined,
+          nextCursor: res.continuation,
+          data: res.items,
+        };
+      }
     },
     {
-      getPreviousPageParam: (firstPage) => firstPage.previousId ?? undefined,
-      getNextPageParam: (lastPage) => lastPage.nextId ?? undefined,
+      enabled: !!addresses,
+      getPreviousPageParam: (firstPage) => firstPage.prevCursor ?? undefined,
+      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      // NOTE: Don't reload on every mount because we keep everything that's
+      // been loaded and this could cause a lot of reloads
+      staleTime: 2 * 60 * 1000,
     },
   );
 
@@ -114,7 +173,7 @@ export function CollectionGrid({className}: ClassProps) {
             justify-center sm:grid-cols-[repeat(auto-fit,minmax(auto,200px))]
           `}>
             {data.pages.map((page) => (
-              <React.Fragment key={page.nextId}>
+              <React.Fragment key={page.nextCursor}>
                 {page.data.map((item: RaribleItem) => (
                   <div
                     key={item.tokenId}
@@ -128,7 +187,7 @@ export function CollectionGrid({className}: ClassProps) {
                     <h3 className="text-lg text-center font-semibold line-clamp-1">
                       {makePrettyName(item)}
                     </h3>
-                    <img className="object-cover rounded-lg aspect-square" src={
+                    <img className="object-cover rounded-lg w-32 mx-auto" src={
                       (item.meta?.content.find((entry: RaribleMetaContent) => (
                         entry["@type"] === "IMAGE"
                       )) ?? {})?.url
@@ -249,6 +308,7 @@ export function ItemPage({className}: ClassProps) {
               &nbsp;{"TODO"}
             </h3>
             */}
+            {/*
             <hr className="my-2" />
             <div className="text-sm">
               {(item.meta?.attributes ?? []).map((attrib: RaribleMetaAttrib) => (
@@ -260,6 +320,7 @@ export function ItemPage({className}: ClassProps) {
                 </p>
               ))}
             </div>
+            */}
             <hr className="my-2" />
             <h4 className="text-md font-bold underline">
               Active Ask(s)
@@ -356,7 +417,7 @@ function FailureIcon() {
   // embedding contexts.
   return (
     <div className="flex flex-col justify-center items-center h-[75vh]">
-      <ErrorIcon className="text-red-400 w-32 h-32" />
+      <ErrorIcon className="text-red-500 w-32 h-32" />
     </div>
   );
 }

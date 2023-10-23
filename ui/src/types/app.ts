@@ -1,3 +1,4 @@
+import { QUERY } from '@/constants';
 import type {
   Item as RaribleItem,
   Order as RaribleOrder,
@@ -8,10 +9,18 @@ import type { Address } from 'viem';
 
 export type TenderType = "eth" | "usdc";
 export type OfferType = "bid" | "sell";
-
+export type UrbitLayer = "locked" | "layer-2" | "layer-1";
+export type CollectionBase = typeof QUERY.COLLECTION_BASE[number];
+export type UrbitPointType = typeof QUERY.POINT_TYPE[number];
 export type GetWagmiAccountResult = Omit<GetAccountResult, "address"> & {
   address: Address;
 };
+
+export interface NavigationQuery {
+  base?: CollectionBase;
+  type?: UrbitPointType;
+  name?: string;
+}
 
 export interface VentureKYC {
   kyc: boolean;

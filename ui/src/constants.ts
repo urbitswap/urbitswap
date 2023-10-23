@@ -8,7 +8,7 @@ export const MAX_DATE: Date = new Date(8640000000000000);
 
 export const CONTRACT = Object.freeze({
   AZIMUTH: APP_DBUG
-    ? "ETHEREUM:0x52a55348144ddc436e3dd020675a8a3eada5797c"
+    ? "ETHEREUM:0x06e3f092362d116c807482c0473ae256e5721c13"
     : "ETHEREUM:0x33eecbf908478c10614626a9d304bfe18b78dd73",
   VENTURE: APP_DBUG
     ? "ETHEREUM:0x0a36453Ce8645Df38c8aadAaf002b8CC24C0Fc81"
@@ -19,7 +19,12 @@ export const CONTRACT = Object.freeze({
     : "ETHEREUM:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
 });
 
-export const TENDERS = [
+export const QUERY = Object.freeze({
+  COLLECTION_BASE: <const> ["all", "mine", "bids"],
+  POINT_TYPE: <const> ["galaxy", "star", "planet"],
+});
+
+export const TENDERS = <const> [
   Object.freeze({value: "usdc", label: "$ USDC"}),
   Object.freeze({value: "eth", label: "⧫ Ethereum"}),
 ];

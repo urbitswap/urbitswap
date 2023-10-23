@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
+import axios from 'axios';
 import { useAccount } from 'wagmi';
 import {
   QueryKey,
@@ -32,6 +33,7 @@ import type {
   Ownerships as RaribleOwnerships,
 } from '@rarible/api-client';
 import type {
+  UrbitLayer,
   VentureKYC,
   VentureTransfer,
   UrbitTraders,
@@ -66,15 +68,17 @@ export function useUrbitTraders(): UrbitTraders | undefined {
     : (data as UrbitTraders);
 }
 
-export function useUrbitAccountAddresses(): Address[] {
+export function useUrbitAccountAddresses(): Address[] | undefined {
   const { address, isConnected } = useWagmiAccount();
   const traders = useUrbitTraders();
 
-  return (!isConnected ? [] : [address]).concat(
-    Object.entries(traders ?? {})
-      .filter(([wlet, patp]: [string, string]) => patp === window.our)
-      .map(([wlet, patp]: [string, string]) => (wlet as Address))
-  );
+  return (traders === undefined)
+    ? undefined
+    : (!isConnected ? [] : [address]).concat(
+        Object.entries(traders)
+          .filter(([wlet, patp]: [string, string]) => patp === window.our)
+          .map(([wlet, patp]: [string, string]) => (wlet as Address))
+      );
 }
 
 export function useUrbitAssociateMutation(
@@ -104,6 +108,33 @@ export function useUrbitAssociateMutation(
       queryClient.invalidateQueries({ queryKey: queryKey }),
     ...options,
   });
+}
+
+export function useUrbitNetworkLayer(urbitId: string): UrbitLayer | undefined {
+  const queryApi = "https://mt2aga2c5l.execute-api.us-east-2.amazonaws.com";
+  const queryKey: QueryKey = useMemo(() => [
+    APP_TERM, "urbit", "layer", urbitId
+  ], [urbitId]);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: queryKey,
+    queryFn: () => axios
+      .get(`${queryApi}/get-pki-events?urbit-id=${urbitId}&limit=1&offset=0`)
+      .then((response: any): UrbitLayer => {
+        const dominion: string | undefined = response.data?.[0]?.dominion;
+        return (dominion === "l2") ? "layer-2"
+          : (dominion === "l1") ? "layer-1"
+          : "locked";
+      }),
+    // NOTE: This will update extremely infrequently, so we don't even bother
+    // refetching the data.
+    retryOnMount: false,
+    refetchOnMount: false,
+  });
+
+  return (isLoading || isError)
+    ? undefined
+    : (data as UrbitLayer);
 }
 
 export function useVentureAccountKYC(): VentureKYC | undefined {
@@ -184,20 +215,21 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
   const addresses = useUrbitAccountAddresses();
 
   const rsdk = useRaribleSDK();
-  const results = useQueries({ queries: addresses.map((address: Address) => ({
+  const results = useQueries({ queries: (addresses ?? []).map((address: Address) => ({
     queryKey: [APP_TERM, "rarible", "account", address, "items"],
     queryFn: () => queryRaribleContinuation(
       rsdk.apis.item.getItemsByOwner,
       {owner: `ETHEREUM:${address}`},
     ),
-    // FIXME: Applying a more strict throttle on ownership because the
-    // query can be expensive (esp. if a user has multiple addresses).
-    // It would be better to not retry on fetch/mount and to rely on a
+    enabled: !!addresses,
+    // FIXME: Applying a more strict throttle on ownership because the query
+    // can be expensive (esp. if a user has multiple addresses or owns many
+    // NFTs). It would be better to not retry on fetch/mount and to rely on a
     // ethers/web3 for invalidation event listener.
     staleTime: 2 * 60 * 1000,
   }))});
 
-  return (results.some(q => q.isLoading) || results.some(q => q.isError))
+  return (!addresses || results.some(q => q.isLoading) || results.some(q => q.isError))
     ? undefined
     : results.reduce(
       (a, i) => a.concat(i.data as RaribleItem[]),
@@ -209,12 +241,13 @@ export function useRaribleAccountBids(): RaribleOrder[] | undefined {
   const addresses = useUrbitAccountAddresses();
 
   const rsdk = useRaribleSDK();
-  const results = useQueries({ queries: addresses.map((address: Address) => ({
+  const results = useQueries({ queries: (addresses ?? []).map((address: Address) => ({
     queryKey: [APP_TERM, "rarible", "account", address, "bids"],
     queryFn: () => queryRaribleContinuation(
       rsdk.apis.order.getOrderBidsByMaker,
       {maker: [`ETHEREUM:${address}`], status: [RaribleOrderStatus.ACTIVE]},
     ),
+    enabled: !!addresses,
     // FIXME: We can query account bids even less frequently because all
     // modifications will come through this interface (but we still need
     // a clean way to invalidate expired bids, which could probably be done
@@ -222,7 +255,7 @@ export function useRaribleAccountBids(): RaribleOrder[] | undefined {
     staleTime: 10 * 60 * 1000,
   }))});
 
-  return (results.some(q => q.isLoading) || results.some(q => q.isError))
+  return (!addresses || results.some(q => q.isLoading) || results.some(q => q.isError))
     ? undefined
     : results.reduce(
       (a, i) => a.concat(i.data as RaribleOrder[]),
@@ -306,7 +339,7 @@ export function useRouteRaribleItemMutation<TResponse>(
             // not being listed as an NFT owner after purchase).
             new Promise(resolve => setTimeout(() => {
               resolve(rsdkResult);
-            }, 10 * 1000))
+            }, 15 * 1000))
           )
       ));
     }) as MutationFunction<TResponse, any>),
@@ -323,6 +356,7 @@ export function useRouteRaribleItemMutation<TResponse>(
       // accounts, as is done currently).
       if (["order.acceptBid", "order.buy"].includes(raribleFn)) {
         queryClient.invalidateQueries({ queryKey: [APP_TERM, "rarible", "account"] });
+        queryClient.invalidateQueries({ queryKey: [APP_TERM, "rarible", "paged-collection"] });
       }
     },
     ...options,

@@ -1,5 +1,5 @@
 import { format, formatDistance } from 'date-fns';
-import { APP_DBUG, MAX_DATE, CONTRACT } from '@/constants';
+import { APP_DBUG, MAX_DATE, CONTRACT, QUERY } from '@/constants';
 import { Blockchain } from '@rarible/api-client';
 import {
   toContractAddress,
@@ -18,7 +18,7 @@ import type {
   Order as RaribleOrder,
   Ownership as RaribleOwnership,
 } from '@rarible/api-client';
-import type { TenderType, OfferType } from '@/types/app';
+import type { TenderType, OfferType, NavigationQuery } from '@/types/app';
 import type { Callable } from '@/types/utils';
 
 export function genRateLimiter(maxReqs: number, perSecs: number) {
@@ -62,14 +62,6 @@ export function makePrettyName(item: RaribleItem,): string {
 }
 
 export function makePrettyPrice(asset: RaribleAsset): string {
-  // const isUSDC: boolean = assetToTender(asset.type) === "usdc";
-  // const assetIdent = isUSDC
-  //   ? "USDC"
-  //   : asset.type["@type"];
-  // const assetValue = isUSDC
-  //   ? parseFloat(asset.value.toString()).toFixed(2)
-  //   : asset.value.toString();
-  // return `${assetValue} ${assetIdent}`;
   const assetValue = asset.value.toString();
   const assetIdent = (assetToTender(asset.type) === "usdc")
     ? "USDC"
@@ -111,6 +103,28 @@ export function makeTerseLapse(date: Date): string {
     .replace(/day(s)?/, 'D')
     .replace(/month(s)?/, 'M')
     .replace(/year(s)?/, 'Y');
+}
+
+export function encodeQuery(query: NavigationQuery): URLSearchParams {
+  const params = new URLSearchParams();
+
+  if (query?.base) {
+    params.set("base", encodeURIComponent(query.base));
+  } if (query?.type) {
+    params.set("type", encodeURIComponent(query.type));
+  } if (query?.name) {
+    params.set("name", encodeURIComponent(query.name));
+  }
+
+  return params;
+}
+
+export function decodeQuery(query: URLSearchParams): NavigationQuery {
+  return {
+    base: QUERY.COLLECTION_BASE.find(s => s === decodeURIComponent(query.get("base") ?? "")),
+    type: QUERY.POINT_TYPE.find(s => s === decodeURIComponent(query.get("type") ?? "")),
+    name: decodeURIComponent(query.get("name") ?? "") || undefined,
+  };
 }
 
 export function getItemUnlock(item: RaribleItem): Date {

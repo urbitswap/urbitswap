@@ -2,17 +2,23 @@ import React, { ReactNode } from 'react';
 import cn from 'classnames';
 import * as Popover from '@radix-ui/react-popover';
 import {
-  ArrowPathIcon,
+  EllipsisHorizontalIcon,
+  GlobeAltIcon,
   LockClosedIcon,
   LockOpenIcon,
+  QuestionMarkCircleIcon,
   TagIcon,
+  SparklesIcon,
   StarIcon,
+  WalletIcon,
 } from '@heroicons/react/24/solid';
 import {
+  useUrbitNetworkLayer,
   useVentureAccountGrant,
   useRaribleAccountItems,
   useRaribleAccountBids,
 } from '@/state/app';
+import { APP_TERM, CONTRACT } from '@/constants';
 import {
   isMaxDate,
   makePrettyLapse,
@@ -34,39 +40,59 @@ export default function ItemBadges({
 }) {
   const myItems = useRaribleAccountItems();
   const myBids = useRaribleAccountBids();
-  const myItemGrant = useVentureAccountGrant(item.tokenId ?? "");
+  // const myItemGrant = useVentureAccountGrant(item.tokenId ?? "");
+  const myItemLayer = useUrbitNetworkLayer(item.meta?.name ?? "");
 
-  const itemUnlock: Date = getItemUnlock(item);
-  const itemTransferable: boolean = myItemGrant !== undefined
-    && myItemGrant?.status === "success";
+  const itemType: string | undefined =
+    (item.meta?.attributes ?? []).find(a => a.key === "size")?.value;
+  // const itemUnlock: Date = getItemUnlock(item);
+  // const itemTransferable: boolean = myItemGrant !== undefined
+  //   && myItemGrant?.status === "success";
 
   return (
-    <div className={cn(className, "flex flex-row justify-center gap-2 items")}>
-      {(myItems === undefined || myBids === undefined) ? (
-        <ArrowPathIcon className={cn(badgeClassName, "text-black animate-spin")} />
+    <div className={cn(className, "flex flex-row justify-center gap-1 items")}>
+      {(myItems === undefined || myBids === undefined || myItemLayer === undefined) ? (
+        <EllipsisHorizontalIcon className={cn(badgeClassName, "text-black animate-ping")} />
       ) : (
         <React.Fragment>
-          {myItems.some((i: RaribleItem) => i.id === item.id) && (
-            <BadgePopover
-              message="Owned by Me"
-              children={<StarIcon className={cn(badgeClassName, "text-blue-400")} />}
-            />
-          )}
-          {(itemUnlock < new Date(Date.now())) ? (
+          {/*(itemUnlock < new Date(Date.now())) ? (
             <BadgePopover
               message="Available for General Purchase"
-              children={<LockOpenIcon className={
-                cn(badgeClassName, itemTransferable && "text-blue-400")
-              } />}
+              children={<LockOpenIcon className={badgeClassName} />}
             />
           ) : (
             <BadgePopover
               message={`Lockup Period Ends ${
                 isMaxDate(itemUnlock) ? "???" : makePrettyLapse(itemUnlock)
               } (${itemTransferable ? "A" : "Una"}vailable to You)`}
-              children={<LockClosedIcon className={
-                cn(badgeClassName, itemTransferable && "text-blue-400")
-              } />}
+              children={<LockClosedIcon className={badgeClassName} />}
+            />
+          )*/}
+          {<BadgePopover
+            message={
+              (myItemLayer[0].toUpperCase() + myItemLayer.slice(1)).replace("-", " ")
+            }
+            children={
+              (myItemLayer === "layer-1") ? (<LockOpenIcon className={badgeClassName} />)
+              : (<LockClosedIcon className={badgeClassName} />)
+            }
+          />}
+          {<BadgePopover
+            message={`${!itemType
+              ? "Unknown"
+              : itemType[0].toUpperCase() + itemType.slice(1)
+            } ID`}
+            children={
+              (itemType === "galaxy") ? (<SparklesIcon className={badgeClassName} />)
+              : (itemType === "star") ? (<StarIcon className={badgeClassName} />)
+              : (itemType === "planet") ? (<GlobeAltIcon className={badgeClassName} />)
+              : (<QuestionMarkCircleIcon className={badgeClassName} />)
+            }
+          />}
+          {myItems.some((i: RaribleItem) => i.id === item.id) && (
+            <BadgePopover
+              message="Owned by Me"
+              children={<WalletIcon className={badgeClassName} />}
             />
           )}
           {myBids.some((o: RaribleOrder) =>
@@ -75,7 +101,7 @@ export default function ItemBadges({
           ) && (
             <BadgePopover
               message="Has my Bid"
-              children={<TagIcon className={cn(badgeClassName, "text-blue-400")} />}
+              children={<TagIcon className={badgeClassName} />}
             />
           )}
         </React.Fragment>

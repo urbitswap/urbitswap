@@ -37,6 +37,7 @@ async function reportRaribleCall(fn: Callable, args: Args): MiddlewarePromise
   return [
     (...argz: any[]) => {
       APP_DBUG && console.log(fn.name);
+      APP_DBUG && console.log(argz);
       return fn(...argz);
     },
     async (res: Promise<any>) => {
