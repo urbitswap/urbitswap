@@ -15,11 +15,12 @@ import {
   OfferDialog,
   TradeDialog,
   CancelDialog,
-  PretradeDialog,
   AssociateDialog,
+  PretradeDialog,
+  DisclaimerDialog,
 } from '@/app/Dialogs';
 import NavBar from '@/app/NavBar';
-import WalletWatcher from '@/app/WalletWatcher';
+import { NewSessionWatcher, NewWalletWatcher } from '@/app/Watchers';
 import { queryAPI, urbitAPI, wagmiAPI } from '@/api';
 import { APP_TERM } from '@/constants';
 import type { ReactRouterState } from '@/types/urbui';
@@ -29,7 +30,8 @@ export function App() {
     <QueryClientProvider client={queryAPI}>
       <WagmiConfig config={wagmiAPI}>
         <BrowserRouter basename={`/apps/${APP_TERM}/`}>
-          <WalletWatcher />
+          <NewSessionWatcher />
+          <NewWalletWatcher />
           <RoutedApp />
         </BrowserRouter>
       </WagmiConfig>
@@ -77,8 +79,10 @@ function RoutedAppRoutes({
       </Routes>
       {state?.backgroundLocation && (
         <Routes>
+          <Route path="/disclaimer" element={<DisclaimerDialog />} />
           <Route path="/assoc" element={<AssociateDialog />} />
           <Route path="/item/:itemId">
+            <Route path="disclaimer" element={<DisclaimerDialog />} />
             <Route path="assoc" element={<AssociateDialog />} />
             <Route path="pretrade" element={<PretradeDialog />} />
             <Route path="offer" element={<OfferDialog />} />

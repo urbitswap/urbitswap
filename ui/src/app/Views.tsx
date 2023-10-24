@@ -1,16 +1,15 @@
 import React, { useMemo, useEffect, useCallback } from 'react';
 import cn from 'classnames';
-import { Link, useParams, useSearchParams, useLocation, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  ArrowsRightLeftIcon,
-  ChatBubbleLeftIcon,
-  CurrencyDollarIcon,
-  XCircleIcon,
-  EllipsisHorizontalIcon,
-} from '@heroicons/react/24/solid';
-import UrbitsExchangeIcon from '@/components/icons/UrbitsExchangeIcon';
-import ErrorIcon from '@/components/icons/ErrorIcon';
+  Link,
+  useParams,
+  useSearchParams,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
+import { useInView } from 'react-intersection-observer'
+import { useInfiniteQuery } from '@tanstack/react-query'
+import useRaribleSDK from '@/logic/useRaribleSDK';
 import TraderName from '@/components/TraderName';
 import ItemBadges from '@/components/ItemBadges';
 import {
@@ -30,32 +29,33 @@ import {
   encodeQuery,
   decodeQuery,
 } from '@/logic/utils';
+import {
+  ArrowsRightLeftIcon,
+  ChatBubbleLeftIcon,
+  CurrencyDollarIcon,
+  XCircleIcon,
+  EllipsisHorizontalIcon,
+} from '@heroicons/react/24/solid';
+import UrbitsExchangeIcon from '@/components/icons/UrbitsExchangeIcon';
+import ErrorIcon from '@/components/icons/ErrorIcon';
 import { APP_TERM, CONTRACT } from '@/constants';
+import {
+  ItemsSearchSort as RaribleItemsSort,
+  OrderStatus as RaribleOrderStatus,
+} from '@rarible/api-client';
 import type {
   CollectionId as RaribleCollectionId,
   Item as RaribleItem,
   Order as RaribleOrder,
   MetaContent as RaribleMetaContent,
   MetaAttribute as RaribleMetaAttrib,
-} from '@rarible/api-client';
-import type { Address } from 'viem';
-import type { OfferType } from '@/types/app';
-import type { ClassProps } from '@/types/urbui';
-
-import { useInView } from 'react-intersection-observer'
-import {
-  useInfiniteQuery,
-  QueryClient,
-  QueryClientProvider,
-} from '@tanstack/react-query'
-import useRaribleSDK from '@/logic/useRaribleSDK';
-import { ItemsSearchSort as RaribleItemsSort } from '@rarible/api-client';
-import { OrderStatus as RaribleOrderStatus } from '@rarible/api-client';
-import {
   EthErc721AssetType as RaribleERC721,
   EthErc721LazyAssetType as RaribleERC721Lazy,
 } from '@rarible/api-client';
 import { ItemId as RaribleItemId } from "@rarible/types";
+import type { Address } from 'viem';
+import type { OfferType } from '@/types/app';
+import type { ClassProps } from '@/types/urbui';
 
 export function CollectionGrid({className}: ClassProps) {
   const navigate = useNavigate();
@@ -118,7 +118,7 @@ export function CollectionGrid({className}: ClassProps) {
       } else { /* fall back to "all" */
         const res = await rsdk.apis.item.searchItems({ itemsSearchRequest: {
           size: 20,
-          sort: RaribleItemsSort.LATEST,
+          sort: RaribleItemsSort.LOWEST_SELL,
           continuation: pageParam,
           filter: {
             collections: ([CONTRACT.AZIMUTH] as RaribleCollectionId[]),

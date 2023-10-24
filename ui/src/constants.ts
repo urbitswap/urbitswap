@@ -19,6 +19,14 @@ export const CONTRACT = Object.freeze({
     : "ETHEREUM:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
 });
 
+export const TREASURY = Object.freeze({
+  ROYALTY: 200, // 2%
+  ADDRESS: APP_DBUG
+    ? "ETHEREUM:0x8aa4C4436b7FB8731b34e791b03C9b64b1461C75"
+    // FIXME: DAO multisig address
+    : "ETHEREUM:0x0000000000000000000000000000000000000000",
+});
+
 export const QUERY = Object.freeze({
   COLLECTION_BASE: <const> ["all", "mine", "bids"],
   POINT_TYPE: <const> ["galaxy", "star", "planet"],

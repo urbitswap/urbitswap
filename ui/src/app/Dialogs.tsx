@@ -12,6 +12,7 @@ import '@/styles/DateTimePicker.css';
 import { useSignMessage } from 'wagmi';
 import {
   ArrowsRightLeftIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/solid';
 import Dialog from '@/components/Dialog';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -513,6 +514,54 @@ export function PretradeDialog() {
           </form>
         </React.Fragment>
       )}
+    </DefaultDialog>
+  );
+}
+
+export function DisclaimerDialog() {
+  const dismiss = useDismissNavigate();
+  const onOpenChange = (open: boolean) => (!open && dismiss());
+
+  const onSubmit = useCallback((event: any) => {
+    event.preventDefault();
+  }, []);
+
+  return (
+    <DefaultDialog onOpenChange={onOpenChange}>
+      <div className="w-5/6">
+        <header className="mb-3 flex items-center text-red-500 gap-2">
+          <ExclamationTriangleIcon className="w-5 h-5" />
+          <h2 className="text-lg font-bold">
+            Disclaimer
+          </h2>
+        </header>
+      </div>
+
+      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+        <p>
+          This is a pre-release version that may contain bugs, errors and
+          other problems that could cause system or other failures, such
+          as loss of assets, funds, or data. By using this software, you
+          assume these risks, so proceed with caution! See the software
+          license for more details on limitations and liability:
+        </p>
+        <Link
+          to="https://raw.githubusercontent.com/sidnym-ladrut/urbits.exchange/v0.0.1/LICENSE"
+          className="text-2xl underline text-center"
+        >
+          Urbit's Exchange License
+        </Link>
+
+        <footer className="mt-4 flex items-center justify-between space-x-2">
+          <div className="ml-auto flex items-center space-x-2">
+            <DialogPrimitive.Close asChild>
+              <button className="button">
+                Acknowledge
+              </button>
+            </DialogPrimitive.Close>
+          </div>
+        </footer>
+      </form>
     </DefaultDialog>
   );
 }
