@@ -1,7 +1,7 @@
-/+  v=vcc
+/+  e=exchange
 |%
 ++  name  %traders
-+$  rock  traders:v
-+$  wave  [=bowl:gall act=action:v]
-++  wash  |=([=rock =wave] (apply:v rock wave))
++$  rock  traders:e
++$  wave  [=bowl:gall act=action:e]
+++  wash  |=([=rock =wave] (apply:e rock wave))
 --

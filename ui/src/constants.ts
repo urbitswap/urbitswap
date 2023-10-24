@@ -1,6 +1,6 @@
 // eslint-disable-next-line import/prefer-default-export
-export const APP_NAME: string = "VCC Trade";
-export const APP_TERM: string = "vcc-trade";
+export const APP_NAME: string = "urbits.exchange";
+export const APP_TERM: string = "exchange";
 export const APP_DBUG: boolean = import.meta.env.MODE === "development";
 
 // https://stackoverflow.com/a/27093173

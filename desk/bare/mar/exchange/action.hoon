@@ -1,6 +1,6 @@
-/-  v=vcc
-/+  j=vcc-json
-|_  act=action:v
+/-  e=exchange
+/+  j=exchange-json
+|_  act=action:e
 ++  grad  %noun
 ++  grow
   |%
@@ -9,7 +9,7 @@
   --
 ++  grab
   |%
-  ++  noun  action:v
+  ++  noun  action:e
   ++  json  action:dejs:j
   --
 --

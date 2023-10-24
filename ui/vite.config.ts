@@ -12,7 +12,7 @@ export default ({ mode }) => {
 
   return defineConfig({
     plugins: [
-      urbitPlugin({ base: 'vcc-trade', target: SHIP_URL, secure: false }),
+      urbitPlugin({ base: 'exchange', target: SHIP_URL, secure: false }),
       reactRefresh(),
       // https://stackoverflow.com/a/77153849, https://stackoverflow.com/a/69021714
       // https://github.com/remorses/esbuild-plugins/issues/14#issuecomment-1437893495

@@ -1,21 +1,21 @@
-/-  v=vcc
+/-  e=exchange
 |%
 ++  enjs
   =,  enjs:format
   =>  |%
       ++  flagify
-        |=  f=flag:v
+        |=  f=flag:e
         ^-  @t
         (rap 3 (scot %p p.f) '/' q.f ~)
       --
   |%
   ++  flag
-    |=  f=flag:v
+    |=  f=flag:e
     ^-  json
     s+(flagify f)
   ::
   ++  traders
-    |=  t=traders:v
+    |=  t=traders:e
     ^-  json
     %-  pairs
     %+  turn  ~(tap by t)
@@ -23,7 +23,7 @@
     [(crip (z-co:co a)) s+(scot %p s)]
   ::
   ++  action
-    |=  [f=flag:v u=update:v]
+    |=  [f=flag:e u=update:e]
     ^-  json
     %-  pairs
     =-  ~[['traders' s+(flagify f)] ['update' -]]
@@ -47,7 +47,7 @@
   ::
   ++  action
     |=  jon=json
-    ;;  action:v
+    ;;  action:e
     %.  jon
     %-  ot
     :~  traders+flag

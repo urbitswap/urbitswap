@@ -9,7 +9,7 @@ import {
   XCircleIcon,
   EllipsisHorizontalIcon,
 } from '@heroicons/react/24/solid';
-import VCCIcon from '@/components/icons/VCCIcon';
+import UrbitsExchangeIcon from '@/components/icons/UrbitsExchangeIcon';
 import ErrorIcon from '@/components/icons/ErrorIcon';
 import TraderName from '@/components/TraderName';
 import ItemBadges from '@/components/ItemBadges';
@@ -78,7 +78,7 @@ export function CollectionGrid({className}: ClassProps) {
   } = useInfiniteQuery(
     // TODO: Need to include address list in the query (or at least invalidate
     // relevant queries when new personal addresses are added).
-    [APP_TERM, "rarible", "paged-collection", query?.base, query?.name, query?.type],
+    [APP_TERM, "rarible", "pcollection", query?.base, query?.name, query?.type],
     async ({ pageParam = undefined }) => {
       if (query?.base === "mine") {
         // TODO: Need to further filter by name and traits
@@ -406,7 +406,7 @@ function LoadingIcon() {
   // embedding contexts.
   return (
     <div className="flex flex-col justify-center items-center h-[75vh]">
-      <VCCIcon className="animate-ping w-32 h-32" />
+      <UrbitsExchangeIcon className="animate-spin w-32 h-32" />
     </div>
   );
 }

@@ -1,1 +1,0 @@
-../../bare/sur/vcc.hoon

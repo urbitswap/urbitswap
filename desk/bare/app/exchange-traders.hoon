@@ -1,5 +1,5 @@
 /-  traders
-/+  v=vcc, j=vcc-json
+/+  e=exchange, j=exchange-json
 /+  verb, dbug
 /+  *sss
 /+  default-agent
@@ -8,21 +8,21 @@
   |%
   +$  state-0
     $:  %0
-        our-traders=(map flag:v traders:v)
-        sub-traders=_(mk-subs traders ,[%vcc %traders @ @ ~])
-        pub-traders=_(mk-pubs traders ,[%vcc %traders @ @ ~])
+        our-traders=(map flag:e traders:e)
+        sub-traders=_(mk-subs traders ,[%exchange %traders @ @ ~])
+        pub-traders=_(mk-pubs traders ,[%exchange %traders @ @ ~])
     ==
   +$  versioned-state
     $%  state-0
     ==
   +$  card  card:agent:gall
   ++  master-flag
-    ^-  flag:v
+    ^-  flag:e
     :_  %master
-    (slav %p ?:(dbug:v '~zod' '~dister-dister-sidnym-ladrut'))
+    (slav %p ?:(dbug:e '~zod' '~dister-dister-sidnym-ladrut'))
   ++  path2flag
-    |=  path=[%vcc %traders @ @ ~]
-    ^-  flag:v
+    |=  path=[%exchange %traders @ @ ~]
+    ^-  flag:e
     [`@p`(slav %p +>-.path) `@tas`(slav %tas +>+<.path)]
   --
 =|  state-0
@@ -64,9 +64,9 @@
   --
 |_  [=bowl:gall cards=(list card)]
 ::
-+*  da-traders  =/  da  (da traders ,[%vcc %traders @ @ ~])
++*  da-traders  =/  da  (da traders ,[%exchange %traders @ @ ~])
                (da sub-traders bowl -:!>(*result:da) -:!>(*from:da) -:!>(*fail:da))
-    du-traders  =/  du  (du traders ,[%vcc %traders @ @ ~])
+    du-traders  =/  du  (du traders ,[%exchange %traders @ @ ~])
                (du pub-traders bowl -:!>(*result:du))
 ::
 ++  abet  [(flop cards) state]
@@ -100,8 +100,8 @@
   ^+  cor
   ?+    mark  ~|(bad-poke/mark !!)
   :: native pokes ::
-      %vcc-action
-    =+  !<(=action:v vase)
+      %exchange-action
+    =+  !<(=action:e vase)
     ?>  (~(has by all-traders) p.action)
     =/  trader-core  (ta-abed:ta-core p.action)
     ?:  =(p.p.action our.bowl)
@@ -112,17 +112,17 @@
   :: sss pokes ::
       %sss-on-rock
     ?-  msg=!<(from:da-traders (fled vase))
-      [[%vcc *] *]  cor
+      [[%exchange *] *]  cor
     ==
   ::
       %sss-fake-on-rock
     ?-  msg=!<(from:da-traders (fled vase))
-      [[%vcc *] *]  (emil (handle-fake-on-rock:da-traders msg))
+      [[%exchange *] *]  (emil (handle-fake-on-rock:da-traders msg))
     ==
   ::
       %sss-to-pub
     ?-  msg=!<(into:du-traders (fled vase))
-      [[%vcc *] *]  (push (apply:du-traders msg))
+      [[%exchange *] *]  (push (apply:du-traders msg))
     ==
   ::
       %sss-traders
@@ -134,7 +134,7 @@
   |=  path=(pole knot)
   ^+  cor
   ?+    path  ~|(bad-watch-path/path !!)
-      [%vcc ship=@ name=@ ~]
+      [%exchange ship=@ name=@ ~]
     =/  ship=@p    (slav %p ship.path)
     =/  name=term  (slav %tas name.path)
     ?>(=(our src):bowl cor)
@@ -143,12 +143,12 @@
 ++  peek
   |=  path=(pole knot)
   ^-  (unit (unit cage))
-  =/  all-traders=(map flag:v traders:v)  all-traders
+  =/  all-traders=(map flag:e traders:e)  all-traders
   ?+    path  [~ ~]
       [%x ship=@ name=@ ~]
     =/  ship=@p    (slav %p ship.path)
     =/  name=term  (slav %tas name.path)
-    ``vcc-traders+!>((~(got by all-traders) ship name))
+    ``exchange-traders+!>((~(got by all-traders) ship name))
   ::
       [%u ship=@ name=@ ~]
     =/  ship=@p    (slav %p ship.path)
@@ -161,16 +161,16 @@
   ^+  cor
   ?+    path  cor
   :: sss responses ::
-      [~ %sss %on-rock @ @ @ %vcc %traders @ @ ~]
+      [~ %sss %on-rock @ @ @ %exchange %traders @ @ ~]
     (pull ~ (chit:da-traders |3:path sign))
   ::
-      [~ %sss %scry-request @ @ @ %vcc %traders @ @ ~]
+      [~ %sss %scry-request @ @ @ %exchange %traders @ @ ~]
     (pull (tell:da-traders |3:path sign))
   ::
-      [~ %sss %scry-response @ @ @ %vcc %traders @ @ ~]
+      [~ %sss %scry-response @ @ @ %exchange %traders @ @ ~]
     (push (tell:du-traders |3:path sign))
-  :: vcc proxy response ::
-      [%vcc ship=@ name=@ ~]
+  :: exchange proxy response ::
+      [%exchange ship=@ name=@ ~]
     =/  ship=@p    (slav %p ship.path)
     =/  name=term  (slav %tas name.path)
     ?>  ?=(%poke-ack -.sign)
@@ -185,15 +185,15 @@
   cor
 ::
 ++  all-traders
-  ^-  (map flag:v traders:v)
+  ^-  (map flag:e traders:e)
   %-  ~(uni by our-traders)
   %-  malt
-  ^-  (list [flag:v traders:v])
+  ^-  (list [flag:e traders:e])
   %+  turn  ~(tap by read:da-traders)
-  |=  [[* * paths=[%vcc %traders @ @ ~]] [stale=? fail=? =traders:v]]
+  |=  [[* * paths=[%exchange %traders @ @ ~]] [stale=? fail=? =traders:e]]
   [(path2flag paths) traders]
 ++  ta-core
-  |_  [=flag:v =traders:v gone=_|]
+  |_  [=flag:e =traders:e gone=_|]
   ++  ta-core  .
   ++  ta-abet
     ?.  =(p.flag our.bowl)
@@ -203,16 +203,16 @@
       ?:(gone (~(del by our-traders) flag) (~(put by our-traders) flag traders))
     ==
   ++  ta-abed
-    |=  f=flag:v
+    |=  f=flag:e
     %=  ta-core
       flag     f
-      traders  (~(gut by all-traders) f *traders:v)
+      traders  (~(gut by all-traders) f *traders:e)
     ==
   ::
-  ++  ta-area  `path`/vcc/(scot %p p.flag)/[q.flag]
+  ++  ta-area  `path`/exchange/(scot %p p.flag)/[q.flag]
   ++  ta-up-area  |=(p=path `(list path)`[(welp ta-area p)]~)
-  ++  ta-du-path  [%vcc %traders (scot %p p.flag) q.flag ~]
-  ++  ta-da-path  [p.flag dap.bowl %vcc %traders (scot %p p.flag) q.flag ~]
+  ++  ta-du-path  [%exchange %traders (scot %p p.flag) q.flag ~]
+  ++  ta-da-path  [p.flag dap.bowl %exchange %traders (scot %p p.flag) q.flag ~]
   ::
   ++  ta-init
     =.  ta-core  (ta-push [%init ~])
@@ -228,21 +228,21 @@
     ta-core(gone &)
   ::
   ++  ta-notify
-    |=  =update:v
+    |=  =update:e
     ^+  ta-core
     =/  paths=(list path)  (ta-up-area /)
     ta-core(cor (give %fact paths %json !>((action:enjs:j flag update))))
   ++  ta-proxy
-    |=  =update:v
+    |=  =update:e
     ^+  ta-core
     =/  =dock  [p.flag dap.bowl]
-    =/  =cage  [%vcc-action !>([flag update])]
+    =/  =cage  [%exchange-action !>([flag update])]
     =.  cor  (emit %pass ta-area %agent dock %poke cage)
     ta-core
   ++  ta-pull
     |=  res=into:da-traders
     ^+  ta-core
-    =/  =update:v
+    =/  =update:e
       ?-  what.res
         %tomb  [%drop ~]
         %wave  q.act.wave.res
@@ -254,14 +254,14 @@
     =.  cor  (pull (apply:da-traders res))
     ta-core
   ++  ta-push
-    |=  =update:v
+    |=  =update:e
     ^+  ta-core
     ::  NOTE: Notify *before* state change to avoid errors during deletions.
     =.  ta-core  (ta-notify update)
     ?:  ?=(%drop -.update)
       =.  cor  (push (kill:du-traders [ta-du-path]~))
       ta-core(gone &)
-    =.  traders  (apply:v traders bowl [flag update])
+    =.  traders  (apply:e traders bowl [flag update])
     =.  cor  (push (give:du-traders ta-du-path bowl [flag update]))
     ta-core
   --

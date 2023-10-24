@@ -58,8 +58,8 @@ export function useUrbitTraders(): UrbitTraders | undefined {
 
   const { data, isLoading, isError } = useUrbitSubscription({
     queryKey: queryKey,
-    app: "vcc-traders",
-    path: `/vcc/${TRADERS_HOST_FLAG}`,
+    app: "exchange-traders",
+    path: `/exchange/${TRADERS_HOST_FLAG}`,
     scry: `/${TRADERS_HOST_FLAG}`,
   });
 
@@ -91,8 +91,8 @@ export function useUrbitAssociateMutation(
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({address, signature}: UrbitAssoc) => urbitAPI.poke({
-      app: "vcc-traders",
-      mark: "vcc-action",
+      app: "exchange-traders",
+      mark: "exchange-action",
       json: {
         traders: TRADERS_HOST_FLAG,
         update: {asoc: {addr: address, sign: signature}},
@@ -320,6 +320,10 @@ export function useRouteRaribleItemMutation<TResponse>(
   const queryKey: QueryKey = useMemo(() => [
     APP_TERM, "rarible", "item", itemId,
   ], [itemId]);
+  const { address } = useWagmiAccount();
+  const accountKey: QueryKey = useMemo(() => [
+    APP_TERM, "rarible", "account", address,
+  ], [address]);
 
   const rsdk = useRaribleSDK();
   const queryClient = useQueryClient();
@@ -351,12 +355,12 @@ export function useRouteRaribleItemMutation<TResponse>(
       queryClient.setQueryData(queryKey, oldData),
     onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKey });
-      // FIXME: For the sake of efficiency, it would be better to void only
-      // the information for the currently active account (instead of all user
-      // accounts, as is done currently).
-      if (["order.acceptBid", "order.buy"].includes(raribleFn)) {
-        queryClient.invalidateQueries({ queryKey: [APP_TERM, "rarible", "account"] });
-        queryClient.invalidateQueries({ queryKey: [APP_TERM, "rarible", "paged-collection"] });
+      if (["order.bid", "order.bidUpdate", "order.cancel"].includes(raribleFn)) {
+        queryClient.invalidateQueries({ queryKey: [...accountKey, "bids"] });
+        queryClient.invalidateQueries({ queryKey: [APP_TERM, "rarible", "pcollection", "bids"] });
+      } if (["order.acceptBid", "order.buy"].includes(raribleFn)) {
+        queryClient.invalidateQueries({ queryKey: [...accountKey, "items"] });
+        queryClient.invalidateQueries({ queryKey: [APP_TERM, "rarible", "pcollection", "mine"] });
       }
     },
     ...options,

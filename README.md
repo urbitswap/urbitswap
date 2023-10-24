@@ -1,6 +1,6 @@
-# vcc-trade #
+# Urbit's Exchange #
 
-Proof of concept for [ventureclub.club] peer-to-peer trading on [Urbit]
+A peer-to-peer trading platform native to [Urbit]
 
 ## Build/Develop ##
 
@@ -27,14 +27,14 @@ echo "VITE_ARCADE_KEY=$ARCADE_APIKEY" >> .env.local
 ```
 
 Subsequently, run the following commands to download [durploy] create a new
-[fake `~zod`][fakezod] with the `%vcc-trade` desk:
+[fake `~zod`][fakezod] with the `%exchange` desk:
 
 ```bash
 curl -LO https://raw.githubusercontent.com/sidnym-ladrut/durploy/release/durploy
 chmod u+x ./durploy
 ./durploy ship zod
 # In a different terminal:
-./durploy desk zod vcc-trade ./desk/full/
+./durploy desk zod exchange ./desk/full/
 ```
 
 ### Development Workflows ###
@@ -45,7 +45,7 @@ In order to continuously test back-end code changes as they're made, run the
 following commands:
 
 ```bash
-./durploy desk -w zod vcc-trade ./desk/full/
+./durploy desk -w zod exchange ./desk/full/
 ```
 
 #### Front-end Workflows ####
@@ -97,14 +97,13 @@ front-end build, run the following commands:
 cd ./ui
 npm run build
 cd ..
-./durploy desk -g zod vcc-trade ./ui/dist/
+./durploy desk -g zod exchange ./ui/dist/
 cp "$(ls -dtr1 "${XDG_CACHE_HOME:-$HOME/.cache}/durploy/glob"/* | tail -1)" ./meta/glob
 ./meta/exec/release 1.2.3 "$(ls -dtr1 ./meta/glob/* | tail -1)"
 ```
 
 
 [urbit]: https://urbit.org
-[ventureclub.club]: https://venture.club
 [durploy]: https://github.com/sidnym-ladrut/durploy
 
 [fakezod]: https://developers.urbit.org/guides/core/environment#development-ships

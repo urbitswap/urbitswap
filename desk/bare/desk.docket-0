@@ -1,11 +1,10 @@
-:~  title+'ventureclub.club'
-    info+'A peer-to-peer trading platform provided by ventureclub.club'
+:~  title+'urbits.exchange'
+    info+'A peer-to-peer trading platform hosted on Urbit'
     color+0x11.1111
-    ::  image+'https://raw.githubusercontent.com/sidnym-ladrut/vcc-trade/v0.0.1/meta/logo/vcc-tile.svg'
-    image+'https://i.seadn.io/gcs/files/26d6b31f0a1720931c0bdbae77aa8a11.png?auto=format&dpr=1&w=256'
+    image+'https://raw.githubusercontent.com/sidnym-ladrut/urbits.exchange/v0.0.1/meta/logo/urbits-exchange-tile.svg'
     glob-http+['https://raw.githubusercontent.com/j3-productions/quorum/v1.0.7/meta/glob/v1.0.7.glob' 0v6.9nqf3.mjuh3.ronig.9ln8e.jsmj1]
-    base+'vcc-trade'
+    base+'exchange'
     version+[0 0 1]
-    website+'https://www.ventureclub.club/'
-    license+'MIT'
+    website+'https://github.com/sidnym-ladrut/urbits.exchange'
+    license+'GNU LGPLv3'
 ==

@@ -1,4 +1,4 @@
-/-  *vcc
+/-  *exchange
 /+  eth=ethereum, txn=naive-transactions
 |%
 ++  dbug  %&
@@ -17,7 +17,7 @@
     *^traders
   ::
       %asoc
-    =-  ~|  "%vcc: user {<src.bowl>} provided bad signature for address {<addr.upd>}"
+    =-  ~|  "%exchange: user {<src.bowl>} provided bad signature for address {<addr.upd>}"
         ?>(- (~(put by traders) addr.upd src.bowl))
     ^-  @f
     ?:  dbug

@@ -1,1 +1,0 @@
-../../bare/app/vcc-traders.hoon

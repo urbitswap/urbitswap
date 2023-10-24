@@ -1,1 +1,0 @@
-../../../bare/lib/vcc/json.hoon

@@ -1,6 +1,6 @@
-/-  v=vcc
-/+  j=vcc-json
-|_  =traders:v
+/-  e=exchange
+/+  j=exchange-json
+|_  =traders:e
 ++  grad  %noun
 ++  grow
   |%
@@ -9,6 +9,6 @@
   --
 ++  grab
   |%
-  ++  noun  traders:v
+  ++  noun  traders:e
   --
 --

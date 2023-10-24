@@ -20,7 +20,7 @@ import {
   WalletIcon,
 } from '@heroicons/react/24/solid';
 import ENSName from '@/components/ENSName';
-import VCCIcon from '@/components/icons/VCCIcon';
+import UrbitsExchangeIcon from '@/components/icons/UrbitsExchangeIcon';
 import { useModalNavigate } from '@/logic/routing';
 import { encodeQuery, decodeQuery } from '@/logic/utils';
 import {
@@ -28,7 +28,7 @@ import {
   useVentureAccountKYC,
   useUrbitTraders,
 } from '@/state/app';
-import type { Chain } from 'viem'; // vcc/ui/node_modules/viem/types/chain.ts
+import type { Chain } from 'viem'; // node_modules/viem/types/chain.ts
 import type {
   CollectionBase,
   UrbitPointType,
@@ -93,17 +93,9 @@ export default function NavBar({
         "flex flex-row justify-between space-x-4 items-center",
         innerClassName,
       )}>
-        <Link to="/" className={cn(
-          "flex flex-row items-center gap-2 font-bold",
-          "text-xl sm:text-3xl",
-        )}>
-          <VCCIcon className={cn(
-            "text-white bg-black border-black border-2 rounded-full",
-            "w-8 h-8 sm:w-12 sm:h-12",
-          )} />
-          <span className="hidden sm:block">
-            Trade
-          </span>
+        <Link to="/" className="flex flex-row items-center gap-2 font-bold">
+          <UrbitsExchangeIcon className="w-12 h-12 sm:w-14 sm:h-14" />
+          <span className="hidden sm:block">Exchange</span>
         </Link>
 
         <div className="flex flex-row gap-2 flex-1 min-w-0">
@@ -154,7 +146,7 @@ export default function NavBar({
               <ChevronDownIcon className="h-3 w-3" />
             </div>
           </DropdownMenu.Trigger>
-          <DropdownMenu.Content className="dropdown">
+          <DropdownMenu.Content align="end" alignOffset={16} className="dropdown">
             <DropdownMenu.Item
               onSelect={() => !isConnected ? connect() : disconnect()}
               className="dropdown-item flex items-center"
