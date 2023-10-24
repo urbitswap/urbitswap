@@ -6,5 +6,5 @@
     base+'exchange'
     version+[0 0 1]
     website+'https://github.com/sidnym-ladrut/urbits.exchange'
-    license+'GNU LGPLv3'
+    license+'GNU LGPLv3 (+ Amendment)'
 ==

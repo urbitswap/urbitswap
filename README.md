@@ -1,6 +1,6 @@
 # Urbit's Exchange #
 
-A peer-to-peer trading platform native to [Urbit]
+A peer-to-peer NFT trading platform native to [Urbit]
 
 ## Build/Develop ##
 
@@ -73,6 +73,8 @@ of the following commands:
 ```bash
 cd ./desk
 rm -rI full/
+find bare -type f | while read f; do { d=$(dirname "$f" | sed "s/^bare/full/"); mkdir -p "$d"; ln -sr -t "$d" "$f"; }; done
+ln -sr ../LICENSE.txt full/license.txt
 find bare -type f | while read f; do { d=$(dirname "$f" | sed "s/^bare/full/"); mkdir -p "$d"; ln -sr -t "$d" "$f"; }; done
 git clone -b 412k-rc2 --depth 1 https://github.com/urbit/urbit.git urb
 cp urb/pkg/arvo/mar/{bill*,hoon*,json*,kelvin*,mime*,noun*,ship*,txt*} full/mar/

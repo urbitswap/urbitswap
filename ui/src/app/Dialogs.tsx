@@ -539,14 +539,14 @@ export function DisclaimerDialog() {
 
       <form className="flex flex-col gap-4" onSubmit={onSubmit}>
         <p>
-          This is a pre-release version that may contain bugs, errors and
-          other problems that could cause system or other failures, such
-          as loss of assets, funds, or data. By using this software, you
-          assume these risks, so proceed with caution! See the software
+          This is unaudited prerelease software that may contain bugs,
+          errors and other problems that could cause system or other
+          failures, such as loss of assets, funds, or data. By using
+          this software, you assume all of these risks. See the software
           license for more details on limitations and liability:
         </p>
         <Link
-          to="https://raw.githubusercontent.com/sidnym-ladrut/urbits.exchange/v0.0.1/LICENSE"
+          to="https://raw.githubusercontent.com/sidnym-ladrut/urbits.exchange/v0.0.1/LICENSE.txt"
           className="text-2xl underline text-center"
         >
           Urbit's Exchange License

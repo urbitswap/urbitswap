@@ -673,6 +673,8 @@ the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
 
+
+
                    GNU LESSER GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
@@ -838,3 +840,41 @@ whether future versions of the GNU Lesser General Public License shall
 apply, that proxy's public statement of acceptance of any version is
 permanent authorization for you to choose that version for the
 Library.
+
+
+
+                    GNU LESSER GENERAL PUBLIC AMENDMENT LICENSE
+                       Version 1, 24 October 2023
+
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
+
+
+  This version of the GNU Lesser General Public Amendment License incorporates
+the terms and conditions of version 3 of the Lesser GNU General Public
+License, supplemented by the additional permissions listed below.
+
+  0. Additional Definitions.
+
+  As used herein, "this License" refers to version 1 of the GNU Lesser General
+Public Amendment License, "GNU LGPL" refers to version 3 of the GNU Lesser
+General Public License , and the "GNU GPL" refers to version 3 of the GNU
+General Public License.
+
+  1. Attorneys’ Fees.
+
+  Should any party hereto reasonably retain counsel for the purpose of
+enforcing or preventing the breach of any rights hereunder, including, but
+not limited to, instituting any action or proceeding to enforce any provision
+hereof, for damages by reason of any alleged breach of any provision hereof,
+for a declaration of such party’s rights or obligations hereunder or for any
+other judicial remedy, then if said matter is settled by judicial
+determination (which term includes arbitration), the prevailing party
+(whether at trial or on appeal) shall be entitled, in addition to such other
+relief as may be granted, to be reimbursed by the losing party for all
+reasonable costs and expenses incurred thereby, including, but not limited
+to, all attorneys’ and expert witness fees and costs actually incurred for
+the services rendered to such prevailing party. Further, the prevailing party
+shall be entitled to additional awards of attorneys’ and expert witness fees
+for services reasonably rendered in aid of enforcing such judgment or award
+or in collecting any monies awarded therein.
