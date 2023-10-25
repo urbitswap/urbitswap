@@ -80,35 +80,49 @@ export function CollectionGrid({className}: ClassProps) {
     // relevant queries when new personal addresses are added).
     [APP_TERM, "rarible", "pcollection", query?.base, query?.name, query?.type],
     async ({ pageParam = undefined }) => {
+      const queryAddresses = (addresses ?? []); // for typescript
+      const queryFilter = (item: RaribleItem): boolean => !!(
+        (!query?.type
+          || (item.meta?.attributes ?? []).find(({key, value}) =>
+            key === "size" && value === query.type
+          )
+        ) && (!query?.name
+          || ((item.meta?.name ?? "").includes(query.name))
+        )
+      );
+
       if (query?.base === "mine") {
-        // TODO: Need to get items for all addresses (ideally sequentially;
-        // will require some finessing with continuations)
-        const res = await rsdk.apis.item.getItemsByOwner({
-          owner: `ETHEREUM:${(addresses ?? [])[0]}`,
-          continuation: pageParam,
-        });
+        const [pageIAddr, pageContinuation] = pageParam?.split(" ") ?? [0, undefined];
+        const pageIndex = Number(pageIAddr);
+        const pageResults = (pageIndex >= queryAddresses.length)
+          ? {continuation: undefined, items: []}
+          : await rsdk.apis.item.getItemsByOwner({
+            owner: `ETHEREUM:${queryAddresses[pageIndex]}`,
+            continuation: pageContinuation,
+          });
+
         return {
-          prevCursor: undefined,
-          nextCursor: res.continuation,
-          data: res.items.filter((item) =>
-            item.collection === CONTRACT.AZIMUTH
-            && (!query?.type
-              || (item.meta?.attributes ?? []).find(({key, value}) =>
-                key === "size" && value === query.type
+          last: (pageIndex >= queryAddresses.length)
+            || ((pageIndex === (queryAddresses.length - 1))
+              && ((pageResults.items.length < 50)
+                || (pageResults.continuation === undefined)
               )
-            ) && (!query?.name
-              || ((item.meta?.name ?? "").includes(query.name))
-            )
-          ),
+            ),
+          next: pageResults.continuation
+            ? `${pageIndex} ${pageResults.continuation}`
+            : `${pageIndex + 1}`,
+          data: pageResults.items
+            .filter((item) => item.collection === CONTRACT.AZIMUTH)
+            .filter(queryFilter),
         };
       } else if (query?.base === "bids") {
-        const res = await rsdk.apis.order.getOrderBidsByMaker({
-          maker: addresses!.map((address) => `ETHEREUM:${address}`),
+        const pageResults = await rsdk.apis.order.getOrderBidsByMaker({
+          maker: queryAddresses.map((address) => `ETHEREUM:${address}`),
           status: [RaribleOrderStatus.ACTIVE],
           continuation: pageParam,
         });
-        const res2 = await rsdk.apis.item.getItemByIds({
-          itemIds: { ids: res.orders
+        const pageResults2 = await rsdk.apis.item.getItemByIds({
+          itemIds: { ids: pageResults.orders
             .filter((o) => (
               (o.take.type["@type"] === "ERC721" || o.take.type["@type"] === "ERC721_Lazy")
               && o.take.type.contract === CONTRACT.AZIMUTH
@@ -118,20 +132,12 @@ export function CollectionGrid({className}: ClassProps) {
           },
         });
         return {
-          prevCursor: undefined,
-          nextCursor: res.continuation,
-          data: res2.items.filter((item) =>
-            (!query?.type
-              || (item.meta?.attributes ?? []).find(({key, value}) =>
-                key === "size" && value === query.type
-              )
-            ) && (!query?.name
-              || ((item.meta?.name ?? "").includes(query.name))
-            )
-          ),
+          last: (pageResults.orders.length < 50) || (pageResults.continuation === undefined),
+          next: pageResults.continuation,
+          data: pageResults2.items.filter(queryFilter),
         };
-      } else { /* fall back to "all" */
-        const res = await rsdk.apis.item.searchItems({ itemsSearchRequest: {
+      } else {
+        const pageResults = await rsdk.apis.item.searchItems({ itemsSearchRequest: {
           size: 20,
           sort: RaribleItemsSort.LOWEST_SELL,
           continuation: pageParam,
@@ -140,37 +146,30 @@ export function CollectionGrid({className}: ClassProps) {
             deleted: false,
             names: query?.name ? [query?.name] : undefined,
             traits: query?.type ? [{key: "size", value: query?.type}] : undefined,
-            // sellPriceFrom: (queryBase !== "active") ? undefined : Number.MIN_VALUE,
-            // sellPriceTo: (queryBase !== "active") ? undefined : Number.MAX_VALUE,
-            // sellCurrency?: string;
-            // bidPriceFrom: (queryBase !== "active") ? undefined : Number.MIN_VALUE,
-            // bidPriceTo: (queryBase !== "active") ? undefined : Number.MAX_VALUE,
-            // bidCurrency?: string;
-            // bidPlatforms?: Array<Platform>;
           },
         }});
-        // FIXME: This causes the first and last pages to use the same ID value
-        // (i.e. undefined), which can cause issues in React.
         return {
-          prevCursor: undefined,
-          nextCursor: res.continuation,
-          data: res.items,
+          last: (pageResults.items.length < 20) || (pageResults.continuation === undefined),
+          next: pageResults.continuation,
+          data: pageResults.items,
         };
       }
     },
     {
       enabled: !!addresses,
-      getPreviousPageParam: (firstPage) => firstPage.prevCursor ?? undefined,
-      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      getPreviousPageParam: (firstPage) => undefined,
+      getNextPageParam: (lastPage) => lastPage.last ? undefined : lastPage.next,
       // NOTE: Don't reload on every mount because we keep everything that's
-      // been loaded and this could cause a lot of reloads
+      // been loaded between navigations and this could cause a lot of reloads
       staleTime: 2 * 60 * 1000,
     },
   );
 
+  // FIXME: This tends to overfetch when there are sufficient results; need to
+  // find some better way to debounce this.
   useEffect(() => {
-    inView && fetchNextPage();
-  }, [inView]);
+    inView && !isFetchingNextPage && fetchNextPage();
+  }, [inView, isFetchingNextPage]);
 
   return (
     <div className={cn(
@@ -187,8 +186,8 @@ export function CollectionGrid({className}: ClassProps) {
             grid w-full h-fit grid-cols-2 gap-4 px-4
             justify-center sm:grid-cols-[repeat(auto-fit,minmax(auto,200px))]
           `}>
-            {data.pages.map((page) => (
-              <React.Fragment key={page.nextCursor}>
+            {data.pages.map((page, index) => (
+              <React.Fragment key={index}>
                 {page.data.map((item: RaribleItem) => (
                   <div
                     key={item.tokenId}

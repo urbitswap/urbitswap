@@ -68,11 +68,11 @@ export default function NavBar({
   const { connect } = useConnect({connector: new InjectedConnector()});
   const { disconnect } = useDisconnect();
   const traders = useUrbitTraders();
-  const vccKYC = useVentureAccountKYC();
+  const vccKYC = {}; // useVentureAccountKYC();
 
   const isConnected: boolean = address !== "0x";
   const isAssociated: boolean = (traders ?? {})[address.toLowerCase()] !== undefined;
-  const isKYCd: boolean = vccKYC !== undefined && vccKYC.kyc;
+  const isKYCd: boolean = false; // vccKYC !== undefined && vccKYC.kyc;
 
   const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const {value}: {value: string;} = event.target;
@@ -309,13 +309,4 @@ export default function NavBar({
       </div>
     </nav>
   );
-}
-
-function getNavigationQuery(query: string): NavigationQuery {
-  return query.split(" ").reduce((a, i) => {
-    const nextPart = i.split(":");
-    const nextKey = (nextPart.length === 1) ? "name" : nextPart[0];
-    const nextValue = (nextPart.length === 1) ? nextPart[0] : nextPart.slice(1).join(":");
-    return {[nextKey]: nextValue, ...a};
-  }, {});
 }

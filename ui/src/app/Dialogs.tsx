@@ -205,7 +205,7 @@ export function TradeDialog() {
   const assetTitle: string | undefined = item && makePrettyName(item);
   const tenderTitle: string | undefined = tradeTender && makePrettyPrice(tradeTender);
   const royaltyTitle: string | undefined =
-    tradeTender && `${(APP_TREASURY.value / 100)}% App Sale Royalty`
+    tradeTender && `${(APP_TREASURY.value / 100)}% App Royalty`
   // const royaltyTitle: string | undefined = tradeTender && makePrettyPrice({
   //   ...tradeTender,
   //   value: tradeTender.value * (APP_TREASURY.value / 10000),
@@ -443,10 +443,10 @@ export function PretradeDialog() {
   const onOpenChange = (open: boolean) => (!open && dismiss());
 
   const { isConnected } = useWagmiAccount();
-  const vccKYC = useVentureAccountKYC();
-  const vccGrant = useVentureAccountGrant(params?.itemId ?? "");
-  const isKYCd: boolean = vccKYC !== undefined && vccKYC.kyc;
-  const isTransferable: boolean = vccGrant !== undefined && vccGrant?.status === "success";
+  const vccKYC = {}; // useVentureAccountKYC();
+  const vccGrant = {}; // useVentureAccountGrant(params?.itemId ?? "");
+  const isKYCd: boolean = true; // vccKYC !== undefined && vccKYC.kyc;
+  const isTransferable: boolean = true; // vccGrant !== undefined && vccGrant?.status === "success";
 
   useLayoutEffect(() => {
     const { thenTo, ...newLocationState } = location.state;
