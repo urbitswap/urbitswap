@@ -1,6 +1,12 @@
 // eslint-disable-next-line import/prefer-default-export
 export const APP_TERM: string = "urbitswap";
 export const APP_DBUG: boolean = import.meta.env.MODE === "development";
+export const APP_TREASURY: {value: number; account: string;} = {
+  value: 200, // 2%
+  account: APP_DBUG
+    ? "ETHEREUM:0x8aa4C4436b7FB8731b34e791b03C9b64b1461C75"
+    : "ETHEREUM:0x5799f7EEf7c1D5f90AEB2ceFA917E853d160Bc2f",
+};
 
 // https://stackoverflow.com/a/27093173
 export const MAX_DATE: Date = new Date(8640000000000000);
@@ -18,14 +24,6 @@ export const CONTRACT = Object.freeze({
     : "ETHEREUM:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
 });
 
-export const TREASURY = Object.freeze({
-  ROYALTY: 200, // 2%
-  ADDRESS: APP_DBUG
-    ? "ETHEREUM:0x8aa4C4436b7FB8731b34e791b03C9b64b1461C75"
-    // FIXME: DAO multisig address
-    : "ETHEREUM:0x0000000000000000000000000000000000000000",
-});
-
 export const QUERY = Object.freeze({
   COLLECTION_BASE: <const> ["all", "mine", "bids"],
   POINT_TYPE: <const> ["galaxy", "star", "planet"],
@@ -38,7 +36,7 @@ export const TENDERS = <const> [
 
 export const TRADERS_HOST: [string, string] = APP_DBUG
   ? ["~zod", "master"]
-  : ["~dister-dister-sidnym-ladrut", "master"];
+  : ["~firser-dister-sidnym-ladrut", "master"];
 export const TRADERS_HOST_FLAG: string = TRADERS_HOST.join("/");
 
 export const AUTHORS = [

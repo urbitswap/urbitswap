@@ -42,7 +42,7 @@ import {
   makePrettyName,
   makePrettyPrice,
 } from '@/logic/utils';
-import { MAX_DATE, TENDERS } from '@/constants';
+import { APP_TREASURY, MAX_DATE, TENDERS } from '@/constants';
 import type {
   Asset as RaribleAsset,
   AssetType as RaribleAssetType,
@@ -199,13 +199,25 @@ export function TradeDialog() {
   const tradeOffer: RaribleOrder | undefined =
     [(item && item.bestSellOrder), ...(bids || [])]
     .find(o => o !== undefined && o.id === offerId);
-  const tradeAsset: string | undefined = item && makePrettyName(item);
-  const tradeTender: string | undefined =
-    tradeOffer && makePrettyPrice(tradeOffer[mine ? "make" : "take"]);
+  const tradeTender: RaribleAsset | undefined =
+    tradeOffer && tradeOffer[mine ? "make" : "take"];
+
+  const assetTitle: string | undefined = item && makePrettyName(item);
+  const tenderTitle: string | undefined = tradeTender && makePrettyPrice(tradeTender);
+  const royaltyTitle: string | undefined =
+    tradeTender && `${(APP_TREASURY.value / 100)}% App Sale Royalty`
+  // const royaltyTitle: string | undefined = tradeTender && makePrettyPrice({
+  //   ...tradeTender,
+  //   value: tradeTender.value * (APP_TREASURY.value / 10000),
+  // });
 
   const onSubmit = useCallback(async (event: any) => {
     event.preventDefault();
-    (offerId !== undefined) && tradeMutate({orderId: offerId, amount: 1});
+    (offerId !== undefined) && tradeMutate({
+      orderId: offerId,
+      amount: 1,
+      originFees: [APP_TREASURY],
+    });
   }, [hasBeenWarned, offerId, tradeMutate]);
   const onKeep = useCallback(async (event: any) => {
     setHasBeenWarned(true);
@@ -261,8 +273,9 @@ export function TradeDialog() {
                   address={address}
                   className="mx-auto font-bold underline"
                 />
-                <p className="line-through text-sm">{mine ? tradeAsset : tradeTender}</p>
-                <p className="italic text-sm">{mine ? tradeTender : tradeAsset}</p>
+                <p className="line-through text-sm">{mine ? assetTitle : tenderTitle}</p>
+                <p className="italic text-sm">{mine ? tenderTitle : assetTitle}</p>
+                <p className="line-through text-sm">{royaltyTitle}</p>
               </div>
               <ArrowsRightLeftIcon className="w-5 h-5" />
               <div className="flex flex-col justify-center text-center">
@@ -270,8 +283,8 @@ export function TradeDialog() {
                   address={(tradeOffer.maker.replace(/^.+:/g, "") as Address)}
                   className="mx-auto font-bold underline"
                 />
-                <p className="italic text-sm">{mine ? tradeAsset : tradeTender}</p>
-                <p className="line-through text-sm">{mine ? tradeTender : tradeAsset}</p>
+                <p className="italic text-sm">{mine ? assetTitle : tenderTitle}</p>
+                <p className="line-through text-sm">{mine ? tenderTitle : assetTitle}</p>
               </div>
             </div>
           )}

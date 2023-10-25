@@ -189,7 +189,7 @@ export function useRaribleCollection(): RaribleItem[] | undefined {
 
   return (isLoading || isError)
     ? undefined
-    : (data as RaribleItem[]).map(addVentureAttribs);
+    : (data as RaribleItem[]); // .map(addVentureAttribs);
 }
 
 // export function useRariblePagedCollection() {
@@ -234,7 +234,7 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
     : results.reduce(
       (a, i) => a.concat(i.data as RaribleItem[]),
       ([] as RaribleItem[])
-    ).map(addVentureAttribs);
+    ); // .map(addVentureAttribs);
 }
 
 export function useRaribleAccountBids(): RaribleOrder[] | undefined {
@@ -291,7 +291,7 @@ export function useRouteRaribleItem(): RouteRaribleItem {
   return (isLoading || isError)
     ? {item: undefined, owner: undefined, bids: undefined}
     : {
-      item: addVentureAttribs(data[0] as RaribleItem),
+      item: (data[0] as RaribleItem), // addVentureAttribs(data[0] as RaribleItem),
       // @ts-ignore
       owner: (data[1].map((o: RaribleOwnership) => o.owner.replace(/^.+:/g, "").toLowerCase())[0] as Address),
       bids: (data[2] as RaribleOrder[]),

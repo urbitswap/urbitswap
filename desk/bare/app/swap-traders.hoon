@@ -19,7 +19,7 @@
   ++  master-flag
     ^-  flag:s
     :_  %master
-    (slav %p ?:(dbug:s '~zod' '~dister-dister-sidnym-ladrut'))
+    (slav %p ?:(dbug:s '~zod' '~firser-dister-sidnym-ladrut'))
   ++  path2flag
     |=  path=[%swap %traders @ @ ~]
     ^-  flag:s
@@ -28,7 +28,7 @@
 =|  state-0
 =*  state  -
 =<
-  %+  verb  &
+  %+  verb  dbug:s
   %-  agent:dbug
   |_  =bowl:gall
   +*  this  .

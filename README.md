@@ -19,7 +19,8 @@ nvm use 16
 cd ./ui
 yarn install
 echo "VITE_SHIP_URL=http://127.0.0.1:8080" > .env.local
-echo "VITE_RARIBLE_KEY=$RARIBLE_APIKEY" >> .env.local
+echo "VITE_RARIBLE_MAINNET_KEY=$RARIBLE_MAINNET_APIKEY" >> .env.local
+echo "VITE_RARIBLE_TESTNET_KEY=$RARIBLE_TESTNET_APIKEY" >> .env.local
 # Optional: To eliminate rate limiting for ETH requests.
 echo "VITE_ALCHEMY_KEY=$ALCHEMY_APIKEY" >> .env.local
 # Optional: To enable Arcade loan/staking features.

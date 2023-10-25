@@ -22,7 +22,9 @@ export default function useRaribleSDK(): RaribleSdk {
     APP_DBUG ? "testnet" : "prod",
     {
       logs: 0,
-      apiKey: import.meta.env.VITE_RARIBLE_KEY,
+      apiKey: APP_DBUG
+        ? import.meta.env.VITE_RARIBLE_TESTNET_KEY
+        : import.meta.env.VITE_RARIBLE_MAINNET_KEY,
       // NOTE: Each 'middleware' is a function that provides a tuple of:
       //   (wrapped API call, callback on API results (promise or value))
       // Usage examples can be found in:
@@ -47,7 +49,7 @@ async function reportRaribleCall(fn: Callable, args: Args): MiddlewarePromise
   ];
 }
 
-const limitRarible = genRateLimiter(5, 6);
+const limitRarible = genRateLimiter(10, 6); // 10 queries / 6 seconds
 async function limitRaribleCall(fn: Callable, args: Args): MiddlewarePromise
 {
   return [
