@@ -58,8 +58,8 @@ export function useUrbitTraders(): UrbitTraders | undefined {
 
   const { data, isLoading, isError } = useUrbitSubscription({
     queryKey: queryKey,
-    app: "exchange-traders",
-    path: `/exchange/${TRADERS_HOST_FLAG}`,
+    app: "swap-traders",
+    path: `/swap/${TRADERS_HOST_FLAG}`,
     scry: `/${TRADERS_HOST_FLAG}`,
   });
 
@@ -91,8 +91,8 @@ export function useUrbitAssociateMutation(
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({address, signature}: UrbitAssoc) => urbitAPI.poke({
-      app: "exchange-traders",
-      mark: "exchange-action",
+      app: "swap-traders",
+      mark: "swap-action",
       json: {
         traders: TRADERS_HOST_FLAG,
         update: {asoc: {addr: address, sign: signature}},

@@ -1,8 +1,8 @@
-# VCC MVP Architecture #
+# `urbitswap` MVP Architecture #
 
 ## Back-end Overview ##
 
-The primary purpose of the VCC back-end is to manage a list of associations
+The primary purpose of the `urbitswap` back-end is to manage a list of associations
 between Urbit ships and Ethereum wallets to enable on-network communications
 related to asset trading.
 
@@ -19,7 +19,7 @@ on remote machines. When a ship learns of a new ship/wallet association, it can
 choose to propagate that association to any number of local and remote lists.
 
 For the purposes of the MVP, only a small subset of this functionality will be
-exposed to users. Each Urbit ship that runs the VCC app will automatically
+exposed to users. Each Urbit ship that runs the `urbitswap` app will automatically
 subscribe to a single master list hosted on the same ship distributing the app
 source code, and will only be able to report its own personal associations
 (i.e. this ship is associated with these wallets) to this list. These
@@ -30,7 +30,7 @@ demoing purposes without significant performance penalties.
 
 ### Scry ###
 
-- `.^((map @ux @p) %gx /=vcc-traders=/ship/list/noun)`: Return the full map
+- `.^((map @ux @p) %gx /=traders=/ship/list/noun)`: Return the full map
   of ship-to-address associations on a particular ship.
 
 ### Poke ###
@@ -40,5 +40,5 @@ demoing purposes without significant performance penalties.
 
 ### Subs ###
 
-- `/=vcc-traders=/ship/list/`: The master subscription feed for all changes
+- `/=traders=/ship/list/`: The master subscription feed for all changes
   that occur to a particular list.

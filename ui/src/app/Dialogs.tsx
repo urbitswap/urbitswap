@@ -546,10 +546,10 @@ export function DisclaimerDialog() {
           license for more details on limitations and liability:
         </p>
         <Link
-          to="https://raw.githubusercontent.com/sidnym-ladrut/urbits.exchange/v0.0.1/LICENSE.txt"
+          to="https://raw.githubusercontent.com/sidnym-ladrut/urbitswap/v0.0.1/LICENSE.txt"
           className="text-2xl underline text-center"
         >
-          Urbit's Exchange License
+          Software License
         </Link>
 
         <footer className="mt-4 flex items-center justify-between space-x-2">

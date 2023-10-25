@@ -1,6 +1,6 @@
-/-  e=exchange
-/+  j=exchange-json
-|_  act=action:e
+/-  s=swap
+/+  j=swap-json
+|_  act=action:s
 ++  grad  %noun
 ++  grow
   |%
@@ -9,7 +9,7 @@
   --
 ++  grab
   |%
-  ++  noun  action:e
+  ++  noun  action:s
   ++  json  action:dejs:j
   --
 --

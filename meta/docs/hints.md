@@ -1,25 +1,25 @@
-# "Urbit's Exchange" Tests #
+# `urbitswap` Tests #
 
 ## Scry Tests ##
 
 ```
-.^(bean %gu /=exchange-traders=/~zod/master)
-.^((map @ux @p) %gx /=exchange-traders=/~zod/master/noun)
-.^(json %gx /=exchange-traders=/~zod/master/json)
+.^(bean %gu /=swap-traders=/~zod/master)
+.^((map @ux @p) %gx /=swap-traders=/~zod/master/noun)
+.^(json %gx /=swap-traders=/~zod/master/json)
 ```
 
 ## Poke Tests ##
 
 ```
-:exchange-traders &exchange-action [[~zod %master] %asoc 0x1234 0xabcd]
+:swap-traders &swap-action [[~zod %master] %asoc 0x1234 0xabcd]
 ```
 
 ## Mark Tests ##
 
 ```
-=e -build-file /=exchange=/sur/exchange/hoon
-=j2a -build-tube /=exchange=/json/exchange-action
-=j2ag |=(t=@t !<(action:e (j2a !>((need (de:json:html t))))))
+=s -build-file /=urbitswap=/sur/swap/hoon
+=j2a -build-tube /=urbitswap=/json/swap-action
+=j2ag |=(t=@t !<(action:s (j2a !>((need (de:json:html t))))))
 (j2ag '{"traders": "~zod/b", "update": {"init": null}}')
 (j2ag '{"traders": "~zod/b", "update": {"drop": null}}')
 (j2ag '{"traders": "~zod/b", "update": {"join": null}}')
@@ -27,9 +27,9 @@
 ```
 
 ```
-=e -build-file /=exchange=/sur/exchange/hoon
-=a2j -build-tube /=exchange=/exchange-action/json
-=a2jg |=(a=action:e (en:json:html !<(json (a2j !>(a)))))
+=s -build-file /=urbitswap=/sur/swap/hoon
+=a2j -build-tube /=urbitswap=/swap-action/json
+=a2jg |=(a=action:s (en:json:html !<(json (a2j !>(a)))))
 (a2jg [[our %b] %init ~])
 (a2jg [[our %b] %drop ~])
 (a2jg [[our %b] %join ~])
@@ -41,8 +41,8 @@
 In debug mode, the `sign` field is ignored, enabling simplified testing/configuration:
 
 ```
-=e -build-file /=exchange=/sur/exchange/hoon
-=j2a -build-tube /=exchange=/json/exchange-action
-=j2ag |=(t=@t !<(action:e (j2a !>((need (de:json:html t))))))
-:exchange-traders &exchange-action (j2ag '{"traders": "~zod/master", "update": {"asoc": {"addr": "", "sign": "0x0"}}}')
+=s -build-file /=urbitswap=/sur/swap/hoon
+=j2a -build-tube /=urbitswap=/json/swap-action
+=j2ag |=(t=@t !<(action:s (j2a !>((need (de:json:html t))))))
+:swap-traders &swap-action (j2ag '{"traders": "~zod/master", "update": {"asoc": {"addr": "", "sign": "0x0"}}}')
 ```

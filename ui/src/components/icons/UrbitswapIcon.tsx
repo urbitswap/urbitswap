@@ -1,7 +1,7 @@
 import React from 'react';
 import { IconProps } from './icon';
 
-export default function UrbitsExchangeIcon(props: IconProps) {
+export default function UrbitswapIcon(props: IconProps) {
   return (
     <svg
       fill="none"

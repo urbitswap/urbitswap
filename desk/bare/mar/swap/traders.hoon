@@ -1,6 +1,6 @@
-/-  e=exchange
-/+  j=exchange-json
-|_  =traders:e
+/-  s=swap
+/+  j=swap-json
+|_  =traders:s
 ++  grad  %noun
 ++  grow
   |%
@@ -9,6 +9,6 @@
   --
 ++  grab
   |%
-  ++  noun  traders:e
+  ++  noun  traders:s
   --
 --

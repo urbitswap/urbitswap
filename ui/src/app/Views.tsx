@@ -36,7 +36,7 @@ import {
   XCircleIcon,
   EllipsisHorizontalIcon,
 } from '@heroicons/react/24/solid';
-import UrbitsExchangeIcon from '@/components/icons/UrbitsExchangeIcon';
+import UrbitswapIcon from '@/components/icons/UrbitswapIcon';
 import ErrorIcon from '@/components/icons/ErrorIcon';
 import { APP_TERM, CONTRACT } from '@/constants';
 import {
@@ -406,7 +406,7 @@ function LoadingIcon() {
   // embedding contexts.
   return (
     <div className="flex flex-col justify-center items-center h-[75vh]">
-      <UrbitsExchangeIcon className="animate-spin w-32 h-32" />
+      <UrbitswapIcon className="animate-spin w-32 h-32" />
     </div>
   );
 }

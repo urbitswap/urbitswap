@@ -1,4 +1,4 @@
-# Urbit's Exchange #
+# `urbitswap` #
 
 A peer-to-peer NFT trading platform native to [Urbit]
 
@@ -27,14 +27,14 @@ echo "VITE_ARCADE_KEY=$ARCADE_APIKEY" >> .env.local
 ```
 
 Subsequently, run the following commands to download [durploy] create a new
-[fake `~zod`][fakezod] with the `%exchange` desk:
+[fake `~zod`][fakezod] with the `%urbitswap` desk:
 
 ```bash
 curl -LO https://raw.githubusercontent.com/sidnym-ladrut/durploy/release/durploy
 chmod u+x ./durploy
 ./durploy ship zod
 # In a different terminal:
-./durploy desk zod exchange ./desk/full/
+./durploy desk zod urbitswap ./desk/full/
 ```
 
 ### Development Workflows ###
@@ -45,7 +45,7 @@ In order to continuously test back-end code changes as they're made, run the
 following commands:
 
 ```bash
-./durploy desk -w zod exchange ./desk/full/
+./durploy desk -w zod urbitswap ./desk/full/
 ```
 
 #### Front-end Workflows ####
@@ -75,7 +75,6 @@ cd ./desk
 rm -rI full/
 find bare -type f | while read f; do { d=$(dirname "$f" | sed "s/^bare/full/"); mkdir -p "$d"; ln -sr -t "$d" "$f"; }; done
 ln -sr ../LICENSE.txt full/license.txt
-find bare -type f | while read f; do { d=$(dirname "$f" | sed "s/^bare/full/"); mkdir -p "$d"; ln -sr -t "$d" "$f"; }; done
 git clone -b 412k-rc2 --depth 1 https://github.com/urbit/urbit.git urb
 cp urb/pkg/arvo/mar/{bill*,hoon*,json*,kelvin*,mime*,noun*,ship*,txt*} full/mar/
 cp urb/pkg/arvo/lib/{agentio*,dbug*,default-agent*,skeleton*,verb*,naive*,tiny*,ethereum*} full/lib/
@@ -99,7 +98,7 @@ front-end build, run the following commands:
 cd ./ui
 npm run build
 cd ..
-./durploy desk -g zod exchange ./ui/dist/
+./durploy desk -g zod urbitswap ./ui/dist/
 cp "$(ls -dtr1 "${XDG_CACHE_HOME:-$HOME/.cache}/durploy/glob"/* | tail -1)" ./meta/glob
 ./meta/exec/release 1.2.3 "$(ls -dtr1 ./meta/glob/* | tail -1)"
 ```

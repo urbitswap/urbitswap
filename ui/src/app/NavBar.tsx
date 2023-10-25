@@ -20,7 +20,7 @@ import {
   WalletIcon,
 } from '@heroicons/react/24/solid';
 import ENSName from '@/components/ENSName';
-import UrbitsExchangeIcon from '@/components/icons/UrbitsExchangeIcon';
+import UrbitswapIcon from '@/components/icons/UrbitswapIcon';
 import { useModalNavigate } from '@/logic/routing';
 import { encodeQuery, decodeQuery } from '@/logic/utils';
 import {
@@ -94,8 +94,8 @@ export default function NavBar({
         innerClassName,
       )}>
         <Link to="/" className="flex flex-row items-center gap-2 font-bold">
-          <UrbitsExchangeIcon className="w-12 h-12 sm:w-14 sm:h-14" />
-          <span className="hidden sm:block">Exchange</span>
+          <UrbitswapIcon className="w-12 h-12 sm:w-14 sm:h-14" />
+          <span className="hidden sm:block">swap</span>
         </Link>
 
         <div className="flex flex-row gap-2 flex-1 min-w-0">

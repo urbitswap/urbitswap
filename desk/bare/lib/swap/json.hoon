@@ -1,21 +1,21 @@
-/-  e=exchange
+/-  s=swap
 |%
 ++  enjs
   =,  enjs:format
   =>  |%
       ++  flagify
-        |=  f=flag:e
+        |=  f=flag:s
         ^-  @t
         (rap 3 (scot %p p.f) '/' q.f ~)
       --
   |%
   ++  flag
-    |=  f=flag:e
+    |=  f=flag:s
     ^-  json
     s+(flagify f)
   ::
   ++  traders
-    |=  t=traders:e
+    |=  t=traders:s
     ^-  json
     %-  pairs
     %+  turn  ~(tap by t)
@@ -23,7 +23,7 @@
     [(crip (z-co:co a)) s+(scot %p s)]
   ::
   ++  action
-    |=  [f=flag:e u=update:e]
+    |=  [f=flag:s u=update:s]
     ^-  json
     %-  pairs
     =-  ~[['traders' s+(flagify f)] ['update' -]]
@@ -47,7 +47,7 @@
   ::
   ++  action
     |=  jon=json
-    ;;  action:e
+    ;;  action:s
     %.  jon
     %-  ot
     :~  traders+flag
