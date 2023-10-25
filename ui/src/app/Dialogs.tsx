@@ -289,6 +289,10 @@ export function TradeDialog() {
             </div>
           )}
 
+          <p className="text-sm text-center">
+            (Trades generally take between 45-120+ seconds to process.)
+          </p>
+
           <footer className="mt-4 flex items-center justify-between space-x-2">
             <div className="ml-auto flex items-center space-x-2">
               <DialogPrimitive.Close asChild>

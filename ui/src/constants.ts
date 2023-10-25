@@ -25,7 +25,7 @@ export const CONTRACT = Object.freeze({
 });
 
 export const QUERY = Object.freeze({
-  COLLECTION_BASE: <const> ["all", "mine", "bids"],
+  COLLECTION_BASE: <const> ["mine", "bids"],
   POINT_TYPE: <const> ["galaxy", "star", "planet"],
 });
 

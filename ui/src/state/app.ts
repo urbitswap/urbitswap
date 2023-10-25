@@ -343,7 +343,7 @@ export function useRouteRaribleItemMutation<TResponse>(
             // not being listed as an NFT owner after purchase).
             new Promise(resolve => setTimeout(() => {
               resolve(rsdkResult);
-            }, 15 * 1000))
+            }, 20 * 1000))
           )
       ));
     }) as MutationFunction<TResponse, any>),

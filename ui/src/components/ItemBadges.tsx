@@ -7,9 +7,9 @@ import {
   LockClosedIcon,
   LockOpenIcon,
   QuestionMarkCircleIcon,
-  TagIcon,
   SparklesIcon,
   StarIcon,
+  TagIcon,
   WalletIcon,
 } from '@heroicons/react/24/solid';
 import {
