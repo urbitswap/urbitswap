@@ -81,7 +81,6 @@ export function CollectionGrid({className}: ClassProps) {
     [APP_TERM, "rarible", "pcollection", query?.base, query?.name, query?.type],
     async ({ pageParam = undefined }) => {
       if (query?.base === "mine") {
-        // TODO: Need to further filter by name and traits
         // TODO: Need to get items for all addresses (ideally sequentially;
         // will require some finessing with continuations)
         const res = await rsdk.apis.item.getItemsByOwner({
@@ -91,10 +90,18 @@ export function CollectionGrid({className}: ClassProps) {
         return {
           prevCursor: undefined,
           nextCursor: res.continuation,
-          data: res.items.filter((item) => item.collection === CONTRACT.AZIMUTH),
+          data: res.items.filter((item) =>
+            item.collection === CONTRACT.AZIMUTH
+            && (!query?.type
+              || (item.meta?.attributes ?? []).find(({key, value}) =>
+                key === "size" && value === query.type
+              )
+            ) && (!query?.name
+              || ((item.meta?.name ?? "").includes(query.name))
+            )
+          ),
         };
       } else if (query?.base === "bids") {
-        // TODO: Need to further filter by name and traits
         const res = await rsdk.apis.order.getOrderBidsByMaker({
           maker: addresses!.map((address) => `ETHEREUM:${address}`),
           status: [RaribleOrderStatus.ACTIVE],
@@ -113,7 +120,15 @@ export function CollectionGrid({className}: ClassProps) {
         return {
           prevCursor: undefined,
           nextCursor: res.continuation,
-          data: res2.items,
+          data: res2.items.filter((item) =>
+            (!query?.type
+              || (item.meta?.attributes ?? []).find(({key, value}) =>
+                key === "size" && value === query.type
+              )
+            ) && (!query?.name
+              || ((item.meta?.name ?? "").includes(query.name))
+            )
+          ),
         };
       } else { /* fall back to "all" */
         const res = await rsdk.apis.item.searchItems({ itemsSearchRequest: {
