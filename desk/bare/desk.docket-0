@@ -2,7 +2,7 @@
     info+'A peer-to-peer NFT trading platform native to Urbit'
     color+0x11.1111
     image+'https://raw.githubusercontent.com/sidnym-ladrut/urbitswap/v0.0.1/meta/logo/urbitswap-tile.svg'
-    glob-http+['https://raw.githubusercontent.com/j3-productions/quorum/v1.0.7/meta/glob/v1.0.7.glob' 0v6.9nqf3.mjuh3.ronig.9ln8e.jsmj1]
+    glob-http+['https://raw.githubusercontent.com/sidnym-ladrut/urbitswap/v0.0.1/meta/glob/v0.0.1.glob' 0v6.9n4pk.dlmou.vabu0.fbc8v.99q6k]
     base+'urbitswap'
     version+[0 0 1]
     website+'https://github.com/sidnym-ladrut/urbitswap'

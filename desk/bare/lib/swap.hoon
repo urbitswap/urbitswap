@@ -1,7 +1,7 @@
 /-  *swap
 /+  eth=ethereum, txn=naive-transactions
 |%
-++  dbug  %&
+++  dbug  %|
 ++  apply
   |=  [=traders =bowl:gall =action]
   ^-  ^traders

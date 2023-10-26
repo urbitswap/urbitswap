@@ -1,6 +1,6 @@
 // eslint-disable-next-line import/prefer-default-export
 export const APP_TERM: string = "urbitswap";
-export const APP_DBUG: boolean = import.meta.env.MODE === "development";
+export const APP_DBUG: boolean = import.meta.env.DEV;
 export const APP_TREASURY: {value: number; account: string;} = {
   value: 200, // 2%
   account: APP_DBUG
