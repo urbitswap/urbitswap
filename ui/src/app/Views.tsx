@@ -17,6 +17,7 @@ import {
   useUrbitAccountAddresses,
   useRaribleCollection,
   useRaribleAccountItems,
+  useRaribleAccountBids,
   useRouteRaribleItem,
   useRouteRaribleAccountItem,
 } from '@/state/app';
@@ -63,10 +64,12 @@ export function CollectionGrid({className}: ClassProps) {
   // const collection = useRaribleCollection();
 
   const addresses = useUrbitAccountAddresses();
+  const myItems = useRaribleAccountItems();
+  const myBids = useRaribleAccountBids();
   const rsdk = useRaribleSDK();
   const query = decodeQuery(params);
   // https://tanstack.com/query/v4/docs/react/examples/react/load-more-infinite-scroll
-  const { ref, inView } = useInView();
+  // const { ref, inView } = useInView();
   const {
     status,
     data,
@@ -165,11 +168,11 @@ export function CollectionGrid({className}: ClassProps) {
     },
   );
 
-  // FIXME: This tends to overfetch when there are sufficient results; need to
-  // find some better way to debounce this.
-  useEffect(() => {
-    inView && !isFetchingNextPage && fetchNextPage();
-  }, [inView, isFetchingNextPage]);
+  // FIXME: This would be better, but we use manual reloads for now b/c this
+  // can cause double loads.
+  // useEffect(() => {
+  //   inView && !isFetchingNextPage && fetchNextPage();
+  // }, [inView, isFetchingNextPage]);
 
   return (
     <div className={cn(
@@ -206,7 +209,12 @@ export function CollectionGrid({className}: ClassProps) {
                         entry["@type"] === "IMAGE"
                       )) ?? {})?.url
                     } />
-                    <ItemBadges item={item} badgeClassName="w-5 h-5" />
+                    <ItemBadges
+                      item={item}
+                      myItems={myItems}
+                      myBids={myBids}
+                      badgeClassName="w-5 h-5"
+                    />
                     <div className="grid grid-cols-2 text-sm text-center">
                       <div>
                         <p className="font-bold">Live Ask</p>
@@ -234,10 +242,17 @@ export function CollectionGrid({className}: ClassProps) {
               </React.Fragment>
             ))}
           </div>
-          <EllipsisHorizontalIcon ref={ref} className={cn(
+          <button
+            disabled={!hasNextPage}
+            onClick={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
+            className={"button mt-6"}
+          >
+            {(isFetching || isFetchingNextPage) ? "..." : "Load Next"}
+          </button>
+          {/*<EllipsisHorizontalIcon ref={ref} className={cn(
             "animate-ping mt-6 h-8 w-8",
             (isFetching || isFetchingNextPage) ? "visible" : "invisible"
-          )} />
+          )} />*/}
         </React.Fragment>
       )}
     </div>
@@ -259,6 +274,7 @@ export function ItemPage({className}: ClassProps) {
   // the currently active wallet
   const myItems = useRaribleAccountItems();
   const isMyItem = (myItems ?? []).some((i: RaribleItem) => i.id === item?.id);
+  const myBids = useRaribleAccountBids();
 
   const ownerUrbitId = useMemo(() => (
     (traders ?? {})[owner ?? ""]
@@ -375,7 +391,12 @@ export function ItemPage({className}: ClassProps) {
                 entry["@type"] === "IMAGE"
               )) ?? {})?.url
             } />
-            <ItemBadges item={item} badgeClassName="w-6 h-6" />
+            <ItemBadges
+              item={item}
+              myItems={myItems}
+              myBids={myBids}
+              badgeClassName="w-6 h-6"
+            />
             <button className="w-full button"
               onClick={() => modalNavigate("pretrade", {
                 state: {backgroundLocation: location, thenTo: "offer"}

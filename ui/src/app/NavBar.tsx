@@ -279,7 +279,7 @@ export default function NavBar({
                 </React.Fragment>
               )}
             </DropdownMenu.Item>
-            {(isConnected && !isKYCd) && (
+            {/*(isConnected && !isKYCd) && (
               <DropdownMenu.Item
                 onSelect={() => modalNavigate("pretrade", {
                   relative: "path",
@@ -290,7 +290,7 @@ export default function NavBar({
                 <IdentificationIcon className="w-4 h-4" />
                 &nbsp;<span>Submit KYC</span>
               </DropdownMenu.Item>
-            )}
+            )*/}
             {(isConnected && !isAssociated) && (
               <DropdownMenu.Item
                 onSelect={() => modalNavigate("assoc", {

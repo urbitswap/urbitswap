@@ -31,15 +31,17 @@ import type {
 
 export default function ItemBadges({
   item,
+  myItems,
+  myBids,
   className,
   badgeClassName,
 }: {
   item: RaribleItem;
+  myItems: RaribleItem[] | undefined;
+  myBids: RaribleOrder[] | undefined;
   className?: string;
   badgeClassName?: string;
 }) {
-  const myItems = useRaribleAccountItems();
-  const myBids = useRaribleAccountBids();
   // const myItemGrant = useVentureAccountGrant(item.tokenId ?? "");
   const myItemLayer = useUrbitNetworkLayer(item.meta?.name ?? "");
 
