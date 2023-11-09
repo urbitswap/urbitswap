@@ -80,14 +80,14 @@ git clone -b 412k-rc2 --depth 1 https://github.com/urbit/urbit.git urb
 cp urb/pkg/arvo/mar/{bill*,hoon*,json*,kelvin*,mime*,noun*,ship*,txt*} full/mar/
 cp urb/pkg/arvo/lib/{agentio*,dbug*,default-agent*,skeleton*,verb*,naive*,tiny*,ethereum*} full/lib/
 cp urb/pkg/arvo/sur/verb.hoon full/sur/
+cp urb/pkg/base-dev/lib/mip.hoon full/lib/
 git clone -b v1.16.0 --depth 1 https://github.com/tloncorp/landscape.git lan
 cp lan/desk/mar/docket* full/mar/
 cp lan/desk/lib/docket* full/lib/
 cp lan/desk/sur/docket* full/sur/
-git clone --depth 1 https://github.com/wicrum-wicrun/sss.git sss
+git clone -b sl/fix-scry-request-agent-wire --depth 1 https://github.com/sidnym-ladrut/sss.git sss
 cp sss/urbit/lib/sss.hoon full/lib/
 cp sss/urbit/sur/sss.hoon full/sur/
-# FIXME: Also need to get lib/mip.hoon from somewhere...
 ```
 
 #### Front-end Workflows ####
