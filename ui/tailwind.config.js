@@ -120,6 +120,7 @@ module.exports = {
       mono: ['Source Code Pro', 'Roboto mono', 'Courier New', 'monospace'],
     },
     fontSize: {
+      '2xs': ['.5rem', '1rem'],
       xs: ['.625rem', '1rem'],
       sm: ['.75rem', '1rem'],
       base: ['.875rem', '1rem'],

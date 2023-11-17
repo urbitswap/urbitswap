@@ -69,7 +69,7 @@ export function CollectionGrid({className}: ClassProps) {
   const rsdk = useRaribleSDK();
   const query = decodeQuery(params);
   // https://tanstack.com/query/v4/docs/react/examples/react/load-more-infinite-scroll
-  // const { ref, inView } = useInView();
+  const { ref, inView } = useInView();
   const {
     status,
     data,
@@ -168,11 +168,11 @@ export function CollectionGrid({className}: ClassProps) {
     },
   );
 
-  // FIXME: This would be better, but we use manual reloads for now b/c this
-  // can cause double loads.
-  // useEffect(() => {
-  //   inView && !isFetchingNextPage && fetchNextPage();
-  // }, [inView, isFetchingNextPage]);
+  // FIXME: This should only prompt 1 reload instead of the 2-3 that it
+  // prompts now.
+  useEffect(() => {
+    inView && !isFetchingNextPage && fetchNextPage();
+  }, [inView, isFetchingNextPage]);
 
   return (
     <div className={cn(
@@ -242,17 +242,10 @@ export function CollectionGrid({className}: ClassProps) {
               </React.Fragment>
             ))}
           </div>
-          <button
-            disabled={!hasNextPage}
-            onClick={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
-            className={"button mt-6"}
-          >
-            {(isFetching || isFetchingNextPage) ? "..." : "Load Next"}
-          </button>
-          {/*<EllipsisHorizontalIcon ref={ref} className={cn(
+          <EllipsisHorizontalIcon ref={ref} className={cn(
             "animate-ping mt-6 h-8 w-8",
             (isFetching || isFetchingNextPage) ? "visible" : "invisible"
-          )} />*/}
+          )} />
         </React.Fragment>
       )}
     </div>

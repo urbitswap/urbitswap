@@ -1,21 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import cn from 'classnames';
-import { useModalNavigate } from '@/logic/routing';
 import { useWagmiAccount, useUrbitTraders } from '@/state/app';
+import { get } from '@/state/idb';
+import { useModalNavigate } from '@/logic/routing';
+import { getVersionCompatibility } from '@/logic/utils';
+import { APP_DBUG } from '@/constants';
 
-export function NewSessionWatcher() {
+export function NewVersionWatcher() {
   const [isNewSession, setIsNewSession] = useState<boolean>(true);
 
   const location = useLocation();
   const modalNavigate = useModalNavigate();
 
   useEffect(() => {
-    if (isNewSession && !location.pathname.endsWith("disclaimer")) {
+    if (isNewSession) {
       setIsNewSession(false);
-      modalNavigate("disclaimer", {
-        relative: "path",
-        state: {backgroundLocation: location},
+      get("version").then((idbVersion: string | undefined) => {
+        const isVersAckOutdated: boolean = idbVersion === undefined
+          || getVersionCompatibility(idbVersion) < (APP_DBUG ? 2 : 1);
+        const isViewingDisclaimer: boolean =
+          location.pathname.endsWith("disclaimer");
+        if (isVersAckOutdated && !isViewingDisclaimer) {
+          modalNavigate("disclaimer", {
+            relative: "path",
+            state: {backgroundLocation: location},
+          });
+        }
       });
     }
   }, [isNewSession]);

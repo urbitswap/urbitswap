@@ -1,5 +1,5 @@
 import { format, formatDistance } from 'date-fns';
-import { APP_DBUG, MAX_DATE, CONTRACT, QUERY } from '@/constants';
+import { APP_DBUG, APP_VERSION, MAX_DATE, CONTRACT, QUERY } from '@/constants';
 import { Blockchain } from '@rarible/api-client';
 import {
   toContractAddress,
@@ -125,6 +125,27 @@ export function decodeQuery(query: URLSearchParams): NavigationQuery {
     type: QUERY.POINT_TYPE.find(s => s === decodeURIComponent(query.get("type") ?? "")),
     name: decodeURIComponent(query.get("name") ?? "") || undefined,
   };
+}
+
+export function getVersionTuple(version: string): number[] {
+  const versionArray: number[] = version.split(".").map((vis: string) => {
+    const vii: number = parseInt(vis, 10);
+    return isNaN(vii) ? -1 : vii;
+  });
+  return versionArray
+    .concat(new Array(Math.max(0, 3 - versionArray.length)).fill(-1))
+    .slice(0, 3);
+}
+
+export function getVersionCompatibility(version: string): number {
+  const appVersion: number[] = getVersionTuple(APP_VERSION);
+  const argVersion: number[] = getVersionTuple(version);
+
+  return (appVersion.some(v => v < 0) || argVersion.some(v => v < 0))
+    ? -1
+    : appVersion.reduce((a, v, i) => (
+      (i === (a + 1) && v === argVersion[i]) ? i : a
+    ), -1);
 }
 
 export function getItemUnlock(item: RaribleItem): Date {

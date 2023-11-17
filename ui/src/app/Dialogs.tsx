@@ -34,6 +34,7 @@ import {
   useRouteRaribleItemMutation,
   useRouteRaribleOfferItemMutation,
 } from '@/state/app';
+import { set } from '@/state/idb';
 import { useDismissNavigate } from '@/logic/routing';
 import {
   isMaxDate,
@@ -42,7 +43,12 @@ import {
   makePrettyName,
   makePrettyPrice,
 } from '@/logic/utils';
-import { APP_TREASURY, MAX_DATE, TENDERS } from '@/constants';
+import {
+  APP_VERSION,
+  APP_TREASURY,
+  MAX_DATE,
+  TENDERS,
+} from '@/constants';
 import type {
   Asset as RaribleAsset,
   AssetType as RaribleAssetType,
@@ -537,7 +543,13 @@ export function PretradeDialog() {
 
 export function DisclaimerDialog() {
   const dismiss = useDismissNavigate();
-  const onOpenChange = (open: boolean) => (!open && dismiss());
+  const onOpenChange = (open: boolean) => {
+    if (!open) {
+      set("version", APP_VERSION)
+        .catch((err) => console.log(err))
+        .finally(() => dismiss());
+    }
+  };
 
   const onSubmit = useCallback((event: any) => {
     event.preventDefault();

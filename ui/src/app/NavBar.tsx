@@ -15,8 +15,10 @@ import {
   BoltIcon,
   BoltSlashIcon,
   ChevronDownIcon,
+  DocumentIcon,
   FunnelIcon,
   GlobeAltIcon,
+  HomeIcon,
   IdentificationIcon,
   LinkIcon,
   MagnifyingGlassIcon,
@@ -106,13 +108,50 @@ export default function NavBar({
       className,
     )}>
       <div className={cn(
-        "flex flex-row justify-between space-x-1 sm:space-x-4 items-center",
+        "flex flex-row justify-between space-x-1 sm:space-x-2 items-center",
         innerClassName,
       )}>
-        <Link to="/" className="flex flex-row items-center gap-2 font-bold">
-          <UrbitswapIcon className="w-10 h-10 sm:w-14 sm:h-14" />
-          <span className="hidden sm:block">swap</span>
-        </Link>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <div
+              className={cn(
+                "flex flex-row items-center space-x-2 font-semibold button text-sm sm:text-md",
+              )}
+            >
+              <UrbitswapIcon className="h-5 w-5" />
+              <div className="hidden sm:block">
+                <p>Menu</p>
+              </div>
+              <ChevronDownIcon className="h-3 w-3" />
+            </div>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content className="dropdown">
+            <DropdownMenu.Item
+              disabled
+              className="dropdown-item flex cursor-default items-center space-x-2 text-gray-300 hover:bg-transparent"
+            >
+              Main Menu
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              onSelect={() => navigate("/")}
+              className="dropdown-item flex items-center"
+            >
+              <HomeIcon className="w-4 h-4" />
+              &nbsp;<span>Go Home</span>
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              onSelect={() => modalNavigate("disclaimer", {
+                relative: "path",
+                state: {backgroundLocation: location},
+              })}
+              className="dropdown-item flex items-center"
+            >
+              <DocumentIcon className="w-4 h-4" />
+              &nbsp;<span>View License</span>
+            </DropdownMenu.Item>
+            <DropdownMenu.Arrow className="w-4 h-3 fill-gray-800" />
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
 
         <div className="flex flex-row gap-2 flex-1 min-w-0">
           <label className="relative flex w-full items-center flex-1 min-w-0">
@@ -245,24 +284,30 @@ export default function NavBar({
           <DropdownMenu.Trigger>
             <div
               className={cn(
-                "flex flex-row items-center space-x-2 font-semibold button text-sm sm:text-md",
-                isConnected ? "text-blue-400 text-xs" : "",
+                "flex flex-row items-center space-x-2 font-semibold button",
+                isConnected ? "text-blue-400 text-2xs" : "text-sm",
               )}
             >
               <WalletIcon className="h-5 w-5" />
-              {!isConnected ? (
-                <p>No Wallet</p>
-              ) : (
-                <React.Fragment>
+              <div className="flex flex-row items-center space-x-2 hidden sm:block">
+                {!isConnected ? (
+                  <p>Wallet</p>
+                ) : (
                   <ENSName address={address} />
-                  {(isKYCd && (<IdentificationIcon className="w-3 h-3 hidden sm:block" />))}
-                  {(isAssociated && (<LinkIcon className="w-3 h-3 hidden sm:block" />))}
-                </React.Fragment>
-              )}
+                )}
+              </div>
               <ChevronDownIcon className="h-3 w-3" />
             </div>
           </DropdownMenu.Trigger>
-          <DropdownMenu.Content align="end" alignOffset={16} className="dropdown">
+          <DropdownMenu.Content align="end" className="dropdown">
+            <DropdownMenu.Item
+              disabled
+              className="dropdown-item flex cursor-default items-center space-x-2 text-gray-300 hover:bg-transparent"
+            >
+              <p>Wallet</p>
+              {(isKYCd && (<IdentificationIcon className="w-3 h-3" />))}
+              {(isAssociated && (<LinkIcon className="w-3 h-3" />))}
+            </DropdownMenu.Item>
             <DropdownMenu.Item
               onSelect={() => !isConnected ? connect() : disconnect()}
               className="dropdown-item flex items-center"
