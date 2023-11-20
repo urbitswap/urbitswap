@@ -216,15 +216,6 @@ export function TradeDialog() {
   const tradeTender: RaribleAsset | undefined =
     tradeOffer && tradeOffer[mine ? "make" : "take"];
 
-  const assetTitle: string | undefined = item && makePrettyName(item);
-  const tenderTitle: string | undefined = tradeTender && makePrettyPrice(tradeTender);
-  const royaltyTitle: string | undefined =
-    tradeTender && `${(APP_TREASURY.value / 100)}% App Royalty`
-  // const royaltyTitle: string | undefined = tradeTender && makePrettyPrice({
-  //   ...tradeTender,
-  //   value: tradeTender.value * (APP_TREASURY.value / 10000),
-  // });
-
   const onSubmit = useCallback(async (event: any) => {
     event.preventDefault();
     (offerId !== undefined) && tradeMutate({
@@ -245,12 +236,25 @@ export function TradeDialog() {
     });
   }, [navigate, location.state]);
 
+  const TradeRow = useCallback(({
+      title,
+      content,
+    } : {
+      title: string;
+      content: string;
+    }) => (
+      <div className="flex flex-row justify-between">
+        <p className="font-semibold">{title}</p>
+        <p>{content}</p>
+      </div>
+  ), []);
+
   return (
     <DefaultDialog onOpenChange={onOpenChange} isWalletDialog>
       <div className="w-5/6">
         <header className="mb-3 flex items-center">
           <h2 className="text-lg font-bold">
-            Accept {mine ? "Bid" : "Ask"}
+            {mine ? "Sell" : "Buy"} NFT
           </h2>
         </header>
       </div>
@@ -276,30 +280,27 @@ export function TradeDialog() {
         </React.Fragment>
       ) : (
         <form onSubmit={onSubmit}>
-          <p>
-            Do you really want to accept this trade?
-          </p>
-
           {(tradeOffer !== undefined) && (
-            <div className="flex flex-row justify-around items-center py-8">
-              <div className="flex flex-col justify-center text-center">
-                <TraderName
-                  address={address}
-                  className="mx-auto font-bold underline"
-                />
-                <p className="line-through text-sm">{mine ? assetTitle : tenderTitle}</p>
-                <p className="italic text-sm">{mine ? tenderTitle : assetTitle}</p>
-                <p className="line-through text-sm">{royaltyTitle}</p>
-              </div>
-              <ArrowsRightLeftIcon className="w-5 h-5" />
-              <div className="flex flex-col justify-center text-center">
-                <TraderName
-                  address={(tradeOffer.maker.replace(/^.+:/g, "") as Address)}
-                  className="mx-auto font-bold underline"
-                />
-                <p className="italic text-sm">{mine ? assetTitle : tenderTitle}</p>
-                <p className="line-through text-sm">{mine ? tenderTitle : assetTitle}</p>
-              </div>
+            <div className="flex flex-col py-4">
+              <TradeRow title="Asset" content={item && makePrettyName(item)} />
+              <hr className="my-2" />
+              <TradeRow
+                title={`${mine ? "Bid" : "Ask"} Price`}
+                content={item && makePrettyPrice(tradeTender)}
+              />
+              <TradeRow
+                title="App Fee"
+                content={tradeTender && `${(APP_TREASURY.value / 100)}%`}
+              />
+              <hr className="my-2" />
+              <TradeRow
+                title={`You ${mine ? "Receive" : "Pay"}`}
+                content={tradeTender && makePrettyPrice({
+                  ...tradeTender,
+                  value: Number.parseFloat(tradeTender.value) + (mine ? -1 : 1)
+                    * tradeTender.value * (APP_TREASURY.value / 10000),
+                })}
+              />
             </div>
           )}
 

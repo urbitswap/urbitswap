@@ -19,6 +19,9 @@ export const CONTRACT = Object.freeze({
   VENTURE: APP_DBUG
     ? "ETHEREUM:0x0a36453Ce8645Df38c8aadAaf002b8CC24C0Fc81"
     : "ETHEREUM:0x9d8ca5b5715704175c6877ee911e727593726332",
+  WETH: APP_DBUG
+    ? "ETHEREUM:0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6"
+    : "ETHEREUM:0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
   // https://www.circle.com/en/usdc/developers#usdc-multichain
   USDC: APP_DBUG
     ? "ETHEREUM:0x07865c6e87b9f70255377e024ace6630c1eaa37f"
