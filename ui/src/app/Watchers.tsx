@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import cn from 'classnames';
-import { useWagmiAccount, useUrbitAccountAddresses } from '@/state/app';
+import { useWagmiAccount, useUrbitAccountAssocAddresses } from '@/state/app';
 import { get, update } from '@/state/idb';
 import { useModalNavigate } from '@/logic/routing';
 import { getVersionCompatibility } from '@/logic/utils';
@@ -41,23 +41,17 @@ export function NewWalletWatcher() {
 
   const { address, isConnected } = useWagmiAccount();
   const lastAddress = useRef<string | undefined>(isConnected ? address : undefined);
-  const myAddresses = useUrbitAccountAddresses();
+  const assocAddresses = useUrbitAccountAssocAddresses();
 
   useEffect(() => {
-    if (myAddresses !== undefined) {
+    if (assocAddresses !== undefined) {
       update("addresses", (idbAddresses: Set<string> | undefined) => {
         const newIdbAddresses = idbAddresses ?? new Set();
-        // NOTE: Remove the currently-connected address from the pool
-        // so it can be handled by wallet-watching `useEffect` below.
-        myAddresses.forEach((a: Address) => {
-          if (a !== address) {
-            newIdbAddresses.add(a)
-          }
-        });
+        assocAddresses.forEach((a: Address) => newIdbAddresses.add(a));
         return newIdbAddresses;
       });
     }
-  }, [myAddresses]);
+  }, [assocAddresses]);
 
   useEffect(() => {
     // NOTE: This can cause unnecessary prompts in cases where a user is

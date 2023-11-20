@@ -68,17 +68,23 @@ export function useUrbitTraders(): UrbitTraders | undefined {
     : (data as UrbitTraders);
 }
 
-export function useUrbitAccountAddresses(): Address[] | undefined {
-  const { address, isConnected } = useWagmiAccount();
+export function useUrbitAccountAssocAddresses(): Address[] | undefined {
   const traders = useUrbitTraders();
 
   return (traders === undefined)
     ? undefined
-    : (!isConnected ? [] : [address]).concat(
-        Object.entries(traders)
-          .filter(([wlet, patp]: [string, string]) => patp === window.our)
-          .map(([wlet, patp]: [string, string]) => (wlet as Address))
-      );
+    : Object.entries(traders)
+        .filter(([wlet, patp]: [string, string]) => patp === window.our)
+        .map(([wlet, patp]: [string, string]) => (wlet as Address));
+}
+
+export function useUrbitAccountAllAddresses(): Address[] | undefined {
+  const { address, isConnected } = useWagmiAccount();
+  const assocAddresses = useUrbitAccountAssocAddresses();
+
+  return (assocAddresses === undefined)
+    ? undefined
+    : (!isConnected ? [] : [address]).concat(assocAddresses);
 }
 
 export function useUrbitAssociateMutation(
@@ -212,7 +218,7 @@ export function useRaribleCollection(): RaribleItem[] | undefined {
 // }
 
 export function useRaribleAccountItems(): RaribleItem[] | undefined {
-  const addresses = useUrbitAccountAddresses();
+  const addresses = useUrbitAccountAllAddresses();
 
   const rsdk = useRaribleSDK();
   const results = useQueries({ queries: (addresses ?? []).map((address: Address) => ({
@@ -238,7 +244,7 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
 }
 
 export function useRaribleAccountBids(): RaribleOrder[] | undefined {
-  const addresses = useUrbitAccountAddresses();
+  const addresses = useUrbitAccountAllAddresses();
 
   const rsdk = useRaribleSDK();
   const results = useQueries({ queries: (addresses ?? []).map((address: Address) => ({

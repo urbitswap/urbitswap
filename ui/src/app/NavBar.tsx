@@ -33,8 +33,8 @@ import { useModalNavigate } from '@/logic/routing';
 import { encodeQuery, decodeQuery } from '@/logic/utils';
 import {
   useWagmiAccount,
+  useUrbitAccountAssocAddresses,
   useVentureAccountKYC,
-  useUrbitTraders,
 } from '@/state/app';
 import { wagmiAPI } from '@/api';
 import { QUERY } from '@/constants';
@@ -69,10 +69,10 @@ export default function NavBar({
   const { address, isConnected } = useWagmiAccount();
   const { connect } = useConnect({connector: wagmiAPI.connectors?.[0]});
   const { disconnect } = useDisconnect();
-  const traders = useUrbitTraders();
-  const vccKYC = {}; // useVentureAccountKYC();
 
-  const isAssociated: boolean = (traders ?? {})[address.toLowerCase()] !== undefined;
+  const assocAddresses = useUrbitAccountAssocAddresses();
+  const isAssociated: boolean = (assocAddresses || []).includes(address);
+  const vccKYC = {}; // useVentureAccountKYC();
   const isKYCd: boolean = false; // vccKYC !== undefined && vccKYC.kyc;
 
   const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {

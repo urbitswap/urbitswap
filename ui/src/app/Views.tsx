@@ -14,7 +14,7 @@ import TraderName from '@/components/TraderName';
 import ItemBadges from '@/components/ItemBadges';
 import {
   useUrbitTraders,
-  useUrbitAccountAddresses,
+  useUrbitAccountAllAddresses,
   useRaribleCollection,
   useRaribleAccountItems,
   useRaribleAccountBids,
@@ -63,7 +63,7 @@ export function CollectionGrid({className}: ClassProps) {
   const [params, setParams] = useSearchParams();
   // const collection = useRaribleCollection();
 
-  const addresses = useUrbitAccountAddresses();
+  const addresses = useUrbitAccountAllAddresses();
   const myItems = useRaribleAccountItems();
   const myBids = useRaribleAccountBids();
   const rsdk = useRaribleSDK();
