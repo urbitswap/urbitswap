@@ -1,4 +1,12 @@
-import React, { ReactNode, useState, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
+import React, {
+  ReactNode,
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from 'react';
 import { FormProvider, useForm, useController } from 'react-hook-form';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -110,7 +118,7 @@ export function OfferDialog() {
   }, [item, offer, offerMutate]);
 
   return (
-    <DefaultDialog onOpenChange={onOpenChange}>
+    <DefaultDialog onOpenChange={onOpenChange} isWalletDialog>
       <FormProvider {...form}>
         <div className="w-5/6">
           <header className="mb-3 flex items-center">
@@ -238,7 +246,7 @@ export function TradeDialog() {
   }, [navigate, location.state]);
 
   return (
-    <DefaultDialog onOpenChange={onOpenChange}>
+    <DefaultDialog onOpenChange={onOpenChange} isWalletDialog>
       <div className="w-5/6">
         <header className="mb-3 flex items-center">
           <h2 className="text-lg font-bold">
@@ -339,7 +347,7 @@ export function CancelDialog() {
   }, [offer, cancelMutate]);
 
   return (
-    <DefaultDialog onOpenChange={onOpenChange}>
+    <DefaultDialog onOpenChange={onOpenChange} isWalletDialog>
       <div className="w-5/6">
         <header className="mb-3 flex items-center">
           <h2 className="text-lg font-bold">
@@ -398,7 +406,7 @@ export function AssociateDialog() {
   }, [signMessage, assocMutate, address, isConnected]);
 
   return (
-    <DefaultDialog onOpenChange={onOpenChange}>
+    <DefaultDialog onOpenChange={onOpenChange} isWalletDialog>
       <div className="w-5/6">
         <header className="mb-3 flex items-center">
           <h2 className="text-lg font-bold">
@@ -605,9 +613,31 @@ interface DialogContentProps extends DialogPrimitive.DialogContentProps {
 type DialogProps = DialogPrimitive.DialogProps &
   DialogContentProps & {
     trigger?: ReactNode;
+    isWalletDialog?: boolean;
   };
 
-function DefaultDialog(props: DialogProps) {
+function DefaultDialog(dprops: DialogProps) {
+  const { isWalletDialog, ...props } = dprops;
+  const dismiss = useDismissNavigate();
+
+  const { address, isConnected } = useWagmiAccount();
+  const lastAddress = useRef<string | undefined>(isConnected ? address : undefined);
+
+  // NOTE: If the user's wallet disconnects or changes, immediately close out
+  // of any wallet-related dialog to prevent unexpected behavior.
+  // FIXME: It would be better if this were a `useLayoutEffect` to prevent
+  // unnecessary renders, but using it causes `dismiss` to only redirect
+  // the page and not properly clear `location.state` to clear the dialog window.
+  useEffect(() => {
+    if (isWalletDialog) {
+      const isAddressNew: boolean = address !== lastAddress.current;
+      lastAddress.current = address;
+      if (!isConnected || isAddressNew) {
+        dismiss();
+      }
+    }
+  }, [address, isConnected]);
+
   return (
     <Dialog defaultOpen modal containerClass="w-full sm:max-w-lg" {...props} />
   );

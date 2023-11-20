@@ -9,7 +9,6 @@ import React, {
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import cn from 'classnames';
 import { useConnect, useDisconnect } from 'wagmi';
-import { InjectedConnector } from 'wagmi/connectors/injected';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
   BoltIcon,
@@ -37,6 +36,7 @@ import {
   useVentureAccountKYC,
   useUrbitTraders,
 } from '@/state/app';
+import { wagmiAPI } from '@/api';
 import { QUERY } from '@/constants';
 import type { Chain } from 'viem'; // node_modules/viem/types/chain.ts
 import type {
@@ -66,13 +66,12 @@ export default function NavBar({
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const modalNavigate = useModalNavigate();
-  const { address, connector } = useWagmiAccount();
-  const { connect } = useConnect({connector: new InjectedConnector()});
+  const { address, isConnected } = useWagmiAccount();
+  const { connect } = useConnect({connector: wagmiAPI.connectors?.[0]});
   const { disconnect } = useDisconnect();
   const traders = useUrbitTraders();
   const vccKYC = {}; // useVentureAccountKYC();
 
-  const isConnected: boolean = address !== "0x";
   const isAssociated: boolean = (traders ?? {})[address.toLowerCase()] !== undefined;
   const isKYCd: boolean = false; // vccKYC !== undefined && vccKYC.kyc;
 

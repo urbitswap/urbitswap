@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import cn from 'classnames';
-import { useWagmiAccount, useUrbitTraders } from '@/state/app';
-import { get } from '@/state/idb';
+import { useWagmiAccount, useUrbitAccountAddresses } from '@/state/app';
+import { get, update } from '@/state/idb';
 import { useModalNavigate } from '@/logic/routing';
 import { getVersionCompatibility } from '@/logic/utils';
 import { APP_DBUG } from '@/constants';
+import type { Address } from 'viem';
 
 export function NewVersionWatcher() {
   const [isNewSession, setIsNewSession] = useState<boolean>(true);
@@ -37,29 +38,52 @@ export function NewVersionWatcher() {
 export function NewWalletWatcher() {
   const location = useLocation();
   const modalNavigate = useModalNavigate();
-  const { address } = useWagmiAccount();
 
-  const traders = useUrbitTraders();
-  const currentAddress = useRef<string | undefined>(undefined);
-  const sessionAddresses = useRef<Set<string>>(new Set());
+  const { address, isConnected } = useWagmiAccount();
+  const lastAddress = useRef<string | undefined>(isConnected ? address : undefined);
+  const myAddresses = useUrbitAccountAddresses();
 
   useEffect(() => {
-    if (address !== "0x" && address !== currentAddress.current) {
-      const knownTrader: string | undefined = (traders ?? {})[address];
-      const iamKnownTrader: boolean = !!knownTrader && knownTrader === window.our;
-      const isSessionAddr: boolean = sessionAddresses.current.has(address);
-
-      currentAddress.current = address;
-      sessionAddresses.current.add(address);
-
-      if (!iamKnownTrader && !isSessionAddr) {
-        modalNavigate("assoc", {
-          relative: "path",
-          state: {backgroundLocation: location},
+    if (myAddresses !== undefined) {
+      update("addresses", (idbAddresses: Set<string> | undefined) => {
+        const newIdbAddresses = idbAddresses ?? new Set();
+        // NOTE: Remove the currently-connected address from the pool
+        // so it can be handled by wallet-watching `useEffect` below.
+        myAddresses.forEach((a: Address) => {
+          if (a !== address) {
+            newIdbAddresses.add(a)
+          }
         });
-      }
+        return newIdbAddresses;
+      });
     }
-  }, [address, location, modalNavigate]);
+  }, [myAddresses]);
+
+  useEffect(() => {
+    // NOTE: This can cause unnecessary prompts in cases where a user is
+    // using a new client and hasn't downloaded the Urbit address list yet.
+    if (isConnected && address !== lastAddress.current) {
+      update("addresses", (idbAddresses: Set<string> | undefined) => {
+        const newIdbAddresses = idbAddresses ?? new Set();
+        if (!newIdbAddresses.has(address)) {
+          lastAddress.current = address;
+          newIdbAddresses.add(address);
+        }
+        return newIdbAddresses;
+      }).then(() => {
+        // FIXME: This is a bit hacky, but we use `lastAddress` ref to
+        // signal from previous promise if `address` is new.
+        const isAddressNew: boolean = address === lastAddress.current;
+        lastAddress.current = address;
+        if (isAddressNew) {
+          modalNavigate("assoc", {
+            relative: "path",
+            state: {backgroundLocation: location},
+          });
+        }
+      });
+    }
+  }, [address]);
 
   return (null);
 }
