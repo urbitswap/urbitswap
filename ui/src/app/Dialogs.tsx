@@ -7,9 +7,11 @@ import React, {
   useRef,
   useMemo,
 } from 'react';
+import cn from 'classnames';
 import { FormProvider, useForm, useController } from 'react-hook-form';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import * as Popover from '@radix-ui/react-popover';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import DateTimePicker from 'react-datetime-picker';
 // FIXME: There's an issue with the CSS where 'active' and 'now' tiles are
@@ -21,6 +23,7 @@ import { useSignMessage } from 'wagmi';
 import {
   ArrowsRightLeftIcon,
   ExclamationTriangleIcon,
+  QuestionMarkCircleIcon,
 } from '@heroicons/react/24/solid';
 import Dialog from '@/components/Dialog';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -57,6 +60,10 @@ import {
   MAX_DATE,
   TENDERS,
 } from '@/constants';
+import { BigNumber } from "bignumber.js";
+import { toBigNumber } from '@rarible/types';
+import type { BigNumber as BigNumberString } from '@rarible/types';
+import type { BigNumber as BigNumberNumber } from '@rarible/utils';
 import type {
   Asset as RaribleAsset,
   AssetType as RaribleAssetType,
@@ -239,13 +246,45 @@ export function TradeDialog() {
   const TradeRow = useCallback(({
       title,
       content,
+      info,
     } : {
-      title: string;
-      content: string;
+      title?: string;
+      content?: string | React.ReactNode;
+      info?: React.ReactNode;
     }) => (
       <div className="flex flex-row justify-between">
-        <p className="font-semibold">{title}</p>
-        <p>{content}</p>
+        {(info === undefined) ? (
+          <p className="font-semibold">{title ?? "<unknown>"}</p>
+        ) : (
+          <div className="flex flex-row space-x-1">
+            <p className="font-semibold">{title ?? "<unknown>"}</p>
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <button
+                  className="p-0.5 rounded-md hover:bg-gray-200"
+                >
+                  <QuestionMarkCircleIcon className="w-4 h-4" />
+                </button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content className="z-40" side="top" sideOffset={5}>
+                  <div className={cn(
+                    "text-sm text-center rounded-lg py-1 px-2 border-2",
+                    "border-gray-200 bg-white shadow-md",
+                  )}>
+                    {info}
+                  </div>
+                  <Popover.Arrow className="w-2 h-1 fill-gray-200" />
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+          </div>
+        )}
+        {(typeof content === "string" || content === undefined) ? (
+          <p>{content ?? "—"}</p>
+        ) : (
+          <React.Fragment>{content}</React.Fragment>
+        )}
       </div>
   ), []);
 
@@ -283,22 +322,34 @@ export function TradeDialog() {
           {(tradeOffer !== undefined) && (
             <div className="flex flex-col py-4">
               <TradeRow title="Asset" content={item && makePrettyName(item)} />
+              <TradeRow
+                title={mine ? "Bidder" : "Asker"}
+                content={tradeOffer && (
+                  <TraderName address={(tradeOffer.maker.replace(/^.+:/g, "") as Address)}/>
+                )}
+              />
               <hr className="my-2" />
               <TradeRow
                 title={`${mine ? "Bid" : "Ask"} Price`}
-                content={item && makePrettyPrice(tradeTender)}
+                content={tradeTender && makePrettyPrice(tradeTender)}
               />
               <TradeRow
                 title="App Fee"
-                content={tradeTender && `${(APP_TREASURY.value / 100)}%`}
+                content={`${(APP_TREASURY.value / 100)}%`}
+                info={// FIXME: The link here can't be cliked on b/c of dialog embed.
+                <p>
+                  Fees fund app development via the <a
+                  href="https://urbitswap.com">Urbitswap DAO</a>.
+                </p>}
               />
               <hr className="my-2" />
               <TradeRow
                 title={`You ${mine ? "Receive" : "Pay"}`}
                 content={tradeTender && makePrettyPrice({
                   ...tradeTender,
-                  value: Number.parseFloat(tradeTender.value) + (mine ? -1 : 1)
-                    * tradeTender.value * (APP_TREASURY.value / 10000),
+                  value: ((n: BigNumberNumber): BigNumberString => toBigNumber(
+                    n.plus(n.times((mine ? -1 : 1) * (APP_TREASURY.value / 10000))).toString(10)
+                  ))(new BigNumber(tradeTender.value)),
                 })}
               />
             </div>
