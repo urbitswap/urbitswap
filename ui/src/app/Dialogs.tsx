@@ -11,7 +11,6 @@ import cn from 'classnames';
 import { FormProvider, useForm, useController } from 'react-hook-form';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import * as Popover from '@radix-ui/react-popover';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import DateTimePicker from 'react-datetime-picker';
 // FIXME: There's an issue with the CSS where 'active' and 'now' tiles are
@@ -26,6 +25,7 @@ import {
   QuestionMarkCircleIcon,
 } from '@heroicons/react/24/solid';
 import Dialog from '@/components/Dialog';
+import Popover from '@/components/Popover';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import TraderName from '@/components/TraderName';
 import ENSName from '@/components/ENSName';
@@ -249,42 +249,20 @@ export function TradeDialog() {
       info,
     } : {
       title?: string;
-      content?: string | React.ReactNode;
+      content?: React.ReactNode;
       info?: React.ReactNode;
     }) => (
       <div className="flex flex-row justify-between">
-        {(info === undefined) ? (
+        <div className="flex flex-row space-x-1">
           <p className="font-semibold">{title ?? "<unknown>"}</p>
-        ) : (
-          <div className="flex flex-row space-x-1">
-            <p className="font-semibold">{title ?? "<unknown>"}</p>
-            <Popover.Root>
-              <Popover.Trigger asChild>
-                <button
-                  className="p-0.5 rounded-md hover:bg-gray-200"
-                >
-                  <QuestionMarkCircleIcon className="w-4 h-4" />
-                </button>
-              </Popover.Trigger>
-              <Popover.Portal>
-                <Popover.Content className="z-40" side="top" sideOffset={5}>
-                  <div className={cn(
-                    "text-sm text-center rounded-lg py-1 px-2 border-2",
-                    "border-gray-200 bg-white shadow-md",
-                  )}>
-                    {info}
-                  </div>
-                  <Popover.Arrow className="w-2 h-1 fill-gray-200" />
-                </Popover.Content>
-              </Popover.Portal>
-            </Popover.Root>
-          </div>
-        )}
-        {(typeof content === "string" || content === undefined) ? (
-          <p>{content ?? "—"}</p>
-        ) : (
-          <React.Fragment>{content}</React.Fragment>
-        )}
+          {(info !== undefined) && (
+            <Popover
+              trigger={<QuestionMarkCircleIcon className="w-4 h-4" />}
+              content={info}
+            />
+          )}
+        </div>
+        {content ?? "—"}
       </div>
   ), []);
 
@@ -336,10 +314,10 @@ export function TradeDialog() {
               <TradeRow
                 title="App Fee"
                 content={`${(APP_TREASURY.value / 100)}%`}
-                info={// FIXME: The link here can't be cliked on b/c of dialog embed.
+                info={// FIXME: The link here can't be clicked on b/c of dialog embed.
                 <p>
                   Fees fund app development via the <a
-                  href="https://urbitswap.com">Urbitswap DAO</a>.
+                  href="https://urbitswap.com">Urbitswap DAO</a>
                 </p>}
               />
               <hr className="my-2" />

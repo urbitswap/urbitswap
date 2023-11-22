@@ -57,7 +57,11 @@ export function assetToTender(asset: RaribleAssetType): TenderType {
     : "eth";
 }
 
-export function makePrettyName(item: RaribleItem,): string {
+export function capitalize(word: string): string {
+  return word[0].toUpperCase() + word.slice(1).toLowerCase();
+}
+
+export function makePrettyName(item: RaribleItem): string {
   return item.meta?.name ?? "<Unknown>";
 }
 
