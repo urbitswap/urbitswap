@@ -71,7 +71,7 @@ export default function NavBar({
   const { disconnect } = useDisconnect();
 
   const assocAddresses = useUrbitAccountAssocAddresses();
-  const isAssociated: boolean = (assocAddresses || []).includes(address);
+  const isAssociated: boolean = (assocAddresses ?? new Set()).has(address);
   const vccKYC = {}; // useVentureAccountKYC();
   const isKYCd: boolean = false; // vccKYC !== undefined && vccKYC.kyc;
 

@@ -83,7 +83,7 @@ export function CollectionGrid({className}: ClassProps) {
     // relevant queries when new personal addresses are added).
     [APP_TERM, "rarible", "pcollection", query?.base, query?.name, query?.type],
     async ({ pageParam = undefined }) => {
-      const queryAddresses = (addresses ?? []); // for typescript
+      const queryAddresses = Array.from(addresses ?? new Set());
       const queryFilter = (item: RaribleItem): boolean => !!(
         (!query?.type
           || (item.meta?.attributes ?? []).find(({key, value}) =>

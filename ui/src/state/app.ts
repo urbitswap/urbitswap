@@ -68,23 +68,27 @@ export function useUrbitTraders(): UrbitTraders | undefined {
     : (data as UrbitTraders);
 }
 
-export function useUrbitAccountAssocAddresses(): Address[] | undefined {
+export function useUrbitAccountAssocAddresses(): Set<Address> | undefined {
   const traders = useUrbitTraders();
 
   return (traders === undefined)
     ? undefined
-    : Object.entries(traders)
-        .filter(([wlet, patp]: [string, string]) => patp === window.our)
-        .map(([wlet, patp]: [string, string]) => (wlet as Address));
+    : new Set(Object.entries(traders)
+      .filter(([wlet, patp]: [string, string]) => patp === window.our)
+      .map(([wlet, patp]: [string, string]) => (wlet as Address))
+    );
 }
 
-export function useUrbitAccountAllAddresses(): Address[] | undefined {
+export function useUrbitAccountAllAddresses(): Set<Address> | undefined {
   const { address, isConnected } = useWagmiAccount();
   const assocAddresses = useUrbitAccountAssocAddresses();
 
   return (assocAddresses === undefined)
     ? undefined
-    : (!isConnected ? [] : [address]).concat(assocAddresses);
+    : (() => {
+      if (isConnected) assocAddresses.add(address);
+      return assocAddresses;
+    })();
 }
 
 export function useUrbitAssociateMutation(
@@ -219,9 +223,10 @@ export function useRaribleCollection(): RaribleItem[] | undefined {
 
 export function useRaribleAccountItems(): RaribleItem[] | undefined {
   const addresses = useUrbitAccountAllAddresses();
+  const addressList = Array.from(addresses ?? new Set<Address>());
 
   const rsdk = useRaribleSDK();
-  const results = useQueries({ queries: (addresses ?? []).map((address: Address) => ({
+  const results = useQueries({ queries: addressList.map((address: Address) => ({
     queryKey: [APP_TERM, "rarible", "account", address, "items"],
     queryFn: () => queryRaribleContinuation(
       rsdk.apis.item.getItemsByOwner,
@@ -245,9 +250,10 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
 
 export function useRaribleAccountBids(): RaribleOrder[] | undefined {
   const addresses = useUrbitAccountAllAddresses();
+  const addressList = Array.from(addresses ?? new Set<Address>());
 
   const rsdk = useRaribleSDK();
-  const results = useQueries({ queries: (addresses ?? []).map((address: Address) => ({
+  const results = useQueries({ queries: addressList.map((address: Address) => ({
     queryKey: [APP_TERM, "rarible", "account", address, "bids"],
     queryFn: () => queryRaribleContinuation(
       rsdk.apis.order.getOrderBidsByMaker,
