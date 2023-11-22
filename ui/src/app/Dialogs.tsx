@@ -256,10 +256,9 @@ export function TradeDialog() {
         <div className="flex flex-row space-x-1">
           <p className="font-semibold">{title ?? "<unknown>"}</p>
           {(info !== undefined) && (
-            <Popover
-              trigger={<QuestionMarkCircleIcon className="w-4 h-4" />}
-              content={info}
-            />
+            <Popover message={info}>
+              <QuestionMarkCircleIcon className="w-4 h-4" />
+            </Popover>
           )}
         </div>
         {content ?? "—"}

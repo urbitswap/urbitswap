@@ -62,29 +62,27 @@ export default function ItemBadges({
               } (${itemTransferable ? "A" : "Una"}vailable to You)`}
             />
           )*/}
-          {<Popover
-            trigger={
-              (itemType === "galaxy") ? (<SparklesIcon className={badgeClassName} />)
-              : (itemType === "star") ? (<StarIcon className={badgeClassName} />)
-              : (itemType === "planet") ? (<GlobeAltIcon className={badgeClassName} />)
-              : (<QuestionMarkCircleIcon className={badgeClassName} />)
-            }
-            content={`${!itemType ? "Unknown" : capitalize(itemType)} ID`}
-          />}
+          {true && (
+            <Popover message={`${!itemType ? "Unknown" : capitalize(itemType)} ID`}>
+              {(itemType === "galaxy") ? (<SparklesIcon className={badgeClassName} />)
+                : (itemType === "star") ? (<StarIcon className={badgeClassName} />)
+                : (itemType === "planet") ? (<GlobeAltIcon className={badgeClassName} />)
+                : (<QuestionMarkCircleIcon className={badgeClassName} />)
+              }
+            </Popover>
+          )}
           {myItems.some((i: RaribleItem) => i.id === item.id) && (
-            <Popover
-              trigger={<WalletIcon className={badgeClassName} />}
-              content="Owned by Me"
-            />
+            <Popover message="Owned by Me">
+              <WalletIcon className={badgeClassName} />
+            </Popover>
           )}
           {myBids.some((o: RaribleOrder) =>
             (o.take.type["@type"] === "ERC721" || o.take.type["@type"] === "ERC721_Lazy")
             && `${o.take.type?.contract}:${o.take.type?.tokenId}` === item.id
           ) && (
-            <Popover
-              trigger={<TagIcon className={badgeClassName} />}
-              content="Has my Bid"
-            />
+            <Popover message="Has my Bid">
+              <TagIcon className={badgeClassName} />
+            </Popover>
           )}
         </React.Fragment>
       )}

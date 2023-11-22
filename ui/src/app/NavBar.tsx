@@ -6,10 +6,9 @@ import React, {
   useMemo,
   useCallback,
 } from 'react';
-import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import cn from 'classnames';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useConnect, useDisconnect } from 'wagmi';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
   BoltIcon,
   BoltSlashIcon,
@@ -29,6 +28,7 @@ import {
 } from '@heroicons/react/24/solid';
 import ENSName from '@/components/ENSName';
 import UrbitswapIcon from '@/components/icons/UrbitswapIcon';
+import { DropdownMenu, DropdownEntry } from '@/components/Dropdown';
 import { useModalNavigate } from '@/logic/routing';
 import { encodeQuery, decodeQuery } from '@/logic/utils';
 import {
@@ -93,6 +93,28 @@ export default function NavBar({
     }
   }, [onSubmit]);
 
+  const DropdownButton = useCallback(({
+    title,
+    children,
+    className
+  }: {
+    title: React.ReactNode;
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <div className={cn(
+      "button flex flex-row items-center space-x-2",
+      "font-semibold text-sm sm:text-md",
+      className,
+    )}>
+      {children}
+      <div className="hidden sm:block">
+        {title}
+      </div>
+      <ChevronDownIcon className="h-3 w-3" />
+    </div>
+  ), []);
+
   useEffect(() => {
     const paramsQuery: NavigationQuery = decodeQuery(params);
     const newQuery: NavigationQuery = {...query, ...paramsQuery};
@@ -110,47 +132,24 @@ export default function NavBar({
         "flex flex-row justify-between space-x-1 sm:space-x-2 items-center",
         innerClassName,
       )}>
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger>
-            <div
-              className={cn(
-                "flex flex-row items-center space-x-2 font-semibold button text-sm sm:text-md",
-              )}
-            >
-              <UrbitswapIcon className="h-5 w-5" />
-              <div className="hidden sm:block">
-                <p>Menu</p>
-              </div>
-              <ChevronDownIcon className="h-3 w-3" />
-            </div>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content className="dropdown">
-            <DropdownMenu.Item
-              disabled
-              className="dropdown-item flex cursor-default items-center space-x-2 text-gray-300 hover:bg-transparent"
-            >
-              Main Menu
-            </DropdownMenu.Item>
-            <DropdownMenu.Item
-              onSelect={() => navigate("/")}
-              className="dropdown-item flex items-center"
-            >
-              <HomeIcon className="w-4 h-4" />
-              &nbsp;<span>Go Home</span>
-            </DropdownMenu.Item>
-            <DropdownMenu.Item
-              onSelect={() => modalNavigate("disclaimer", {
-                relative: "path",
-                state: {backgroundLocation: location},
-              })}
-              className="dropdown-item flex items-center"
-            >
-              <DocumentIcon className="w-4 h-4" />
-              &nbsp;<span>View License</span>
-            </DropdownMenu.Item>
-            <DropdownMenu.Arrow className="w-4 h-3 fill-gray-800" />
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
+        <DropdownMenu trigger={
+          <DropdownButton title="Menu" children={<UrbitswapIcon className="h-5 w-5" />} />
+        }>
+          <DropdownEntry disabled children="Main Menu" />
+          <DropdownEntry onSelect={() => navigate("/")}>
+            <HomeIcon className="w-4 h-4" />
+            <span>Go Home</span>
+          </DropdownEntry>
+          <DropdownEntry
+            onSelect={() => modalNavigate("disclaimer", {
+              relative: "path",
+              state: {backgroundLocation: location},
+            })}
+          >
+            <DocumentIcon className="w-4 h-4" />
+            <span>View License</span>
+          </DropdownEntry>
+        </DropdownMenu>
 
         <div className="flex flex-row gap-2 flex-1 min-w-0">
           <label className="relative flex w-full items-center flex-1 min-w-0">
@@ -179,177 +178,98 @@ export default function NavBar({
               "absolute inset-y-[3px] right-0 h-8 w-8",
               "flex items-center pr-14 text-gray-400",
             )}>
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger>
-                  {(queryBase === "mine") ? (
-                    <WalletIcon className="h-5 w-5" />
-                  ) : (queryBase === "bids") ? (
-                    <TagIcon className="h-5 w-5" />
-                  ) : (
-                    <ViewfinderCircleIcon className="h-5 w-5" />
-                  )}
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content className="dropdown">
-                  <DropdownMenu.Item
-                    disabled
-                    className="dropdown-item flex cursor-default items-center space-x-2 text-gray-300 hover:bg-transparent"
-                  >
-                    Collection
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item
-                    onSelect={() => onSubmit({base: undefined})}
-                    className="dropdown-item flex items-center"
-                  >
-                    <ViewfinderCircleIcon className="w-5 h-5" />
-                    &nbsp;<span>Full Collection</span>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item
-                    onSelect={() => onSubmit({base: "mine"})}
-                    className="dropdown-item flex items-center"
-                  >
-                    <WalletIcon className="w-5 h-5" />
-                    &nbsp;<span>Owned Assets</span>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item
-                    onSelect={() => onSubmit({base: "bids"})}
-                    className="dropdown-item flex items-center"
-                  >
-                    <TagIcon className="w-5 h-5" />
-                    &nbsp;<span>Bid Assets</span>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Arrow className="w-4 h-3 fill-gray-800" />
-                </DropdownMenu.Content>
-              </DropdownMenu.Root>
+              <DropdownMenu trigger={
+                (queryBase === "mine") ? (<WalletIcon className="h-5 w-5" />)
+                : (queryBase === "bids") ? (<TagIcon className="h-5 w-5" />)
+                : (<ViewfinderCircleIcon className="h-5 w-5" />)
+              }>
+                <DropdownEntry disabled children="Collection" />
+                <DropdownEntry onSelect={() => onSubmit({base: undefined})}>
+                  <ViewfinderCircleIcon className="w-5 h-5" />
+                  <span>Full Collection</span>
+                </DropdownEntry>
+                <DropdownEntry onSelect={() => onSubmit({base: "mine"})}>
+                  <WalletIcon className="w-5 h-5" />
+                  <span>Owned Assets</span>
+                </DropdownEntry>
+                <DropdownEntry onSelect={() => onSubmit({base: "bids"})}>
+                  <TagIcon className="w-5 h-5" />
+                  <span>Bid Assets</span>
+                </DropdownEntry>
+              </DropdownMenu>
             </span>
             <span className={cn(
               "absolute inset-y-[3px] right-0 h-8 w-8",
               "flex items-center pr-2 text-gray-400",
             )}>
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger>
-                  {(queryType === "galaxy") ? (
-                    <SparklesIcon className="h-5 w-5" />
-                  ) : (queryType === "star") ? (
-                    <StarIcon className="h-5 w-5" />
-                  ) : (queryType === "planet") ? (
-                    <GlobeAltIcon className="h-5 w-5" />
-                  ) : (
-                    <FunnelIcon className="h-5 w-5" />
-                  )}
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content className="dropdown">
-                  <DropdownMenu.Item
-                    disabled
-                    className="dropdown-item flex cursor-default items-center space-x-2 text-gray-300 hover:bg-transparent"
-                  >
-                    Type Filter
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item
-                    onSelect={() => onSubmit({type: undefined})}
-                    className="dropdown-item flex items-center"
-                  >
-                    <FunnelIcon className="w-5 h-5" />
-                    &nbsp;<span>No Filter</span>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item
-                    onSelect={() => onSubmit({type: "galaxy"})}
-                    className="dropdown-item flex items-center"
-                  >
-                    <SparklesIcon className="w-5 h-5" />
-                    &nbsp;<span>Galaxies</span>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item
-                    onSelect={() => onSubmit({type: "star"})}
-                    className="dropdown-item flex items-center"
-                  >
-                    <StarIcon className="w-5 h-5" />
-                    &nbsp;<span>Stars</span>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item
-                    onSelect={() => onSubmit({type: "planet"})}
-                    className="dropdown-item flex items-center"
-                  >
-                    <GlobeAltIcon className="w-5 h-5" />
-                    &nbsp;<span>Planets</span>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Arrow className="w-4 h-3 fill-gray-800" />
-                </DropdownMenu.Content>
-              </DropdownMenu.Root>
+              <DropdownMenu trigger={
+                (queryType === "galaxy") ? (<SparklesIcon className="h-5 w-5" />)
+                : (queryType === "star") ? (<StarIcon className="h-5 w-5" />)
+                : (queryType === "planet") ? (<GlobeAltIcon className="h-5 w-5" />)
+                : (<FunnelIcon className="h-5 w-5" />)
+              }>
+                <DropdownEntry disabled children="Type Filter" />
+                <DropdownEntry onSelect={() => onSubmit({type: undefined})}>
+                  <FunnelIcon className="w-5 h-5" />
+                  <span>No Filter</span>
+                </DropdownEntry>
+                <DropdownEntry onSelect={() => onSubmit({type: "galaxy"})}>
+                  <SparklesIcon className="w-5 h-5" />
+                  <span>Galaxies</span>
+                </DropdownEntry>
+                <DropdownEntry onSelect={() => onSubmit({type: "star"})}>
+                  <StarIcon className="w-5 h-5" />
+                  <span>Stars</span>
+                </DropdownEntry>
+                <DropdownEntry onSelect={() => onSubmit({type: "planet"})}>
+                  <GlobeAltIcon className="w-5 h-5" />
+                  <span>Planets</span>
+                </DropdownEntry>
+              </DropdownMenu>
             </span>
           </label>
         </div>
 
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger>
-            <div
-              className={cn(
-                "flex flex-row items-center space-x-2 font-semibold button",
-                isConnected ? "text-blue-400 text-2xs" : "text-sm",
-              )}
+        {/*TODO: The connected text shrinking isn't proply being applied to the title here.*/}
+        <DropdownMenu trigger={
+          <DropdownButton
+            title={!isConnected ? "Wallet" : <ENSName address={address} />}
+            children={<WalletIcon className="h-5 w-5" />}
+            className={!isConnected ? "" : "text-blue-400 text-2xs"}
+          />
+        }>
+          <DropdownEntry disabled>
+            <span>Wallet</span>
+            {(isKYCd && (<IdentificationIcon className="w-3 h-3" />))}
+            {(isAssociated && (<LinkIcon className="w-3 h-3" />))}
+          </DropdownEntry>
+          <DropdownEntry onSelect={() => !isConnected ? connect() : disconnect()}>
+            {!isConnected ? (<BoltIcon className="w-4 h-4" />) : (<BoltSlashIcon className="w-4 h-4" />)}
+            <span>{`${isConnected ? "Disc" : "C"}onnect Wallet`}</span>
+          </DropdownEntry>
+          {/*(isConnected && !isKYCd) && (
+            <DropdownEntry
+              onSelect={() => modalNavigate("pretrade", {
+                relative: "path",
+                state: {backgroundLocation: location},
+              })}
             >
-              <WalletIcon className="h-5 w-5" />
-              <div className="flex flex-row items-center space-x-2 hidden sm:block">
-                {!isConnected ? (
-                  <p>Wallet</p>
-                ) : (
-                  <ENSName address={address} />
-                )}
-              </div>
-              <ChevronDownIcon className="h-3 w-3" />
-            </div>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content align="end" className="dropdown">
-            <DropdownMenu.Item
-              disabled
-              className="dropdown-item flex cursor-default items-center space-x-2 text-gray-300 hover:bg-transparent"
+              <IdentificationIcon className="w-4 h-4" />
+              <span>Submit KYC</span>
+            </DropdownEntry>
+          )*/}
+          {(isConnected && !isAssociated) && (
+            <DropdownEntry
+              onSelect={() => modalNavigate("assoc", {
+                relative: "path",
+                state: {backgroundLocation: location},
+              })}
             >
-              <p>Wallet</p>
-              {(isKYCd && (<IdentificationIcon className="w-3 h-3" />))}
-              {(isAssociated && (<LinkIcon className="w-3 h-3" />))}
-            </DropdownMenu.Item>
-            <DropdownMenu.Item
-              onSelect={() => !isConnected ? connect() : disconnect()}
-              className="dropdown-item flex items-center"
-            >
-              {!isConnected ? (
-                <React.Fragment>
-                  <BoltIcon className="w-4 h-4" />
-                  &nbsp;<span>Connect Wallet</span>
-                </React.Fragment>
-              ) : (
-                <React.Fragment>
-                  <BoltSlashIcon className="w-4 h-4" />
-                  &nbsp;<span>Disconnect Wallet</span>
-                </React.Fragment>
-              )}
-            </DropdownMenu.Item>
-            {/*(isConnected && !isKYCd) && (
-              <DropdownMenu.Item
-                onSelect={() => modalNavigate("pretrade", {
-                  relative: "path",
-                  state: {backgroundLocation: location},
-                })}
-                className="dropdown-item flex items-center"
-              >
-                <IdentificationIcon className="w-4 h-4" />
-                &nbsp;<span>Submit KYC</span>
-              </DropdownMenu.Item>
-            )*/}
-            {(isConnected && !isAssociated) && (
-              <DropdownMenu.Item
-                onSelect={() => modalNavigate("assoc", {
-                  relative: "path",
-                  state: {backgroundLocation: location},
-                })}
-                className="dropdown-item flex items-center"
-              >
-                <LinkIcon className="w-4 h-4" />
-                &nbsp;<span>Associate @p</span>
-              </DropdownMenu.Item>
-            )}
-            <DropdownMenu.Arrow className="w-4 h-3 fill-gray-800" />
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
+              <LinkIcon className="w-4 h-4" />
+              <span>Associate @p</span>
+            </DropdownEntry>
+          )}
+        </DropdownMenu>
       </div>
     </nav>
   );
