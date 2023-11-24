@@ -4,7 +4,6 @@ import {
   Link,
   useParams,
   useSearchParams,
-  useLocation,
   useNavigate,
 } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer'
@@ -253,7 +252,6 @@ export function CollectionGrid({className}: ClassProps) {
 }
 
 export function ItemPage({className}: ClassProps) {
-  const location = useLocation();
   const modalNavigate = useModalNavigate();
   const chatNavigate = useChatNavigate();
   const {
@@ -297,16 +295,14 @@ export function ItemPage({className}: ClassProps) {
           : makePrettyLapse(new Date(order?.endedAt || ""))
         } />
         <button className="button"
-          onClick={() => modalNavigate("pretrade", {
-            state: {backgroundLocation: location, thenTo: `trade/${order?.id}`}
-          })}
+          onClick={() => modalNavigate("pretrade", {state: {thenTo: `trade/${order?.id}`}})}
           disabled={!isConnected || disabled}
         >
           <ArrowsRightLeftIcon className="w-4 h-4" />
           &nbsp;{"Trade"}
         </button>
       </div>
-  ), [isConnected, modalNavigate, location]);
+  ), [isConnected, modalNavigate]);
 
   return (
     <div className={cn(className)}>
@@ -390,35 +386,27 @@ export function ItemPage({className}: ClassProps) {
               myBids={myBids}
               badgeClassName="w-6 h-6"
             />
-            <button className="w-full button"
-              onClick={() => modalNavigate("pretrade", {
-                state: {backgroundLocation: location, thenTo: "offer"}
-              })}
+            <button className="button w-full gap-1"
+              onClick={() => modalNavigate("pretrade", {state: {thenTo: "offer"}})}
             >
               <CurrencyDollarIcon className="w-4 h-4" />
-              &nbsp;{`${(offer !== undefined) ? "Update" : "Post"}
-                ${isMyItem ? "Ask" : "Bid"}
-              `}
+              {`${(offer !== undefined) ? "Update" : "Post"} ${isMyItem ? "Ask" : "Bid"}`}
             </button>
             {(offer !== undefined) && (
-              <button className="w-full button"
-                onClick={() => modalNavigate("pretrade", {
-                  state: {backgroundLocation: location, thenTo: "cancel"}
-                })}
+              <button className="button w-full gap-1"
+                onClick={() => modalNavigate("pretrade", {state: {thenTo: "cancel"}})}
               >
                 <XCircleIcon className="w-4 h-4" />
-                &nbsp;{`Rescind ${isMyItem ? "Ask" : "Bid"}`}
+                {`Rescind ${isMyItem ? "Ask" : "Bid"}`}
               </button>
             )}
             {!isMyItem && (
-              <button className="w-full button"
+              <button className="w-full button gap-1"
                 disabled={ownerUrbitId === undefined}
-                onClick={() => (
-                  (ownerUrbitId !== undefined) && chatNavigate(ownerUrbitId)
-                )}
+                onClick={() => (ownerUrbitId !== undefined) && chatNavigate(ownerUrbitId)}
               >
                 <ChatBubbleLeftIcon className="w-4 h-4" />
-                &nbsp;{"Message Owner"}
+                {"Message Owner"}
               </button>
             )}
           </div>

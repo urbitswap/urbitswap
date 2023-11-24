@@ -7,7 +7,7 @@ import React, {
   useCallback,
 } from 'react';
 import cn from 'classnames';
-import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useConnect, useDisconnect } from 'wagmi';
 import {
   BoltIcon,
@@ -30,7 +30,15 @@ import ENSName from '@/components/ENSName';
 import UrbitswapIcon from '@/components/icons/UrbitswapIcon';
 import { DropdownMenu, DropdownEntry } from '@/components/Dropdown';
 import { useModalNavigate } from '@/logic/routing';
-import { encodeQuery, decodeQuery } from '@/logic/utils';
+import {
+  COLLECTION_ICONS,
+  COLLECTION_ICON_MAP,
+  URBITPOINT_ICONS,
+  URBITPOINT_ICON_MAP,
+  capitalize,
+  encodeQuery,
+  decodeQuery,
+} from '@/logic/utils';
 import {
   useWagmiAccount,
   useUrbitAccountAssocAddresses,
@@ -42,8 +50,8 @@ import type { Chain } from 'viem'; // node_modules/viem/types/chain.ts
 import type {
   CollectionBase,
   UrbitPointType,
-  UrbitLayer,
   NavigationQuery,
+  IconLabel,
 } from '@/types/app';
 
 export default function NavBar({
@@ -62,10 +70,9 @@ export default function NavBar({
     name: queryName ? queryName : undefined,
   }), [queryBase, queryType, queryName]);
 
-  const location = useLocation();
   const navigate = useNavigate();
-  const [params, setParams] = useSearchParams();
   const modalNavigate = useModalNavigate();
+  const [params, setParams] = useSearchParams();
   const { address, isConnected } = useWagmiAccount();
   const { connect } = useConnect({connector: wagmiAPI.connectors?.[0]});
   const { disconnect } = useDisconnect();
@@ -100,7 +107,7 @@ export default function NavBar({
   }: {
     title: React.ReactNode;
     children: React.ReactNode;
-    className?: string;
+    className?: string | boolean;
   }) => (
     <div className={cn(
       "button flex flex-row items-center space-x-2",
@@ -140,12 +147,7 @@ export default function NavBar({
             <HomeIcon className="w-4 h-4" />
             <span>Go Home</span>
           </DropdownEntry>
-          <DropdownEntry
-            onSelect={() => modalNavigate("disclaimer", {
-              relative: "path",
-              state: {backgroundLocation: location},
-            })}
-          >
+          <DropdownEntry onSelect={() => modalNavigate("disclaimer")}>
             <DocumentIcon className="w-4 h-4" />
             <span>View License</span>
           </DropdownEntry>
@@ -178,53 +180,34 @@ export default function NavBar({
               "absolute inset-y-[3px] right-0 h-8 w-8",
               "flex items-center pr-14 text-gray-400",
             )}>
-              <DropdownMenu trigger={
-                (queryBase === "mine") ? (<WalletIcon className="h-5 w-5" />)
-                : (queryBase === "bids") ? (<TagIcon className="h-5 w-5" />)
-                : (<ViewfinderCircleIcon className="h-5 w-5" />)
-              }>
+              <DropdownMenu trigger={React.createElement(
+                COLLECTION_ICON_MAP[queryBase ?? ""].icon,
+                {className: "w-5 h-5"},
+              )}>
                 <DropdownEntry disabled children="Collection" />
-                <DropdownEntry onSelect={() => onSubmit({base: undefined})}>
-                  <ViewfinderCircleIcon className="w-5 h-5" />
-                  <span>Full Collection</span>
-                </DropdownEntry>
-                <DropdownEntry onSelect={() => onSubmit({base: "mine"})}>
-                  <WalletIcon className="w-5 h-5" />
-                  <span>Owned Assets</span>
-                </DropdownEntry>
-                <DropdownEntry onSelect={() => onSubmit({base: "bids"})}>
-                  <TagIcon className="w-5 h-5" />
-                  <span>Bid Assets</span>
-                </DropdownEntry>
+                {COLLECTION_ICONS.map(({id, name, icon}: IconLabel<CollectionBase | "">) => (
+                  <DropdownEntry key={`base-${id}-dd`} onSelect={() => onSubmit({base: id || undefined})}>
+                    {React.createElement(icon, {className: "w-5 h-5"})}
+                    <span>{name}</span>
+                  </DropdownEntry>
+                ))}
               </DropdownMenu>
             </span>
             <span className={cn(
               "absolute inset-y-[3px] right-0 h-8 w-8",
               "flex items-center pr-2 text-gray-400",
             )}>
-              <DropdownMenu trigger={
-                (queryType === "galaxy") ? (<SparklesIcon className="h-5 w-5" />)
-                : (queryType === "star") ? (<StarIcon className="h-5 w-5" />)
-                : (queryType === "planet") ? (<GlobeAltIcon className="h-5 w-5" />)
-                : (<FunnelIcon className="h-5 w-5" />)
-              }>
-                <DropdownEntry disabled children="Type Filter" />
-                <DropdownEntry onSelect={() => onSubmit({type: undefined})}>
-                  <FunnelIcon className="w-5 h-5" />
-                  <span>No Filter</span>
-                </DropdownEntry>
-                <DropdownEntry onSelect={() => onSubmit({type: "galaxy"})}>
-                  <SparklesIcon className="w-5 h-5" />
-                  <span>Galaxies</span>
-                </DropdownEntry>
-                <DropdownEntry onSelect={() => onSubmit({type: "star"})}>
-                  <StarIcon className="w-5 h-5" />
-                  <span>Stars</span>
-                </DropdownEntry>
-                <DropdownEntry onSelect={() => onSubmit({type: "planet"})}>
-                  <GlobeAltIcon className="w-5 h-5" />
-                  <span>Planets</span>
-                </DropdownEntry>
+              <DropdownMenu trigger={React.createElement(
+                URBITPOINT_ICON_MAP[queryType?? ""].icon,
+                {className: "w-5 h-5"},
+              )}>
+                <DropdownEntry disabled children="Collection" />
+                {URBITPOINT_ICONS.map(({id, name, icon}: IconLabel<UrbitPointType | "">) => (
+                  <DropdownEntry key={`type-${id}-dd`} onSelect={() => onSubmit({type: id || undefined})}>
+                    {React.createElement(icon, {className: "w-5 h-5"})}
+                    <span>{name}</span>
+                  </DropdownEntry>
+                ))}
               </DropdownMenu>
             </span>
           </label>
@@ -233,9 +216,11 @@ export default function NavBar({
         {/*TODO: The connected text shrinking isn't proply being applied to the title here.*/}
         <DropdownMenu trigger={
           <DropdownButton
-            title={!isConnected ? "Wallet" : <ENSName address={address} />}
+            title={!isConnected ? "Wallet"
+              : <ENSName address={address} className={isConnected && "text-2xs"} />
+            }
             children={<WalletIcon className="h-5 w-5" />}
-            className={!isConnected ? "" : "text-blue-400 text-2xs"}
+            className={isConnected && "text-blue-400"}
           />
         }>
           <DropdownEntry disabled>
@@ -248,23 +233,13 @@ export default function NavBar({
             <span>{`${isConnected ? "Disc" : "C"}onnect Wallet`}</span>
           </DropdownEntry>
           {/*(isConnected && !isKYCd) && (
-            <DropdownEntry
-              onSelect={() => modalNavigate("pretrade", {
-                relative: "path",
-                state: {backgroundLocation: location},
-              })}
-            >
+            <DropdownEntry onSelect={() => modalNavigate("pretrade")}>
               <IdentificationIcon className="w-4 h-4" />
               <span>Submit KYC</span>
             </DropdownEntry>
           )*/}
           {(isConnected && !isAssociated) && (
-            <DropdownEntry
-              onSelect={() => modalNavigate("assoc", {
-                relative: "path",
-                state: {backgroundLocation: location},
-              })}
-            >
+            <DropdownEntry onSelect={() => modalNavigate("assoc")}>
               <LinkIcon className="w-4 h-4" />
               <span>Associate @p</span>
             </DropdownEntry>

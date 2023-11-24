@@ -1,3 +1,5 @@
+import React from 'react';
+import { TagIcon } from '@heroicons/react/24/solid';
 import { QUERY } from '@/constants';
 import type {
   Item as RaribleItem,
@@ -22,6 +24,12 @@ export interface NavigationQuery {
   base?: CollectionBase;
   type?: UrbitPointType;
   name?: string;
+}
+
+export interface IconLabel<IdType extends string = string> {
+  id: IdType;
+  name: string;
+  icon: typeof TagIcon;
 }
 
 export interface VentureKYC {

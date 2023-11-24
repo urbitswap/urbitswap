@@ -1,12 +1,17 @@
+import React from 'react';
 import { format, formatDistance } from 'date-fns';
+import {
+  FunnelIcon,
+  GlobeAltIcon,
+  ViewfinderCircleIcon,
+  WalletIcon,
+  SparklesIcon,
+  StarIcon,
+  TagIcon,
+} from '@heroicons/react/24/solid';
 import { APP_DBUG, APP_VERSION, MAX_DATE, CONTRACT, QUERY } from '@/constants';
 import { Blockchain } from '@rarible/api-client';
-import {
-  toContractAddress,
-  toItemId,
-  toOrderId,
-  toUnionAddress,
-} from '@rarible/types';
+import { toContractAddress } from '@rarible/types';
 import type {
   RequestCurrency as RaribleCurrency,
 } from '@rarible/sdk';
@@ -18,8 +23,35 @@ import type {
   Order as RaribleOrder,
   Ownership as RaribleOwnership,
 } from '@rarible/api-client';
-import type { TenderType, OfferType, NavigationQuery } from '@/types/app';
+import type {
+  CollectionBase,
+  UrbitPointType,
+  TenderType,
+  OfferType,
+  NavigationQuery,
+  IconLabel,
+} from '@/types/app';
 import type { Callable } from '@/types/utils';
+
+export const COLLECTION_ICONS: IconLabel<CollectionBase | "">[] = [
+  {id: "", name: "Full Collection", icon: ViewfinderCircleIcon},
+  {id: "mine", name: "Owned Asset", icon: WalletIcon},
+  {id: "bids", name: "Bid Asset", icon: TagIcon},
+];
+export const COLLECTION_ICON_MAP: Record<CollectionBase | "", IconLabel> = COLLECTION_ICONS.reduce(
+  (a, i) => {a[i.id] = i; return a;},
+  ({} as Record<CollectionBase | "", IconLabel>),
+);
+export const URBITPOINT_ICONS: IconLabel<UrbitPointType | "">[] = [
+  {id: "", name: "Point Type", icon: FunnelIcon},
+  {id: "galaxy", name: "Galaxy", icon: SparklesIcon},
+  {id: "star", name: "Star", icon: StarIcon},
+  {id: "planet", name: "Planet", icon: GlobeAltIcon},
+];
+export const URBITPOINT_ICON_MAP: Record<UrbitPointType | "", IconLabel> =URBITPOINT_ICONS.reduce(
+  (a, i) => {a[i.id] = i; return a;},
+  ({} as Record<UrbitPointType | "", IconLabel>),
+);
 
 export function genRateLimiter(maxReqs: number, perSecs: number) {
   let frameStart: number = 0;

@@ -23,10 +23,7 @@ export function NewVersionWatcher() {
         const isViewingDisclaimer: boolean =
           location.pathname.endsWith("disclaimer");
         if (isVersAckOutdated && !isViewingDisclaimer) {
-          modalNavigate("disclaimer", {
-            relative: "path",
-            state: {backgroundLocation: location},
-          });
+          modalNavigate("disclaimer");
         }
       });
     }
@@ -36,7 +33,6 @@ export function NewVersionWatcher() {
 }
 
 export function NewWalletWatcher() {
-  const location = useLocation();
   const modalNavigate = useModalNavigate();
 
   const { address, isConnected } = useWagmiAccount();
@@ -70,10 +66,7 @@ export function NewWalletWatcher() {
         const isAddressNew: boolean = address === lastAddress.current;
         lastAddress.current = address;
         if (isAddressNew) {
-          modalNavigate("assoc", {
-            relative: "path",
-            state: {backgroundLocation: location},
-          });
+          modalNavigate("assoc");
         }
       });
     }

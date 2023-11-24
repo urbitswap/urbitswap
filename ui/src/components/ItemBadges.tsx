@@ -2,23 +2,29 @@ import React, { ReactNode } from 'react';
 import cn from 'classnames';
 import {
   EllipsisHorizontalIcon,
-  GlobeAltIcon,
   LockClosedIcon,
   LockOpenIcon,
-  QuestionMarkCircleIcon,
-  SparklesIcon,
-  StarIcon,
-  TagIcon,
-  WalletIcon,
 } from '@heroicons/react/24/solid';
 import Popover from '@/components/Popover';
 import { useUrbitNetworkLayer, useVentureAccountGrant } from '@/state/app';
-import { APP_TERM, CONTRACT } from '@/constants';
-import { capitalize, isMaxDate, makePrettyLapse, getItemUnlock } from '@/logic/utils';
+import { APP_TERM, CONTRACT, QUERY } from '@/constants';
+import {
+  COLLECTION_ICON_MAP,
+  URBITPOINT_ICON_MAP,
+  capitalize,
+  isMaxDate,
+  makePrettyLapse,
+  getItemUnlock,
+} from '@/logic/utils';
 import type {
   Item as RaribleItem,
   Order as RaribleOrder,
 } from '@rarible/api-client';
+import type {
+  CollectionBase,
+  UrbitPointType,
+  IconLabel,
+} from '@/types/app';
 
 export default function ItemBadges({
   item,
@@ -37,8 +43,9 @@ export default function ItemBadges({
   // const myItemLayer = useUrbitNetworkLayer(item.meta?.name ?? "");
 
   // FIXME: This is needs to be specialized to the Azimuth/Urbit NFT collection
-  const itemType: string | undefined =
-    (item.meta?.attributes ?? []).find(a => a.key === "size")?.value;
+  const itemType: UrbitPointType | undefined = QUERY.POINT_TYPE.find(a =>
+    a === (item.meta?.attributes ?? []).find(a => a.key === "size")?.value
+  );
   // const itemUnlock: Date = getItemUnlock(item);
   // const itemTransferable: boolean = myItemGrant !== undefined
   //   && myItemGrant?.status === "success";
@@ -63,25 +70,24 @@ export default function ItemBadges({
             />
           )*/}
           {true && (
-            <Popover message={`${!itemType ? "Unknown" : capitalize(itemType)} ID`}>
-              {(itemType === "galaxy") ? (<SparklesIcon className={badgeClassName} />)
-                : (itemType === "star") ? (<StarIcon className={badgeClassName} />)
-                : (itemType === "planet") ? (<GlobeAltIcon className={badgeClassName} />)
-                : (<QuestionMarkCircleIcon className={badgeClassName} />)
-              }
+            <Popover message={`${URBITPOINT_ICON_MAP[(itemType ?? "")].name} ID`}>
+              {React.createElement(
+                URBITPOINT_ICON_MAP[itemType ?? ""].icon,
+                {className: badgeClassName},
+              )}
             </Popover>
           )}
           {myItems.some((i: RaribleItem) => i.id === item.id) && (
-            <Popover message="Owned by Me">
-              <WalletIcon className={badgeClassName} />
+            <Popover message={COLLECTION_ICON_MAP["mine"].name}>
+              {React.createElement(COLLECTION_ICON_MAP["mine"].icon, {className: badgeClassName})}
             </Popover>
           )}
           {myBids.some((o: RaribleOrder) =>
             (o.take.type["@type"] === "ERC721" || o.take.type["@type"] === "ERC721_Lazy")
             && `${o.take.type?.contract}:${o.take.type?.tokenId}` === item.id
           ) && (
-            <Popover message="Has my Bid">
-              <TagIcon className={badgeClassName} />
+            <Popover message={COLLECTION_ICON_MAP["bids"].name}>
+              {React.createElement(COLLECTION_ICON_MAP["bids"].icon, {className: badgeClassName})}
             </Popover>
           )}
         </React.Fragment>

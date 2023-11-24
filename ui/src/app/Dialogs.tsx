@@ -237,10 +237,7 @@ export function TradeDialog() {
   const onCancel = useCallback(async (event: any) => {
     // NOTE: Okay not to go through "pretrade" form here because we just
     // went through it
-    navigate(`../cancel`, {
-      replace: true,
-      state: location.state,
-    });
+    navigate(`../cancel`, {replace: true, state: location.state});
   }, [navigate, location.state]);
 
   const TradeRow = useCallback(({

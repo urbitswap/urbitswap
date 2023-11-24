@@ -82,8 +82,6 @@ function RoutedAppRoutes({
           <Route path="/disclaimer" element={<DisclaimerDialog />} />
           <Route path="/assoc" element={<AssociateDialog />} />
           <Route path="/item/:itemId">
-            <Route path="disclaimer" element={<DisclaimerDialog />} />
-            <Route path="assoc" element={<AssociateDialog />} />
             <Route path="pretrade" element={<PretradeDialog />} />
             <Route path="offer" element={<OfferDialog />} />
             <Route path="trade/:offerId" element={<TradeDialog />} />

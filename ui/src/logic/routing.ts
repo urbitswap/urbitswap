@@ -16,14 +16,14 @@ export function useModalNavigate() {
   const location = useLocation();
 
   return useCallback(
-    (to: To, opts?: NavigateOptions) => {
-      if (location.state) {
-        navigate(to, {...(opts || {}), state: location.state});
-        return;
-      }
-      navigate(to, opts);
+    (to: To, nopts?: NavigateOptions) => {
+      const { state, ...opts } = nopts ?? {};
+      navigate(to, {
+        ...(opts || {}),
+        state: {backgroundLocation: location, ...(state ?? {}), ...location.state},
+      });
     },
-    [navigate, location.state]
+    [navigate, location]
   );
 }
 
