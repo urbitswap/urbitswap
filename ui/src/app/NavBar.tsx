@@ -213,8 +213,7 @@ export default function NavBar({
           </label>
         </div>
 
-        {/*TODO: The connected text shrinking isn't proply being applied to the title here.*/}
-        <DropdownMenu trigger={
+        <DropdownMenu align="end" trigger={
           <DropdownButton
             title={!isConnected ? "Wallet"
               : <ENSName address={address} className={isConnected && "text-2xs"} />

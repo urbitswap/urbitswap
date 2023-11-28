@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, createElement } from 'react';
 import cn from 'classnames';
 import {
   EllipsisHorizontalIcon,
@@ -71,7 +71,7 @@ export default function ItemBadges({
           )*/}
           {true && (
             <Popover message={`${URBITPOINT_ICON_MAP[(itemType ?? "")].name} ID`}>
-              {React.createElement(
+              {createElement(
                 URBITPOINT_ICON_MAP[itemType ?? ""].icon,
                 {className: badgeClassName},
               )}
@@ -79,7 +79,7 @@ export default function ItemBadges({
           )}
           {myItems.some((i: RaribleItem) => i.id === item.id) && (
             <Popover message={COLLECTION_ICON_MAP["mine"].name}>
-              {React.createElement(COLLECTION_ICON_MAP["mine"].icon, {className: badgeClassName})}
+              {createElement(COLLECTION_ICON_MAP["mine"].icon, {className: badgeClassName})}
             </Popover>
           )}
           {myBids.some((o: RaribleOrder) =>
@@ -87,7 +87,7 @@ export default function ItemBadges({
             && `${o.take.type?.contract}:${o.take.type?.tokenId}` === item.id
           ) && (
             <Popover message={COLLECTION_ICON_MAP["bids"].name}>
-              {React.createElement(COLLECTION_ICON_MAP["bids"].icon, {className: badgeClassName})}
+              {createElement(COLLECTION_ICON_MAP["bids"].icon, {className: badgeClassName})}
             </Popover>
           )}
         </React.Fragment>

@@ -1,23 +1,28 @@
 import React from 'react';
 import cn from 'classnames';
 import * as BaseDropdownMenu from '@radix-ui/react-dropdown-menu';
+import { ALIGN_OPTIONS } from '@radix-ui/react-popper';
 import type { DropdownMenuItemProps } from '@radix-ui/react-dropdown-menu';
+
+type RadixAlign = typeof ALIGN_OPTIONS[number];
 
 export function DropdownMenu({
   trigger,
   children,
   className,
+  align = "center",
 }: {
   trigger: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  align?: RadixAlign;
 }) {
   return (
     <BaseDropdownMenu.Root>
       <BaseDropdownMenu.Trigger>
         {trigger}
       </BaseDropdownMenu.Trigger>
-      <BaseDropdownMenu.Content className={cn("dropdown", className)}>
+      <BaseDropdownMenu.Content align={align} className={cn("dropdown", className)}>
         {children}
         <BaseDropdownMenu.Arrow className="w-4 h-3 fill-gray-800" />
       </BaseDropdownMenu.Content>
