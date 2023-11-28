@@ -12,9 +12,11 @@ import type { Address } from 'viem';
 export type TenderType = "eth" | "usdc";
 export type OfferType = "bid" | "sell";
 export type CollectionBase = typeof QUERY.COLLECTION_BASE[number];
+export type CollectionBaseish = CollectionBase | "";
 
 export type UrbitLayer = "locked" | "layer-2" | "layer-1";
 export type UrbitPointType = typeof QUERY.POINT_TYPE[number];
+export type UrbitPointTypeish = UrbitPointType | "";
 
 export type GetWagmiAccountResult = Omit<GetAccountResult, "address"> & {
   address: Address;

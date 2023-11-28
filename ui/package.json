@@ -36,7 +36,7 @@
     "react-select": "^5.4.0",
     "tslib": "^2.3.1",
     "viem": "^1.10.13",
-    "wagmi": "^1.4.1"
+    "wagmi": "^1.4.7"
   },
   "devDependencies": {
     "@tailwindcss/aspect-ratio": "^0.4.0",

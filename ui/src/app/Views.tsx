@@ -1,11 +1,6 @@
 import React, { useMemo, useEffect, useCallback } from 'react';
 import cn from 'classnames';
-import {
-  Link,
-  useParams,
-  useSearchParams,
-  useNavigate,
-} from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import useRaribleSDK from '@/logic/useRaribleSDK';
@@ -14,7 +9,8 @@ import ItemBadges from '@/components/ItemBadges';
 import {
   useUrbitTraders,
   useUrbitAccountAllAddresses,
-  useRaribleCollection,
+  useRaribleCollectionMeta,
+  useRaribleCollectionItems,
   useRaribleAccountItems,
   useRaribleAccountBids,
   useRouteRaribleItem,
@@ -44,6 +40,7 @@ import {
   OrderStatus as RaribleOrderStatus,
 } from '@rarible/api-client';
 import type {
+  Collection as RaribleCollection,
   CollectionId as RaribleCollectionId,
   Item as RaribleItem,
   Order as RaribleOrder,
@@ -59,8 +56,53 @@ import type { ClassProps } from '@/types/urbui';
 
 export function CollectionGrid({className}: ClassProps) {
   const navigate = useNavigate();
+
+  const urbitMeta = useRaribleCollectionMeta(CONTRACT.AZIMUTH);
+  const miladyMeta = useRaribleCollectionMeta(CONTRACT.MILADY);
+  const vccMeta = useRaribleCollectionMeta(CONTRACT.VENTURE);
+  const collMetas = [urbitMeta, miladyMeta, vccMeta];
+
+  return (
+    <div className={cn("flex flex-col items-center", className)}>
+      {(collMetas.some(c => c === undefined)) ? (
+        <LoadingIcon />
+      ) : (
+        <React.Fragment>
+          <div className={`
+            grid w-full h-fit grid-cols-2 gap-4 px-4
+            justify-center sm:grid-cols-[repeat(auto-fit,minmax(auto,200px))]
+          `}>
+            {collMetas.map((collection: RaribleCollection | undefined) => collection && (
+              <div
+                key={collection.id}
+                role="link"
+                className={cn(
+                  "flex flex-col justify-between p-2 gap-2 rounded-lg border-2",
+                  "border-gray-200 hover:border-gray-800",
+                )}
+                onClick={() => navigate(`/${collection.id}`)}
+              >
+                <h3 className="text-lg text-center font-semibold line-clamp-1">
+                  {collection.name}
+                </h3>
+                <img className="object-cover rounded-lg w-32 mx-auto" src={
+                  (collection.meta?.content.find((entry: RaribleMetaContent) => (
+                    entry["@type"] === "IMAGE"
+                  )) ?? {})?.url
+                } />
+              </div>
+            ))}
+          </div>
+        </React.Fragment>
+      )}
+    </div>
+  );
+}
+
+export function ItemGrid({className}: ClassProps) {
+  const navigate = useNavigate();
+  const { collId } = useParams();
   const [params, setParams] = useSearchParams();
-  // const collection = useRaribleCollection();
 
   const addresses = useUrbitAccountAllAddresses();
   const myItems = useRaribleAccountItems();
@@ -72,15 +114,13 @@ export function CollectionGrid({className}: ClassProps) {
   const {
     status,
     data,
-    error,
     isFetching,
     isFetchingNextPage,
     fetchNextPage,
-    hasNextPage,
   } = useInfiniteQuery(
     // TODO: Need to include address list in the query (or at least invalidate
     // relevant queries when new personal addresses are added).
-    [APP_TERM, "rarible", "pcollection", query?.base, query?.name, query?.type],
+    [APP_TERM, "rarible", "pcollection", collId, query?.base, query?.name, query?.type],
     async ({ pageParam = undefined }) => {
       const queryAddresses = Array.from(addresses ?? new Set());
       const queryFilter = (item: RaribleItem): boolean => !!(
@@ -114,7 +154,7 @@ export function CollectionGrid({className}: ClassProps) {
             ? `${pageIndex} ${pageResults.continuation}`
             : `${pageIndex + 1}`,
           data: pageResults.items
-            .filter((item) => item.collection === CONTRACT.AZIMUTH)
+            .filter((item) => item.collection === collId)
             .filter(queryFilter),
         };
       } else if (query?.base === "bids") {
@@ -127,10 +167,10 @@ export function CollectionGrid({className}: ClassProps) {
           itemIds: { ids: pageResults.orders
             .filter((o) => (
               (o.take.type["@type"] === "ERC721" || o.take.type["@type"] === "ERC721_Lazy")
-              && o.take.type.contract === CONTRACT.AZIMUTH
+              && o.take.type.contract === collId
             ))
             .map((o: RaribleOrder) => (o.take.type as RaribleERC721 | RaribleERC721Lazy))
-            .map((t) => `${CONTRACT.AZIMUTH}:${t.tokenId}` as RaribleItemId)
+            .map((t) => `${collId}:${t.tokenId}` as RaribleItemId)
           },
         });
         return {
@@ -144,7 +184,7 @@ export function CollectionGrid({className}: ClassProps) {
           sort: RaribleItemsSort.LOWEST_SELL,
           continuation: pageParam,
           filter: {
-            collections: ([CONTRACT.AZIMUTH] as RaribleCollectionId[]),
+            collections: ([collId] as RaribleCollectionId[]),
             deleted: false,
             names: query?.name ? [query?.name] : undefined,
             traits: query?.type ? [{key: "size", value: query?.type}] : undefined,
@@ -174,10 +214,7 @@ export function CollectionGrid({className}: ClassProps) {
   }, [inView, isFetchingNextPage]);
 
   return (
-    <div className={cn(
-      "flex flex-col items-center",
-      className,
-    )}>
+    <div className={cn("flex flex-col items-center", className)}>
       {(status === "loading") ? (
         <LoadingIcon />
       ) : (status === "error") ? (
@@ -198,7 +235,7 @@ export function CollectionGrid({className}: ClassProps) {
                       "flex flex-col justify-between p-2 gap-2 rounded-lg border-2",
                       "border-gray-200 hover:border-gray-800",
                     )}
-                    onClick={() => navigate(`/item/${item.tokenId}`)}
+                    onClick={() => navigate(`./item/${item.tokenId}`)}
                   >
                     <h3 className="text-lg text-center font-semibold line-clamp-1">
                       {makePrettyName(item)}
@@ -342,7 +379,7 @@ export function ItemPage({className}: ClassProps) {
             */}
             <hr className="my-2" />
             <h4 className="text-md font-bold underline">
-              Active Ask(s)
+              Active Asks
             </h4>
             <div className="flex flex-col text-sm gap-4 py-4">
               {(item.bestSellOrder === undefined) ? (
@@ -356,7 +393,7 @@ export function ItemPage({className}: ClassProps) {
               )}
             </div>
             <h4 className="text-md font-bold underline">
-              Active Bid(s)
+              Active Bids
             </h4>
             <div className="flex flex-col text-sm gap-4 py-4">
               {/* TODO: Sort highest to lowest price (converted to USD) */}

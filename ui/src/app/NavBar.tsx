@@ -7,24 +7,19 @@ import React, {
   useCallback,
 } from 'react';
 import cn from 'classnames';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useConnect, useDisconnect } from 'wagmi';
 import {
   BoltIcon,
   BoltSlashIcon,
   ChevronDownIcon,
   DocumentIcon,
-  FunnelIcon,
-  GlobeAltIcon,
   HomeIcon,
+  RectangleGroupIcon,
   IdentificationIcon,
   LinkIcon,
   MagnifyingGlassIcon,
-  ViewfinderCircleIcon,
   WalletIcon,
-  SparklesIcon,
-  StarIcon,
-  TagIcon,
 } from '@heroicons/react/24/solid';
 import ENSName from '@/components/ENSName';
 import UrbitswapIcon from '@/components/icons/UrbitswapIcon';
@@ -41,6 +36,7 @@ import {
 } from '@/logic/utils';
 import {
   useWagmiAccount,
+  useRaribleCollectionMeta,
   useUrbitAccountAssocAddresses,
   useVentureAccountKYC,
 } from '@/state/app';
@@ -48,8 +44,8 @@ import { wagmiAPI } from '@/api';
 import { QUERY } from '@/constants';
 import type { Chain } from 'viem'; // node_modules/viem/types/chain.ts
 import type {
-  CollectionBase,
-  UrbitPointType,
+  CollectionBaseish,
+  UrbitPointTypeish,
   NavigationQuery,
   IconLabel,
 } from '@/types/app';
@@ -61,38 +57,38 @@ export default function NavBar({
   className?: string;
   innerClassName?: string;
 }) {
-  const [queryBase, setQueryBase] = useState<CollectionBase | undefined>(undefined);
-  const [queryType, setQueryType] = useState<UrbitPointType | undefined>(undefined);
-  const [queryName, setQueryName] = useState<string>("");
-  const query: NavigationQuery = useMemo(() => ({
-    base: queryBase,
-    type: queryType,
-    name: queryName ? queryName : undefined,
-  }), [queryBase, queryType, queryName]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const navigate = useNavigate();
   const modalNavigate = useModalNavigate();
-  const [params, setParams] = useSearchParams();
+  const { collId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const collMeta = useRaribleCollectionMeta(collId ?? "");
   const { address, isConnected } = useWagmiAccount();
   const { connect } = useConnect({connector: wagmiAPI.connectors?.[0]});
   const { disconnect } = useDisconnect();
 
+  const inCollectionMode: boolean = collId !== undefined;
   const assocAddresses = useUrbitAccountAssocAddresses();
   const isAssociated: boolean = (assocAddresses ?? new Set()).has(address);
-  const vccKYC = {}; // useVentureAccountKYC();
-  const isKYCd: boolean = false; // vccKYC !== undefined && vccKYC.kyc;
+  // const vccKYC = {}; // useVentureAccountKYC();
+  // const isKYCd: boolean = false; // vccKYC !== undefined && vccKYC.kyc;
 
   const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const {value}: {value: string;} = event.target;
-    setQueryName(value);
-  }, [setQueryName]);
+    setSearchQuery(value);
+  }, [setSearchQuery]);
   const onSubmit = useCallback((newQuery: NavigationQuery | void) => {
-    const queryParams: URLSearchParams = encodeQuery({
-      ...query,
+    const newSearchParams: URLSearchParams = encodeQuery({
+      ...Object.fromEntries(searchParams),
+      name: searchQuery,
       ...(!newQuery ? {} : newQuery),
     });
-    navigate(`/?${queryParams.toString()}`);
-  }, [query, navigate]);
+    // NOTE: We use 'navigate' instead of 'setSearchParams' in order to enable
+    // search from internal collection pages (e.g. per-item pages).
+    navigate(`/${collId ?? ""}?${newSearchParams.toString()}`);
+  }, [collId, navigate, searchQuery, searchParams]);
   const onKeyDown = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
@@ -122,14 +118,6 @@ export default function NavBar({
     </div>
   ), []);
 
-  useEffect(() => {
-    const paramsQuery: NavigationQuery = decodeQuery(params);
-    const newQuery: NavigationQuery = {...query, ...paramsQuery};
-    setQueryBase(newQuery?.base);
-    setQueryType(newQuery?.type);
-    setQueryName(newQuery?.name ?? "");
-  }, [params]);
-
   return (
     <nav className={cn(
       "w-full py-2 px-4 bg-white border-gray-800 border-b-2",
@@ -147,13 +135,19 @@ export default function NavBar({
             <HomeIcon className="w-4 h-4" />
             <span>Go Home</span>
           </DropdownEntry>
-          <DropdownEntry onSelect={() => modalNavigate("disclaimer")}>
+          {inCollectionMode && (
+            <DropdownEntry onSelect={() => navigate(`/${collId}`)}>
+              <RectangleGroupIcon className="w-4 h-4" />
+              <span>View Collection</span>
+            </DropdownEntry>
+          )}
+          <DropdownEntry onSelect={() => modalNavigate("/disclaimer")}>
             <DocumentIcon className="w-4 h-4" />
             <span>View License</span>
           </DropdownEntry>
         </DropdownMenu>
 
-        <div className="flex flex-row gap-2 flex-1 min-w-0">
+        <div className={cn("flex flex-row gap-2 flex-1 min-w-0", !inCollectionMode && "invisible")}>
           <label className="relative flex w-full items-center flex-1 min-w-0">
             <span className="sr-only">Search Prefences</span>
             <span className={cn(
@@ -162,6 +156,7 @@ export default function NavBar({
             )}>
               <MagnifyingGlassIcon
                 className="h-5 w-5"
+                onClick={() => onSubmit()}
                 style={{transform: "rotateY(180deg)"}}
               />
             </span>
@@ -170,46 +165,52 @@ export default function NavBar({
                 "input h-9 w-full bg-gray-50 pl-8 pr-16 flex-1 min-w-0",
                 "placeholder:font-normal focus-within:mix-blend-normal text-sm sm:text-md",
               )}
-              placeholder={"Search"}
-              value={queryName}
+              disabled={!inCollectionMode}
+              value={searchQuery}
               onChange={onChange}
               onKeyDown={onKeyDown}
               onSubmit={() => onSubmit()}
+              placeholder={!inCollectionMode
+                ? "Search Collections"
+                : `Search ${!collMeta ? "Collection" : `'${collMeta.name}'`}`
+              }
             />
-            <span className={cn(
+            {/*<span className={cn(
               "absolute inset-y-[3px] right-0 h-8 w-8",
               "flex items-center pr-14 text-gray-400",
             )}>
               <DropdownMenu trigger={React.createElement(
-                COLLECTION_ICON_MAP[queryBase ?? ""].icon,
+                URBITPOINT_ICON_MAP[((searchParams.get("type") ?? "") as UrbitPointTypeish)].icon,
                 {className: "w-5 h-5"},
               )}>
                 <DropdownEntry disabled children="Collection" />
-                {COLLECTION_ICONS.map(({id, name, icon}: IconLabel<CollectionBase | "">) => (
-                  <DropdownEntry key={`base-${id}-dd`} onSelect={() => onSubmit({base: id || undefined})}>
-                    {React.createElement(icon, {className: "w-5 h-5"})}
-                    <span>{name}</span>
-                  </DropdownEntry>
-                ))}
-              </DropdownMenu>
-            </span>
-            <span className={cn(
-              "absolute inset-y-[3px] right-0 h-8 w-8",
-              "flex items-center pr-2 text-gray-400",
-            )}>
-              <DropdownMenu trigger={React.createElement(
-                URBITPOINT_ICON_MAP[queryType?? ""].icon,
-                {className: "w-5 h-5"},
-              )}>
-                <DropdownEntry disabled children="Collection" />
-                {URBITPOINT_ICONS.map(({id, name, icon}: IconLabel<UrbitPointType | "">) => (
+                {URBITPOINT_ICONS.map(({id, name, icon}: IconLabel<UrbitPointTypeish>) => (
                   <DropdownEntry key={`type-${id}-dd`} onSelect={() => onSubmit({type: id || undefined})}>
                     {React.createElement(icon, {className: "w-5 h-5"})}
                     <span>{name}</span>
                   </DropdownEntry>
                 ))}
               </DropdownMenu>
-            </span>
+            </span>*/}
+            {inCollectionMode && (
+              <span className={cn(
+                "absolute inset-y-[3px] right-0 h-8 w-8",
+                "flex items-center pr-2 text-gray-400",
+              )}>
+                <DropdownMenu trigger={React.createElement(
+                  COLLECTION_ICON_MAP[((searchParams.get("base") ?? "") as CollectionBaseish)].icon,
+                  {className: "w-5 h-5"},
+                )}>
+                  <DropdownEntry disabled children="Collection" />
+                  {COLLECTION_ICONS.map(({id, name, icon}: IconLabel<CollectionBaseish>) => (
+                    <DropdownEntry key={`base-${id}-dd`} onSelect={() => onSubmit({base: id || undefined})}>
+                      {React.createElement(icon, {className: "w-5 h-5"})}
+                      <span>{name}</span>
+                    </DropdownEntry>
+                  ))}
+                </DropdownMenu>
+              </span>
+            )}
           </label>
         </div>
 
@@ -224,7 +225,7 @@ export default function NavBar({
         }>
           <DropdownEntry disabled>
             <span>Wallet</span>
-            {(isKYCd && (<IdentificationIcon className="w-3 h-3" />))}
+            {/*(isKYCd && (<IdentificationIcon className="w-3 h-3" />))*/}
             {(isAssociated && (<LinkIcon className="w-3 h-3" />))}
           </DropdownEntry>
           <DropdownEntry onSelect={() => !isConnected ? connect() : disconnect()}>
@@ -238,7 +239,7 @@ export default function NavBar({
             </DropdownEntry>
           )*/}
           {(isConnected && !isAssociated) && (
-            <DropdownEntry onSelect={() => modalNavigate("assoc")}>
+            <DropdownEntry onSelect={() => modalNavigate("/assoc")}>
               <LinkIcon className="w-4 h-4" />
               <span>Associate @p</span>
             </DropdownEntry>

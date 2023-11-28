@@ -25,6 +25,7 @@ import { APP_TERM, CONTRACT, TRADERS_HOST, TRADERS_HOST_FLAG } from '@/constants
 import { OrderStatus as RaribleOrderStatus } from '@rarible/api-client';
 import type { Address } from 'viem';
 import type {
+  Collection as RaribleCollection,
   Item as RaribleItem,
   Items as RaribleItems,
   Order as RaribleOrder,
@@ -183,17 +184,39 @@ export function useVentureAccountGrant(itemId: string): VentureTransfer | undefi
     : (data as VentureTransfer);
 }
 
-export function useRaribleCollection(): RaribleItem[] | undefined {
+export function useRaribleCollectionMeta(collId: string): RaribleCollection | undefined {
   const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "rarible", "collection",
-  ], []);
+    APP_TERM, "rarible", "collection", collId, "meta",
+  ], [collId]);
+
+  const rsdk = useRaribleSDK();
+  const { data, isLoading, isError } = useQuery({
+    queryKey: queryKey,
+    queryFn: () => rsdk.apis.collection.getCollectionById(
+      {collection: collId},
+    ),
+    // NOTE: This will update extremely infrequently, so we don't even bother
+    // refetching the data.
+    retryOnMount: false,
+    refetchOnMount: false,
+  });
+
+  return (isLoading || isError)
+    ? undefined
+    : (data as RaribleCollection);
+}
+
+export function useRaribleCollectionItems(collId: string): RaribleItem[] | undefined {
+  const queryKey: QueryKey = useMemo(() => [
+    APP_TERM, "rarible", "collection", collId, "items",
+  ], [collId]);
 
   const rsdk = useRaribleSDK();
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
     queryFn: () => queryRaribleContinuation(
       rsdk.apis.item.getItemsByCollection,
-      {collection: CONTRACT.AZIMUTH},
+      {collection: collId},
     ),
   });
 
@@ -276,16 +299,16 @@ export function useRaribleAccountBids(): RaribleOrder[] | undefined {
 }
 
 export function useRouteRaribleItem(): RouteRaribleItem {
-  const { itemId } = useParams();
+  const { collId, itemId } = useParams();
   const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "rarible", "item", itemId,
-  ], [itemId]);
+    APP_TERM, "rarible", "collection", collId, "item", itemId,
+  ], [collId, itemId]);
 
   const rsdk = useRaribleSDK();
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
     queryFn: () => {
-      const itemAddr: string = `${CONTRACT.AZIMUTH}:${itemId}`;
+      const itemAddr: string = `${collId}:${itemId}`;
       return Promise.all([
         rsdk.apis.item.getItemById({itemId: itemAddr}),
         queryRaribleContinuation(
@@ -328,10 +351,10 @@ export function useRouteRaribleItemMutation<TResponse>(
   raribleFn: string,
   options?: UseMutationOptions<TResponse, unknown, any, unknown>
 ) {
-  const { itemId } = useParams();
+  const { collId, itemId } = useParams();
   const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "rarible", "item", itemId,
-  ], [itemId]);
+    APP_TERM, "rarible", "collection", collId, "item", itemId,
+  ], [collId, itemId]);
   const { address } = useWagmiAccount();
   const accountKey: QueryKey = useMemo(() => [
     APP_TERM, "rarible", "account", address,

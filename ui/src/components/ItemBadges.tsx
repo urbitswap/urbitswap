@@ -1,5 +1,6 @@
 import React, { ReactNode, createElement } from 'react';
 import cn from 'classnames';
+import { useParams } from 'react-router-dom';
 import {
   EllipsisHorizontalIcon,
   LockClosedIcon,
@@ -39,11 +40,12 @@ export default function ItemBadges({
   className?: string;
   badgeClassName?: string;
 }) {
+  const { collId } = useParams();
   // const myItemGrant = useVentureAccountGrant(item.tokenId ?? "");
   // const myItemLayer = useUrbitNetworkLayer(item.meta?.name ?? "");
 
-  // FIXME: This is needs to be specialized to the Azimuth/Urbit NFT collection
-  const itemType: UrbitPointType | undefined = QUERY.POINT_TYPE.find(a =>
+  const isUrbitCollection: boolean = collId === CONTRACT.AZIMUTH;
+  const urbitItemType: UrbitPointType | undefined = QUERY.POINT_TYPE.find(a =>
     a === (item.meta?.attributes ?? []).find(a => a.key === "size")?.value
   );
   // const itemUnlock: Date = getItemUnlock(item);
@@ -69,10 +71,10 @@ export default function ItemBadges({
               } (${itemTransferable ? "A" : "Una"}vailable to You)`}
             />
           )*/}
-          {true && (
-            <Popover message={`${URBITPOINT_ICON_MAP[(itemType ?? "")].name} ID`}>
+          {isUrbitCollection && (
+            <Popover message={`${URBITPOINT_ICON_MAP[(urbitItemType ?? "")].name} ID`}>
               {createElement(
-                URBITPOINT_ICON_MAP[itemType ?? ""].icon,
+                URBITPOINT_ICON_MAP[urbitItemType ?? ""].icon,
                 {className: badgeClassName},
               )}
             </Popover>

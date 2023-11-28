@@ -10,7 +10,7 @@ import {
 import cn from 'classnames';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { WagmiConfig } from 'wagmi';
-import { CollectionGrid, ItemPage } from '@/app/Views';
+import { CollectionGrid, ItemGrid, ItemPage } from '@/app/Views';
 import {
   OfferDialog,
   TradeDialog,
@@ -74,14 +74,15 @@ function RoutedAppRoutes({
           </div>
         }>
           <Route path="/" element={<CollectionGrid />} />
-          <Route path="/item/:itemId" element={<ItemPage />} />
+          <Route path="/:collId" element={<ItemGrid />} />
+          <Route path="/:collId/item/:itemId" element={<ItemPage />} />
         </Route>
       </Routes>
       {state?.backgroundLocation && (
         <Routes>
           <Route path="/disclaimer" element={<DisclaimerDialog />} />
           <Route path="/assoc" element={<AssociateDialog />} />
-          <Route path="/item/:itemId">
+          <Route path="/:collId/item/:itemId">
             <Route path="pretrade" element={<PretradeDialog />} />
             <Route path="offer" element={<OfferDialog />} />
             <Route path="trade/:offerId" element={<TradeDialog />} />

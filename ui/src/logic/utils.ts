@@ -24,8 +24,8 @@ import type {
   Ownership as RaribleOwnership,
 } from '@rarible/api-client';
 import type {
-  CollectionBase,
-  UrbitPointType,
+  CollectionBaseish,
+  UrbitPointTypeish,
   TenderType,
   OfferType,
   NavigationQuery,
@@ -33,24 +33,24 @@ import type {
 } from '@/types/app';
 import type { Callable } from '@/types/utils';
 
-export const COLLECTION_ICONS: IconLabel<CollectionBase | "">[] = [
+export const COLLECTION_ICONS: IconLabel<CollectionBaseish>[] = [
   {id: "", name: "Full Collection", icon: ViewfinderCircleIcon},
   {id: "mine", name: "Owned Asset", icon: WalletIcon},
   {id: "bids", name: "Bid Asset", icon: TagIcon},
 ];
-export const COLLECTION_ICON_MAP: Record<CollectionBase | "", IconLabel> = COLLECTION_ICONS.reduce(
+export const COLLECTION_ICON_MAP: Record<CollectionBaseish, IconLabel> = COLLECTION_ICONS.reduce(
   (a, i) => {a[i.id] = i; return a;},
-  ({} as Record<CollectionBase | "", IconLabel>),
+  ({} as Record<CollectionBaseish, IconLabel>),
 );
-export const URBITPOINT_ICONS: IconLabel<UrbitPointType | "">[] = [
+export const URBITPOINT_ICONS: IconLabel<UrbitPointTypeish>[] = [
   {id: "", name: "Point Type", icon: FunnelIcon},
   {id: "galaxy", name: "Galaxy", icon: SparklesIcon},
   {id: "star", name: "Star", icon: StarIcon},
   {id: "planet", name: "Planet", icon: GlobeAltIcon},
 ];
-export const URBITPOINT_ICON_MAP: Record<UrbitPointType | "", IconLabel> =URBITPOINT_ICONS.reduce(
+export const URBITPOINT_ICON_MAP: Record<UrbitPointTypeish, IconLabel> = URBITPOINT_ICONS.reduce(
   (a, i) => {a[i.id] = i; return a;},
-  ({} as Record<UrbitPointType | "", IconLabel>),
+  ({} as Record<UrbitPointTypeish, IconLabel>),
 );
 
 export function genRateLimiter(maxReqs: number, perSecs: number) {
