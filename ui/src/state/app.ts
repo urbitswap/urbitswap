@@ -21,7 +21,7 @@ import {
   addVentureAttribs,
 } from '@/logic/ventureclub';
 import { urbitAPI } from '@/api';
-import { APP_TERM, CONTRACT, TRADERS_HOST, TRADERS_HOST_FLAG } from '@/constants';
+import { APP_TERM, CONTRACT, FEATURED, TRADERS_HOST, TRADERS_HOST_FLAG } from '@/constants';
 import { OrderStatus as RaribleOrderStatus } from '@rarible/api-client';
 import type { Address } from 'viem';
 import type {
@@ -174,7 +174,7 @@ export function useVentureAccountGrant(itemId: string): VentureTransfer | undefi
     queryKey: queryKey,
     queryFn: async () => requestVentureTransfer(
       address,
-      (CONTRACT.AZIMUTH.slice("ETHEREUM:".length) as Address),
+      ("0x"/*FEATURED.VC.slice("ETHEREUM:".length)*/ as Address),
       itemId,
     ),
   });
@@ -195,6 +195,7 @@ export function useRaribleCollectionMeta(collId: string): RaribleCollection | un
     queryFn: () => rsdk.apis.collection.getCollectionById(
       {collection: collId},
     ),
+    enabled: !!collId,
     // NOTE: This will update extremely infrequently, so we don't even bother
     // refetching the data.
     retryOnMount: false,
@@ -218,31 +219,13 @@ export function useRaribleCollectionItems(collId: string): RaribleItem[] | undef
       rsdk.apis.item.getItemsByCollection,
       {collection: collId},
     ),
+    enabled: !!collId,
   });
 
   return (isLoading || isError)
     ? undefined
     : (data as RaribleItem[]); // .map(addVentureAttribs);
 }
-
-// export function useRariblePagedCollection() {
-//   const queryKey: QueryKey = useMemo(() => [
-//     APP_TERM, "rarible", "paged-collection",
-//   ], []);
-//
-//   const rsdk = useRaribleSDK();
-//   const { data, isLoading, isError } = useInfiniteQuery({
-//     queryKey: queryKey,
-//     queryFn: () => queryRaribleContinuation(
-//       rsdk.apis.item.getItemsByCollection,
-//       {collection: CONTRACT.AZIMUTH},
-//     ),
-//   });
-//
-//   return (isLoading || isError)
-//     ? undefined
-//     : (data as RaribleItem[]).map(addVentureAttribs);
-// }
 
 export function useRaribleAccountItems(): RaribleItem[] | undefined {
   const addresses = useUrbitAccountAllAddresses();

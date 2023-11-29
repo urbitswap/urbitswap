@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useCallback } from 'react';
 import cn from 'classnames';
+import axios from 'axios';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer'
 import { useInfiniteQuery } from '@tanstack/react-query'
@@ -9,7 +10,6 @@ import ItemBadges from '@/components/ItemBadges';
 import {
   useUrbitTraders,
   useUrbitAccountAllAddresses,
-  useRaribleCollectionMeta,
   useRaribleCollectionItems,
   useRaribleAccountItems,
   useRaribleAccountBids,
@@ -35,7 +35,7 @@ import {
 } from '@heroicons/react/24/solid';
 import UrbitswapIcon from '@/components/icons/UrbitswapIcon';
 import ErrorIcon from '@/components/icons/ErrorIcon';
-import { APP_TERM, CONTRACT } from '@/constants';
+import { APP_DBUG, APP_TERM, FEATURED } from '@/constants';
 import {
   ItemsSearchSort as RaribleItemsSort,
   OrderStatus as RaribleOrderStatus,
@@ -57,39 +57,152 @@ import type { ClassProps } from '@/types/urbui';
 
 export function CollectionGrid({className}: ClassProps) {
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
 
-  const urbitMeta = useRaribleCollectionMeta(CONTRACT.AZIMUTH);
-  const miladyMeta = useRaribleCollectionMeta(CONTRACT.MILADY);
-  const vccMeta = useRaribleCollectionMeta(CONTRACT.VENTURE);
-  const collMetas = [urbitMeta, miladyMeta, vccMeta];
+  const rsdk = useRaribleSDK();
+  const query = decodeQuery(params);
+  // https://tanstack.com/query/v4/docs/react/examples/react/load-more-infinite-scroll
+  const { ref, inView } = useInView();
+  const {
+    status,
+    data,
+    isFetching,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery(
+    [APP_TERM, "rarible", "mcollection", query?.name],
+    async ({ pageParam = undefined }) => {
+      if (!query?.name) {
+        const pageResults = await Promise.all(Object.entries(FEATURED).sort().map(
+          ([_, collId]) => rsdk.apis.collection.getCollectionById({collection: collId})
+        ));
+
+        return {
+          last: true,
+          next: undefined,
+          data: pageResults,
+        };
+      } else {
+        // FIXME: This is a hack we have to use because the collection
+        // search function is not currently included in the Rarible SDK.
+        const pageResults = await axios.request({
+          method: "post",
+          url: `/v0.1/collections/search/`,
+          baseURL: `https://${!APP_DBUG ? "" : "testnet-"}api.rarible.org/`,
+          data: {
+            "size": 20,
+            "continuation": pageParam,
+            "filter": {
+              "text": query?.name,
+              "blockchains": ["ETHEREUM"],
+            },
+          },
+          headers: {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "X-API-KEY": APP_DBUG
+              ? import.meta.env.VITE_RARIBLE_TESTNET_KEY
+              : import.meta.env.VITE_RARIBLE_MAINNET_KEY,
+          }
+        }).then((response: any) => (
+          response.data
+        ));
+
+        return {
+          last: (pageResults.collections.length < 20) || (pageResults.continuation === undefined),
+          next: pageResults.continuation,
+          data: pageResults.collections,
+        };
+      }
+    },
+    {
+      getPreviousPageParam: (firstPage) => undefined,
+      getNextPageParam: (lastPage) => lastPage.last ? undefined : lastPage.next,
+      // NOTE: This will update extremely infrequently, so we don't even bother
+      // refetching the data.
+      retryOnMount: false,
+      refetchOnMount: false,
+    },
+  );
+
+  // FIXME: This should only prompt 1 reload instead of the 2-3 that it
+  // prompts now.
+  useEffect(() => {
+    inView && !(isFetching || isFetchingNextPage) && fetchNextPage();
+  }, [inView, isFetching, isFetchingNextPage]);
 
   return (
     <div className={cn("flex flex-col items-center", className)}>
-      {(collMetas.some(c => c === undefined)) ? (
+      {(status === "loading") ? (
         <LoadingIcon />
+      ) : (status === "error") ? (
+        <FailureIcon />
       ) : (
         <React.Fragment>
+          {!query?.name && (
+            <h1 className="text-2xl text-center font-bold underline pb-4">
+              Featured Collections
+            </h1>
+          )}
           <div className={`
             grid w-full h-fit grid-cols-2 gap-4 px-4
             justify-center sm:grid-cols-[repeat(auto-fit,minmax(auto,200px))]
           `}>
-            {collMetas.map((collection: RaribleCollection | undefined) => collection && (
-              <div
-                key={collection.id}
-                role="link"
-                className={cn(
-                  "flex flex-col justify-between p-2 gap-2 rounded-lg border-2",
-                  "border-gray-200 hover:border-gray-800",
-                )}
-                onClick={() => navigate(`/${collection.id}`)}
-              >
-                <h3 className="text-lg text-center font-semibold line-clamp-1">
-                  {collection.name}
-                </h3>
-                <MetaIcon src={collection} className="w-32" />
-              </div>
+            {data.pages.map((page, index) => (
+              <React.Fragment key={index}>
+                {page.data.map((collection: RaribleCollection) => (
+                  <div
+                    key={collection.id}
+                    role="link"
+                    className={cn(
+                      "flex flex-col justify-between p-2 gap-2 rounded-lg border-2",
+                      "border-gray-200 hover:border-gray-800",
+                    )}
+                    onClick={() => navigate(`/${collection.id}`)}
+                  >
+                    <h3 className="text-lg text-center font-semibold line-clamp-1">
+                      {collection.name}
+                    </h3>
+                    <MetaIcon src={collection} className="w-32" />
+                    <div className="grid grid-cols-2 text-sm text-center">
+                      {/*<div>
+                        <p className="font-bold">Floor Price</p>
+                        <p>
+                          {(collection?.statistics?.floorPrice === undefined) ? (
+                            "—"
+                          ) : (
+                            collection?.statistics?.floorPrice
+                          )}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-bold">Total Volume</p>
+                        <p>
+                          {(collection?.statistics?.totalVolume === undefined) ? (
+                            "—"
+                          ) : (
+                            collection?.statistics?.totalVolume
+                          )}
+                        </p>
+                      </div>*/}
+                      <div>
+                        <p className="font-bold">Symbol</p>
+                        <p>{collection.symbol}</p>
+                      </div>
+                      <div>
+                        <p className="font-bold">Chain</p>
+                        <p>{collection.blockchain}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </React.Fragment>
             ))}
           </div>
+          <EllipsisHorizontalIcon ref={ref} className={cn(
+            "animate-ping mt-6 h-8 w-8",
+            (isFetching || isFetchingNextPage) ? "visible" : "invisible"
+          )} />
         </React.Fragment>
       )}
     </div>
@@ -207,8 +320,8 @@ export function ItemGrid({className}: ClassProps) {
   // FIXME: This should only prompt 1 reload instead of the 2-3 that it
   // prompts now.
   useEffect(() => {
-    inView && !isFetchingNextPage && fetchNextPage();
-  }, [inView, isFetchingNextPage]);
+    inView && !(isFetching || isFetchingNextPage) && fetchNextPage();
+  }, [inView, isFetching, isFetchingNextPage]);
 
   return (
     <div className={cn("flex flex-col items-center", className)}>

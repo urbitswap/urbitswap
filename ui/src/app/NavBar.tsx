@@ -2,8 +2,7 @@ import React, {
   ChangeEvent,
   KeyboardEvent,
   useState,
-  useEffect,
-  useMemo,
+  useRef,
   useCallback,
 } from 'react';
 import cn from 'classnames';
@@ -57,6 +56,7 @@ export default function NavBar({
   className?: string;
   innerClassName?: string;
 }) {
+  // const inputRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const navigate = useNavigate();
@@ -147,7 +147,7 @@ export default function NavBar({
           </DropdownEntry>
         </DropdownMenu>
 
-        <div className={cn("flex flex-row gap-2 flex-1 min-w-0", !inCollectionMode && "invisible")}>
+        <div className="flex flex-row gap-2 flex-1 min-w-0">
           <label className="relative flex w-full items-center flex-1 min-w-0">
             <span className="sr-only">Search Prefences</span>
             <span className={cn(
@@ -161,11 +161,6 @@ export default function NavBar({
               />
             </span>
             <input
-              className={cn(
-                "input h-9 w-full bg-gray-50 pl-8 pr-16 flex-1 min-w-0",
-                "placeholder:font-normal focus-within:mix-blend-normal text-sm sm:text-md",
-              )}
-              disabled={!inCollectionMode}
               value={searchQuery}
               onChange={onChange}
               onKeyDown={onKeyDown}
@@ -174,6 +169,10 @@ export default function NavBar({
                 ? "Search Collections"
                 : `Search ${!collMeta ? "Collection" : `'${collMeta.name}'`}`
               }
+              className={cn(
+                "input h-9 w-full bg-gray-50 pl-8 pr-16 flex-1 min-w-0",
+                "placeholder:font-normal focus-within:mix-blend-normal text-sm sm:text-md",
+              )}
             />
             {/*<span className={cn(
               "absolute inset-y-[3px] right-0 h-8 w-8",

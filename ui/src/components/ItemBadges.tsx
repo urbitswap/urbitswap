@@ -8,7 +8,7 @@ import {
 } from '@heroicons/react/24/solid';
 import Popover from '@/components/Popover';
 import { useUrbitNetworkLayer, useVentureAccountGrant } from '@/state/app';
-import { APP_TERM, CONTRACT, QUERY } from '@/constants';
+import { APP_TERM, FEATURED, QUERY } from '@/constants';
 import {
   COLLECTION_ICON_MAP,
   URBITPOINT_ICON_MAP,
@@ -44,7 +44,7 @@ export default function ItemBadges({
   // const myItemGrant = useVentureAccountGrant(item.tokenId ?? "");
   // const myItemLayer = useUrbitNetworkLayer(item.meta?.name ?? "");
 
-  const isUrbitCollection: boolean = collId === CONTRACT.AZIMUTH;
+  const isUrbitCollection: boolean = collId === FEATURED.AZP;
   const urbitItemType: UrbitPointType | undefined = QUERY.POINT_TYPE.find(a =>
     a === (item.meta?.attributes ?? []).find(a => a.key === "size")?.value
   );
