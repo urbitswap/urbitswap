@@ -18,6 +18,7 @@ import {
 } from '@/state/app';
 import { useModalNavigate, useChatNavigate } from '@/logic/routing';
 import {
+  extractMetaImage,
   isMaxDate,
   makePrettyName,
   makePrettyPrice,
@@ -85,11 +86,7 @@ export function CollectionGrid({className}: ClassProps) {
                 <h3 className="text-lg text-center font-semibold line-clamp-1">
                   {collection.name}
                 </h3>
-                <img className="object-cover rounded-lg w-32 mx-auto" src={
-                  (collection.meta?.content.find((entry: RaribleMetaContent) => (
-                    entry["@type"] === "IMAGE"
-                  )) ?? {})?.url
-                } />
+                <MetaIcon src={collection} className="w-32" />
               </div>
             ))}
           </div>
@@ -235,16 +232,12 @@ export function ItemGrid({className}: ClassProps) {
                       "flex flex-col justify-between p-2 gap-2 rounded-lg border-2",
                       "border-gray-200 hover:border-gray-800",
                     )}
-                    onClick={() => navigate(`./item/${item.tokenId}`)}
+                    onClick={() => navigate(`./item/${item.tokenId}`, {relative: "path"})}
                   >
                     <h3 className="text-lg text-center font-semibold line-clamp-1">
                       {makePrettyName(item)}
                     </h3>
-                    <img className="object-cover rounded-lg w-32 mx-auto" src={
-                      (item.meta?.content.find((entry: RaribleMetaContent) => (
-                        entry["@type"] === "IMAGE"
-                      )) ?? {})?.url
-                    } />
+                    <MetaIcon src={item} className="w-32" />
                     <ItemBadges
                       item={item}
                       myItems={myItems}
@@ -410,13 +403,7 @@ export function ItemPage({className}: ClassProps) {
             </div>
           </div>
           <div className="sm:row-span-1 flex flex-col gap-4 items-center">
-            <img className={cn(
-              "object-contain aspect-square rounded-lg border-2 border-gray-800",
-            )} src={
-              (item.meta?.content.find((entry: RaribleMetaContent) => (
-                entry["@type"] === "IMAGE"
-              )) ?? {})?.url
-            } />
+            <MetaIcon src={item} className="object-contain aspect-square border-2 border-gray-800" />
             <ItemBadges
               item={item}
               myItems={myItems}
@@ -440,7 +427,7 @@ export function ItemPage({className}: ClassProps) {
             {!isMyItem && (
               <button className="w-full button gap-1"
                 disabled={ownerUrbitId === undefined}
-                onClick={() => (ownerUrbitId !== undefined) && chatNavigate(ownerUrbitId)}
+                onClick={() => ownerUrbitId && chatNavigate(ownerUrbitId)}
               >
                 <ChatBubbleLeftIcon className="w-4 h-4" />
                 {"Message Owner"}
@@ -453,10 +440,26 @@ export function ItemPage({className}: ClassProps) {
   );
 }
 
+function MetaIcon({
+  src,
+  className,
+}: {
+  src: RaribleItem | RaribleCollection;
+  className?: string;
+}) {
+  return (
+    <img
+      src={extractMetaImage(src.meta, ("name" in src) ? src.name : src.id)}
+      className={cn("object-cover rounded-lg mx-auto", className)}
+    />
+  );
+}
+
+// FIXME: The height value used in the components below is a hack that
+// assumes containment in the main content area under the navbar, which
+// obviously won't work in all embedding contexts.
+
 function LoadingIcon() {
-  // FIXME: The height value given here is a hack that assumes working in the
-  // main content area under the navbar and obviously won't work in all
-  // embedding contexts.
   return (
     <div className="flex flex-col justify-center items-center h-[75vh]">
       <UrbitswapIcon className="animate-spin w-32 h-32" />
@@ -465,9 +468,6 @@ function LoadingIcon() {
 }
 
 function FailureIcon() {
-  // FIXME: The height value given here is a hack that assumes working in the
-  // main content area under the navbar and obviously won't work in all
-  // embedding contexts.
   return (
     <div className="flex flex-col justify-center items-center h-[75vh]">
       <ErrorIcon className="text-red-500 w-32 h-32" />

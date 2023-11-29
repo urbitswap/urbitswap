@@ -1,5 +1,6 @@
 import React from 'react';
 import { format, formatDistance } from 'date-fns';
+import * as seedrandom from 'seedrandom';
 import {
   FunnelIcon,
   GlobeAltIcon,
@@ -19,6 +20,9 @@ import type {
   Asset as RaribleAsset,
   AssetType as RaribleAssetType,
   Item as RaribleItem,
+  Meta as RaribleItemMeta,
+  CollectionMeta as RaribleCollectionMeta,
+  MetaContent as RaribleMetaContent,
   MetaAttribute as RaribleMetaAttrib,
   Order as RaribleOrder,
   Ownership as RaribleOwnership,
@@ -52,6 +56,10 @@ export const URBITPOINT_ICON_MAP: Record<UrbitPointTypeish, IconLabel> = URBITPO
   (a, i) => {a[i.id] = i; return a;},
   ({} as Record<UrbitPointTypeish, IconLabel>),
 );
+
+export function capitalize(word: string): string {
+  return word[0].toUpperCase() + word.slice(1).toLowerCase();
+}
 
 export function genRateLimiter(maxReqs: number, perSecs: number) {
   let frameStart: number = 0;
@@ -89,8 +97,31 @@ export function assetToTender(asset: RaribleAssetType): TenderType {
     : "eth";
 }
 
-export function capitalize(word: string): string {
-  return word[0].toUpperCase() + word.slice(1).toLowerCase();
+export function extractMetaImage(
+  meta: RaribleItemMeta | RaribleCollectionMeta | undefined,
+  text: string | undefined,
+): string {
+  const metaImageUrl: string | undefined = (meta?.content.find(
+    (e: RaribleMetaContent) => e["@type"] === "IMAGE"
+  ) ?? {})?.url;
+
+  if (metaImageUrl) {
+    return metaImageUrl;
+  } else {
+    const imageText: string = text ?? meta?.name ?? "";
+    const imageColorBG: number = Math.floor(seedrandom(imageText)() * (0xFFFFFF - 0x0 + 1) + 0x0);
+    const imageColorFG: number = ((num: number) => {
+      num >>>= 0;
+      const b = num & 0xFF, g = (num & 0xFF00) >>> 8, r = (num & 0xFF0000) >>> 16;
+      return (0xFF - b) << 0 | (0xFF - g) << 8 | (0xFF - r) << 16;
+    })(imageColorBG);
+
+    return `https://placehold.co/400/${
+      [imageColorBG, imageColorFG].map(c => c.toString(16).padStart(6, "0")).join("/")
+    }/png?text=${
+      encodeURIComponent(imageText)
+    }`;
+  }
 }
 
 export function makePrettyName(item: RaribleItem): string {
