@@ -7,7 +7,7 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 // https://vitejs.dev/config/
 export default ({ mode }) => {
-  process.env.VITE_STORAGE_VERSION = mode === 'dev'
+  process.env.VITE_STORAGE_VERSION = mode === 'development'
     ? (d => `${d.getFullYear()}.${d.getMonth()}.${d.getDate()}`)(new Date(Date.now()))
     : packageJson.version;
 

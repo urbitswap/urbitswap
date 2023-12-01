@@ -1,4 +1,5 @@
 import { add as offsetDate } from 'date-fns';
+import axios from 'axios';
 import type { VentureKYC, VentureTransfer } from '@/types/app';
 import type { Address } from 'viem';
 import type { Item as RaribleItem, Meta as RaribleItemMeta } from '@rarible/api-client';
@@ -6,13 +7,14 @@ import type { Item as RaribleItem, Meta as RaribleItemMeta } from '@rarible/api-
 export async function requestVentureKYC(
   wallet: Address,
 ): Promise<VentureKYC> {
-  // TODO: Replace with real VCC validation query.
-  return {
-    kyc: wallet !== "0x",
-    details: (wallet !== "0x")
-      ? undefined
-      : "Address not Registered w/ Venture Club",
-  };
+  return axios.request({
+    method: "get",
+    baseURL: "https://app.ventureclub.club/",
+    url: "/.netlify/functions/get-kyc",
+    params: {
+      wallets: wallet
+    },
+  });
 }
 
 export async function requestVentureTransfer(

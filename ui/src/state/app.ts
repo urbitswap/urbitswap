@@ -373,12 +373,11 @@ export function useRouteRaribleItemMutation<TResponse>(
       queryClient.setQueryData(queryKey, oldData),
     onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKey });
+      queryClient.invalidateQueries({ queryKey: [APP_TERM, "rarible", "pcollection", collId] });
       if (["order.bid", "order.bidUpdate", "order.cancel"].includes(raribleFn)) {
         queryClient.invalidateQueries({ queryKey: [...accountKey, "bids"] });
-        queryClient.invalidateQueries({ queryKey: [APP_TERM, "rarible", "pcollection", "bids"] });
       } if (["order.acceptBid", "order.buy"].includes(raribleFn)) {
         queryClient.invalidateQueries({ queryKey: [...accountKey, "items"] });
-        queryClient.invalidateQueries({ queryKey: [APP_TERM, "rarible", "pcollection", "mine"] });
       }
     },
     ...options,

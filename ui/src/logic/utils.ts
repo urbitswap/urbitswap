@@ -1,6 +1,6 @@
 import React from 'react';
 import { format, formatDistance } from 'date-fns';
-import * as seedrandom from 'seedrandom';
+import seedrandom from 'seedrandom';
 import {
   FunnelIcon,
   GlobeAltIcon,

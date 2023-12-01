@@ -70,7 +70,7 @@ export function CollectionGrid({className}: ClassProps) {
     isFetchingNextPage,
     fetchNextPage,
   } = useInfiniteQuery(
-    [APP_TERM, "rarible", "mcollection", query?.name],
+    [APP_TERM, "rarible", "collections", query?.name],
     async ({ pageParam = undefined }) => {
       if (!query?.name) {
         const pageResults = await Promise.all(Object.entries(FEATURED).sort().map(
@@ -87,8 +87,8 @@ export function CollectionGrid({className}: ClassProps) {
         // search function is not currently included in the Rarible SDK.
         const pageResults = await axios.request({
           method: "post",
-          url: `/v0.1/collections/search/`,
           baseURL: `https://${!APP_DBUG ? "" : "testnet-"}api.rarible.org/`,
+          url: `/v0.1/collections/search/`,
           data: {
             "size": 20,
             "continuation": pageParam,
@@ -494,7 +494,7 @@ export function ItemPage({className}: ClassProps) {
                 <ItemOffer
                   order={item.bestSellOrder}
                   offerType="sell"
-                  disabled={mine}
+                  disabled={isMyItem}
                 />
               )}
             </div>
@@ -510,7 +510,7 @@ export function ItemPage({className}: ClassProps) {
                   key={bid.id}
                   order={bid}
                   offerType="bid"
-                  disabled={!mine}
+                  disabled={!isMyItem}
                 />
               )))}
             </div>
@@ -527,9 +527,9 @@ export function ItemPage({className}: ClassProps) {
               onClick={() => modalNavigate("pretrade", {state: {thenTo: "offer"}})}
             >
               <CurrencyDollarIcon className="w-4 h-4" />
-              {`${(offer !== undefined) ? "Update" : "Post"} ${isMyItem ? "Ask" : "Bid"}`}
+              {`${(isMyItem || offer !== undefined) ? "Update" : "Post"} ${isMyItem ? "Ask" : "Bid"}`}
             </button>
-            {(offer !== undefined) && (
+            {(isMyItem || offer !== undefined) && (
               <button className="button w-full gap-1"
                 onClick={() => modalNavigate("pretrade", {state: {thenTo: "cancel"}})}
               >

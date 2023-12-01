@@ -1,13 +1,9 @@
 // eslint-disable-next-line import/prefer-default-export
 export const APP_TERM: string = "urbitswap";
-export const APP_DBUG: boolean = import.meta.env.DEV;
+export const APP_DBUG: boolean = import.meta.env.MODE === "development";
+// NOTE: Separate from 'APP_DBUG' to test ETH/Urbit testnet/livenet independently.
+export const APP_FAKEZOD: boolean = APP_DBUG;
 export const APP_VERSION: string = import.meta.env.VITE_STORAGE_VERSION;
-export const APP_TREASURY: {value: number; account: string;} = {
-  value: 200, // 2%
-  account: APP_DBUG
-    ? "ETHEREUM:0x8aa4C4436b7FB8731b34e791b03C9b64b1461C75"
-    : "ETHEREUM:0x5799f7EEf7c1D5f90AEB2ceFA917E853d160Bc2f",
-};
 
 // https://stackoverflow.com/a/27093173
 export const MAX_DATE: Date = new Date(8640000000000000);
@@ -34,6 +30,13 @@ export const FEATURED = Object.freeze({
   //   : "ETHEREUM:0x9d8ca5b5715704175c6877ee911e727593726332",
 });
 
+export const TREASURY: {value: number; account: string;} = {
+  value: 200, // 2%
+  account: APP_DBUG
+    ? "ETHEREUM:0x8aa4C4436b7FB8731b34e791b03C9b64b1461C75"
+    : "ETHEREUM:0x5799f7EEf7c1D5f90AEB2ceFA917E853d160Bc2f",
+};
+
 export const QUERY = Object.freeze({
   COLLECTION_BASE: <const> ["mine", "bids"],
   POINT_TYPE: <const> ["galaxy", "star", "planet"],
@@ -44,7 +47,7 @@ export const TENDERS = <const> [
   Object.freeze({value: "eth", label: "⧫ Ethereum"}),
 ];
 
-export const TRADERS_HOST: [string, string] = APP_DBUG
+export const TRADERS_HOST: [string, string] = APP_FAKEZOD
   ? ["~zod", "master"]
   : ["~firser-dister-sidnym-ladrut", "master"];
 export const TRADERS_HOST_FLAG: string = TRADERS_HOST.join("/");

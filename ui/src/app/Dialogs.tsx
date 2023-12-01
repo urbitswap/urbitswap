@@ -56,8 +56,8 @@ import {
 } from '@/logic/utils';
 import {
   APP_VERSION,
-  APP_TREASURY,
   MAX_DATE,
+  TREASURY,
   TENDERS,
 } from '@/constants';
 import { BigNumber } from "bignumber.js";
@@ -228,7 +228,7 @@ export function TradeDialog() {
     (offerId !== undefined) && tradeMutate({
       orderId: offerId,
       amount: 1,
-      originFees: [APP_TREASURY],
+      originFees: [TREASURY],
     });
   }, [hasBeenWarned, offerId, tradeMutate]);
   const onKeep = useCallback(async (event: any) => {
@@ -309,7 +309,7 @@ export function TradeDialog() {
               />
               <TradeRow
                 title="App Fee"
-                content={`${(APP_TREASURY.value / 100)}%`}
+                content={`${(TREASURY.value / 100)}%`}
                 info={// FIXME: The link here can't be clicked on b/c of dialog embed.
                 <p>
                   Fees fund app development via the <a
@@ -322,7 +322,7 @@ export function TradeDialog() {
                 content={tradeTender && makePrettyPrice({
                   ...tradeTender,
                   value: ((n: BigNumberNumber): BigNumberString => toBigNumber(
-                    n.plus(n.times((mine ? -1 : 1) * (APP_TREASURY.value / 10000))).toString(10)
+                    n.plus(n.times((mine ? -1 : 1) * (TREASURY.value / 10000))).toString(10)
                   ))(new BigNumber(tradeTender.value)),
                 })}
               />
