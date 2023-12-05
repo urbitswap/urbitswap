@@ -72,6 +72,8 @@ export interface RouteRaribleItem {
 }
 
 export interface RouteRaribleAccountItem extends RouteRaribleItem, GetWagmiAccountResult {
-  mine: boolean;
   offer: RaribleOrder | undefined;
+  myItems: RaribleItem[] | undefined;
+  isMyItem: boolean;
+  isAddressItem: boolean;
 }

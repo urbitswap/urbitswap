@@ -1,5 +1,6 @@
 import React, {
   ReactNode,
+  createElement,
   useState,
   useEffect,
   useLayoutEffect,
@@ -18,8 +19,9 @@ import DateTimePicker from 'react-datetime-picker';
 import 'react-datetime-picker/dist/DateTimePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import '@/styles/DateTimePicker.css';
-import { useSignMessage } from 'wagmi';
+import { useNetwork, useSignMessage } from 'wagmi';
 import {
+  ArrowRightIcon,
   ArrowsRightLeftIcon,
   ExclamationTriangleIcon,
   QuestionMarkCircleIcon,
@@ -30,6 +32,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import TraderName from '@/components/TraderName';
 import ENSName from '@/components/ENSName';
 import ShipName from '@/components/ShipName';
+import UrbitswapIcon from '@/components/icons/UrbitswapIcon';
 import {
   SingleSelector,
   MultiSelector,
@@ -43,7 +46,6 @@ import {
   useRouteRaribleItem,
   useRouteRaribleAccountItem,
   useRouteRaribleItemMutation,
-  useRouteRaribleOfferItemMutation,
 } from '@/state/app';
 import { set } from '@/state/idb';
 import { useDismissNavigate } from '@/logic/routing';
@@ -56,6 +58,7 @@ import {
 } from '@/logic/utils';
 import {
   APP_VERSION,
+  FEATURED,
   MAX_DATE,
   TREASURY,
   TENDERS,
@@ -65,6 +68,7 @@ import { toBigNumber } from '@rarible/types';
 import type { BigNumber as BigNumberString } from '@rarible/types';
 import type { BigNumber as BigNumberNumber } from '@rarible/utils';
 import type {
+  Item as RaribleItem,
   Asset as RaribleAsset,
   AssetType as RaribleAssetType,
   Order as RaribleOrder,
@@ -73,12 +77,20 @@ import type { Address } from 'viem';
 import type { TenderType } from '@/types/app';
 
 export function OfferDialog() {
+  return (
+    <DialogSequence comps={DefaultTradeCheckers.concat(OfferDialogHelper)} />
+  );
+}
+function OfferDialogHelper() {
   const dismiss = useDismissNavigate();
-  const onOpenChange = (open: boolean) => (!open && dismiss());
-
-  const { item, mine, offer } = useRouteRaribleAccountItem();
-  const { mutate: offerMutate, status: offerStatus } =
-    useRouteRaribleOfferItemMutation({onSuccess: () => dismiss()});
+  const { item, owner, offer, address, isAddressItem, isMyItem } = useRouteRaribleAccountItem();
+  const { mutate: offerMutate, status: offerStatus } = useRouteRaribleItemMutation(
+    `order.${isAddressItem
+      ? `sell${offer === undefined ? "" : "Update"}`
+      : `bid${offer === undefined ? "" : "Update"}`
+    }`,
+    { onSuccess: () => dismiss() },
+  );
 
   const form = useForm({
     mode: "onChange",
@@ -90,7 +102,7 @@ export function OfferDialog() {
           expiration: undefined,
         };
       } else {
-        const myAsset: RaribleAsset = mine ? offer.take : offer.make;
+        const myAsset: RaribleAsset = isAddressItem ? offer.take : offer.make;
         const endDate: Date = new Date(offer.endedAt ?? "");
         return {
           tender: assetToTender(myAsset.type),
@@ -98,7 +110,7 @@ export function OfferDialog() {
           expiration: isMaxDate(endDate) ? undefined : endDate,
         };
       }
-    }, [mine, offer]),
+    }, [isAddressItem, offer]),
   });
   const {register, handleSubmit, formState: {isDirty, isValid}, control} = form;
   const {field: {value: tender, onChange: tenderOnChange, ref: tenderRef}} =
@@ -125,16 +137,8 @@ export function OfferDialog() {
   }, [item, offer, offerMutate]);
 
   return (
-    <DefaultDialog onOpenChange={onOpenChange} isWalletDialog>
+    <DialogBody head={`${(offer === undefined) ? "Post" : "Update"} ${isMyItem ? "Ask" : "Bid"}`}>
       <FormProvider {...form}>
-        <div className="w-5/6">
-          <header className="mb-3 flex items-center">
-            <h2 className="text-lg font-bold">
-              {`${(offer === undefined) ? "Post" : "Update"} Listing`}
-            </h2>
-          </header>
-        </div>
-
         <form onSubmit={handleSubmit(onSubmit)}>
           <label className="mb-3 font-semibold">
             Tender*
@@ -146,19 +150,19 @@ export function OfferDialog() {
               className="my-2 w-full"
               isSearchable={false}
               isClearable={false}
-              isDisabled={!mine || offer !== undefined}
+              isDisabled={!isAddressItem || offer !== undefined}
             />
           </label>
           <label className="mb-3 font-semibold">
             Amount*
             <input type="number" autoComplete="off"
               step="0.00001"
-              min={(offer !== undefined && !mine)
-                ? ((mine ? offer?.makePrice : offer?.takePrice) ?? "0.00001").toString()
+              min={(offer !== undefined && !isAddressItem)
+                ? ((isAddressItem ? offer?.makePrice : offer?.takePrice) ?? "0.00001").toString()
                 : "0.00001"
               }
-              max={(offer !== undefined && mine)
-                ? ((mine ? offer?.makePrice : offer?.takePrice) ?? `${Number.MAX_VALUE}`).toString()
+              max={(offer !== undefined && isAddressItem)
+                ? ((isAddressItem ? offer?.makePrice : offer?.takePrice) ?? `${Number.MAX_VALUE}`).toString()
                 : Number.MAX_VALUE
               }
               className="input my-2 block w-full py-1 px-2"
@@ -199,20 +203,24 @@ export function OfferDialog() {
           </footer>
         </form>
       </FormProvider>
-    </DefaultDialog>
+    </DialogBody>
   );
 }
 
 export function TradeDialog() {
+  return (
+    <DialogSequence comps={DefaultTradeCheckers.concat(TradeDialogHelper)} />
+  );
+}
+function TradeDialogHelper() {
   const navigate = useNavigate();
   const location = useLocation();
   const dismiss = useDismissNavigate();
-  const onOpenChange = (open: boolean) => (!open && dismiss());
 
   const [hasBeenWarned, setHasBeenWarned] = useState<boolean>(false);
-  const { address, item, bids, mine, offer: myOffer } = useRouteRaribleAccountItem();
+  const { item, bids, isAddressItem, offer: myOffer } = useRouteRaribleAccountItem();
   const { mutate: tradeMutate, status: tradeStatus } = useRouteRaribleItemMutation(
-    `order.${mine ? "acceptBid" : "buy"}`,
+    `order.${isAddressItem ? "acceptBid" : "buy"}`,
     { onSuccess: () => dismiss() },
   );
 
@@ -221,7 +229,7 @@ export function TradeDialog() {
     [(item && item.bestSellOrder), ...(bids || [])]
     .find(o => o !== undefined && o.id === offerId);
   const tradeTender: RaribleAsset | undefined =
-    tradeOffer && tradeOffer[mine ? "make" : "take"];
+    tradeOffer && tradeOffer[isAddressItem ? "make" : "take"];
 
   const onSubmit = useCallback(async (event: any) => {
     event.preventDefault();
@@ -230,14 +238,12 @@ export function TradeDialog() {
       amount: 1,
       originFees: [TREASURY],
     });
-  }, [hasBeenWarned, offerId, tradeMutate]);
+  }, [offerId, tradeMutate]);
   const onKeep = useCallback(async (event: any) => {
     setHasBeenWarned(true);
   }, [setHasBeenWarned]);
   const onCancel = useCallback(async (event: any) => {
-    // NOTE: Okay not to go through "pretrade" form here because we just
-    // went through it
-    navigate(`../cancel`, {replace: true, state: location.state});
+    navigate("../cancel", {relative: "path", state: location.state});
   }, [navigate, location.state]);
 
   const TradeRow = useCallback(({
@@ -263,19 +269,11 @@ export function TradeDialog() {
   ), []);
 
   return (
-    <DefaultDialog onOpenChange={onOpenChange} isWalletDialog>
-      <div className="w-5/6">
-        <header className="mb-3 flex items-center">
-          <h2 className="text-lg font-bold">
-            {mine ? "Sell" : "Buy"} NFT
-          </h2>
-        </header>
-      </div>
-
-      {(myOffer !== undefined && !hasBeenWarned) ? (
+    <DialogBody head={`${isAddressItem ? "Sell" : "Buy"} NFT`}>
+      (myOffer !== undefined && !hasBeenWarned) ? (
         <React.Fragment>
           <p>
-            You have an open {mine ? "ask" : "bid"} for this item. Would you
+            You have an open {isAddressItem ? "ask" : "bid"} for this item. Would you
             like to rescind it before proceeding? If kept open, it will
             reactivate if/when you transfer this item.
           </p>
@@ -294,17 +292,17 @@ export function TradeDialog() {
       ) : (
         <form onSubmit={onSubmit}>
           {(tradeOffer !== undefined) && (
-            <div className="flex flex-col py-4">
+            <div className="flex flex-col">
               <TradeRow title="Asset" content={item && makePrettyName(item)} />
               <TradeRow
-                title={mine ? "Bidder" : "Asker"}
+                title={isAddressItem ? "Bidder" : "Asker"}
                 content={tradeOffer && (
                   <TraderName address={(tradeOffer.maker.replace(/^.+:/g, "") as Address)}/>
                 )}
               />
               <hr className="my-2" />
               <TradeRow
-                title={`${mine ? "Bid" : "Ask"} Price`}
+                title={`${isAddressItem ? "Bid" : "Ask"} Price`}
                 content={tradeTender && makePrettyPrice(tradeTender)}
               />
               <TradeRow
@@ -318,11 +316,11 @@ export function TradeDialog() {
               />
               <hr className="my-2" />
               <TradeRow
-                title={`You ${mine ? "Receive" : "Pay"}`}
+                title={`You ${isAddressItem ? "Receive" : "Pay"}`}
                 content={tradeTender && makePrettyPrice({
                   ...tradeTender,
                   value: ((n: BigNumberNumber): BigNumberString => toBigNumber(
-                    n.plus(n.times((mine ? -1 : 1) * (TREASURY.value / 10000))).toString(10)
+                    n.plus(n.times((isAddressItem ? -1 : 1) * (TREASURY.value / 10000))).toString(10)
                   ))(new BigNumber(tradeTender.value)),
                 })}
               />
@@ -352,15 +350,18 @@ export function TradeDialog() {
             </div>
           </footer>
         </form>
-      )}
-    </DefaultDialog>
+      )
+    </DialogBody>
   );
 }
 
 export function CancelDialog() {
+  return (
+    <DialogSequence comps={DefaultTradeCheckers.concat(CancelDialogHelper)} />
+  );
+}
+function CancelDialogHelper() {
   const dismiss = useDismissNavigate();
-  const onOpenChange = (open: boolean) => (!open && dismiss());
-
   const { offer } = useRouteRaribleAccountItem();
   const { mutate: cancelMutate, status: cancelStatus } = useRouteRaribleItemMutation(
     "order.cancel",
@@ -373,15 +374,7 @@ export function CancelDialog() {
   }, [offer, cancelMutate]);
 
   return (
-    <DefaultDialog onOpenChange={onOpenChange} isWalletDialog>
-      <div className="w-5/6">
-        <header className="mb-3 flex items-center">
-          <h2 className="text-lg font-bold">
-            Cancel Listing
-          </h2>
-        </header>
-      </div>
-
+    <DialogBody head="Cancel Listing">
       <form onSubmit={onSubmit}>
         <p>
           Do you really want to rescind your listing?
@@ -406,15 +399,18 @@ export function CancelDialog() {
           </div>
         </footer>
       </form>
-    </DefaultDialog>
+    </DialogBody>
   );
 }
 
 export function AssociateDialog() {
+  return (
+    <DialogSequence comps={DefaultWalletCheckers.concat(AssociateDialogHelper)} />
+  );
+}
+function AssociateDialogHelper() {
   const dismiss = useDismissNavigate();
-  const onOpenChange = (open: boolean) => (!open && dismiss());
-
-  const { address, isConnected } = useWagmiAccount();
+  const { address } = useWagmiAccount();
   const { signMessageAsync: signMessage } = useSignMessage({
     message: window.our,
   });
@@ -424,29 +420,19 @@ export function AssociateDialog() {
 
   const onSubmit = useCallback(async (event: any) => {
     event.preventDefault();
-    if (isConnected) {
-      signMessage().then((signature: string) => (
-        assocMutate({address, signature})
-      ));
-    }
-  }, [signMessage, assocMutate, address, isConnected]);
+    signMessage().then((signature: string) => (
+      assocMutate({address, signature})
+    ));
+  }, [signMessage, assocMutate, address]);
 
   return (
-    <DefaultDialog onOpenChange={onOpenChange} isWalletDialog>
-      <div className="w-5/6">
-        <header className="mb-3 flex items-center">
-          <h2 className="text-lg font-bold">
-            Associate Wallet
-          </h2>
-        </header>
-      </div>
-
+    <DialogBody head="Associate Wallet">
       <form onSubmit={onSubmit}>
         <p>
           Would you like to associate this new wallet with your Urbit ID?
         </p>
 
-        <div className="flex flex-row justify-around items-center py-8">
+        <div className="flex flex-row justify-around items-center py-4">
           <ShipName name={window.our} full={false} />
           <ArrowsRightLeftIcon className="w-5 h-5" />
           <ENSName address={address} full={false} />
@@ -471,107 +457,7 @@ export function AssociateDialog() {
           </div>
         </footer>
       </form>
-    </DefaultDialog>
-  );
-}
-
-export function PretradeDialog() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const params = useParams();
-  const dismiss = useDismissNavigate();
-  const onOpenChange = (open: boolean) => (!open && dismiss());
-
-  const { isConnected } = useWagmiAccount();
-  const vccKYC = {}; // useVentureAccountKYC();
-  const vccGrant = {}; // useVentureAccountGrant(params?.itemId ?? "");
-  const isKYCd: boolean = true; // vccKYC !== undefined && vccKYC.kyc;
-  const isTransferable: boolean = true; // vccGrant !== undefined && vccGrant?.status === "success";
-
-  useLayoutEffect(() => {
-    const { thenTo, ...newLocationState } = location.state;
-    if (isConnected && isKYCd && isTransferable) {
-      navigate(`../${thenTo}`, {
-        replace: true,
-        state: newLocationState,
-      });
-    }
-  }, [
-    isConnected,
-    isKYCd,
-    isTransferable,
-    navigate,
-    location.state,
-  ]);
-
-  const onSubmit = useCallback(async (event: any) => {
-    event.preventDefault();
-  }, []);
-
-  return (
-    <DefaultDialog onOpenChange={onOpenChange}>
-      {(vccKYC === undefined || vccGrant === undefined) ? (
-        <LoadingSpinner />
-      ) : (
-        <React.Fragment>
-          <div className="w-5/6">
-            <header className="mb-3 flex items-center">
-              <h2 className="text-lg font-bold">
-                Before You Trade
-              </h2>
-            </header>
-          </div>
-
-          <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-            {!isConnected ? (
-              <React.Fragment>
-                <p>
-                  Please connect your crypto wallet
-                  via <Link to="https://metamask.io/">Metamask</Link> in order to
-                  start trading. If you don't have Metamask installed, visit their
-                  website to get started:
-                </p>
-                <Link to="https://metamask.io/download/" className="text-2xl underline text-center">
-                  Install Metamask
-                </Link>
-              </React.Fragment>
-            ) : !isKYCd ? (
-              <React.Fragment>
-                <p>
-                  In order to exchange assets, you'll first need to go through Venture
-                  Club's <Link to="https://en.wikipedia.org/wiki/Know_your_customer">KYC</Link> process.
-                  Visit our website to get started:
-                </p>
-                <Link to="https://ventureclub.club" className="text-2xl underline text-center">
-                  Venture Club KYC
-                </Link>
-              </React.Fragment>
-            ) : (
-              <React.Fragment>
-                <p>
-                  TODO: Cannot transfer error message here.
-                </p>
-              </React.Fragment>
-            )}
-
-            <footer className="mt-4 flex items-center justify-between space-x-2">
-              <div className="ml-auto flex items-center space-x-2">
-                <DialogPrimitive.Close asChild>
-                  <button className="secondary-button ml-auto">
-                    Decline
-                  </button>
-                </DialogPrimitive.Close>
-                <DialogPrimitive.Close asChild>
-                  <button className="button">
-                    Acknowledge
-                  </button>
-                </DialogPrimitive.Close>
-              </div>
-            </footer>
-          </form>
-        </React.Fragment>
-      )}
-    </DefaultDialog>
+    </DialogBody>
   );
 }
 
@@ -585,10 +471,6 @@ export function DisclaimerDialog() {
     }
   };
 
-  const onSubmit = useCallback((event: any) => {
-    event.preventDefault();
-  }, []);
-
   return (
     <DefaultDialog onOpenChange={onOpenChange}>
       <div className="w-5/6">
@@ -600,7 +482,7 @@ export function DisclaimerDialog() {
         </header>
       </div>
 
-      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+      <form className="flex flex-col gap-4">
         <p>
           This is unaudited prerelease software that may contain bugs,
           errors and other problems that could cause system or other
@@ -629,6 +511,205 @@ export function DisclaimerDialog() {
   );
 }
 
+function DialogSequence({comps}: {comps: React.ForwardRefRenderFunction<null, {}>[]}) {
+  const dismiss = useDismissNavigate();
+  const onOpenChange = (open: boolean) => (!open && dismiss());
+
+  const etype = useCallback((elem: React.ReactElement) => (
+    // @ts-ignore
+    (typeof elem.type === "string") ? elem.type : elem.type()
+  ), []);
+  // FIXME: For some reason, passing JSX arguments here isn't allowed; React
+  // always errors and says that the component's props are undefined.
+  const LoadingBody = useCallback(() => (
+    <DialogBody head="Loading..." className="justify-center items-center">
+      <UrbitswapIcon className="animate-spin w-20 h-20" />
+      <p className="italic">Check ?/{comps.length}</p>
+    </DialogBody>
+  ), [comps.length]);
+
+  return createElement(
+    DefaultDialog,
+    { onOpenChange: onOpenChange },
+    comps.reduce((a: React.ReactElement, n: React.ForwardRefRenderFunction<null, {}>) => (
+      !([true, undefined].includes(etype(a)))
+        ? a
+        : ((b: React.ReactElement): React.ReactElement => (
+          undefined !== etype(b)
+            ? b
+            : createElement<{}>(LoadingBody)
+        ))(createElement<{}>(n))
+    ), createElement<{}>(() => true))
+  );
+}
+
+function CheckWalletConnection(): React.ReactNode {
+  const { isConnected } = useWagmiAccount();
+  return (
+    isConnected ? (
+      true
+    ) : (
+      <DialogBody head="Checking Wallet Connectivity">
+        <p>
+          Please connect your crypto wallet
+          via <Link to="https://metamask.io/">Metamask</Link> in order to
+          start trading. If you don't have Metamask installed, visit their
+          website to get started:
+        </p>
+        <Link to="https://metamask.io/download/" className="text-2xl underline text-center">
+          Install Metamask
+        </Link>
+      </DialogBody>
+    )
+  );
+}
+
+function CheckWalletConsistency(): React.ReactNode {
+  const { address } = useWagmiAccount();
+  const lastAddress = useRef<Address>(address);
+  return (
+    (address === lastAddress.current) ? (
+      true
+    ) : (
+      <DialogBody head="Checking Wallet Consistency">
+        <p>
+          Your wallet address has changed since opening this dialog (see the
+          change below). Please refresh the dialog to continue.
+        </p>
+        <div className="flex flex-row justify-around items-center py-4">
+          <ENSName address={address} full={false} />
+          <ArrowRightIcon className="w-5 h-5" />
+          <ENSName address={lastAddress.current} full={false} />
+        </div>
+      </DialogBody>
+    )
+  );
+}
+
+function CheckNetworkSupported(): React.ReactNode {
+  const { chain, chains } = useNetwork();
+  return (
+    (chain !== undefined && !chain.unsupported) ? (
+      true
+    ) : (
+      <DialogBody head="Checking Blockchain Network">
+        <p>
+          Your crypto wallet is connected to the wrong network. Please use
+          your wallet interface to switch to the following network and try again:
+        </p>
+        <p className="text-2xl underline text-center">
+          {chains?.[0]?.name ?? "<Unknown>"}
+        </p>
+      </DialogBody>
+    )
+  );
+}
+
+function CheckOfferOwnership(): React.ReactNode {
+  const {
+    address, owner, item,
+    isMyItem, isAddressItem,
+  } = useRouteRaribleAccountItem();
+  return (
+    (item === undefined || owner === undefined) ? (
+      undefined
+    ) : !(isMyItem && !isAddressItem) ? (
+      true
+    ) : (
+      <DialogBody head="Validating Item Ownership">
+        <p>
+          This item is owned by one of your other crypto wallets. Please
+          change to the appropriate wallet to continue (see below).
+        </p>
+        <div className="flex flex-row justify-around items-center py-4">
+          <ENSName address={address} full={false} />
+          <ArrowRightIcon className="w-5 h-5" />
+          <ENSName address={owner} full={false} />
+        </div>
+      </DialogBody>
+    )
+  );
+}
+
+// function CheckCollectionKYC(): React.ReactNode {
+//   const { collId } = useParams();
+//   const vccKYC = useVentureAccountKYC();
+//
+//   // // const vccKYC = {}; // useVentureAccountKYC();
+//   // // const vccGrant = {}; // useVentureAccountGrant(params?.itemId ?? "");
+//   // // const isKYCd: boolean = true; // vccKYC !== undefined && vccKYC.kyc;
+//   // // const isTransferable: boolean = true; // vccGrant !== undefined && vccGrant?.status === "success";
+//   return (
+//     (collId !== FEATURED.VC) ? (
+//       true
+//     ) : (vccKYC === undefined) ? (
+//       undefined
+//     ) : () ? (
+//       <DialogBody head="Checking Collection KYC">
+//         <p>
+//           In order to exchange assets, you'll first need to go through Venture
+//           Club's <Link to="https://en.wikipedia.org/wiki/Know_your_customer">KYC</Link> process.
+//           Visit their website to get started:
+//         </p>
+//         <Link to="https://ventureclub.club" className="text-2xl underline text-center">
+//           Venture Club KYC
+//         </Link>
+//       </DialogBody>
+//     )
+//   );
+// }
+//
+// function CheckCollectionTransfer(): React.ReactNode {
+//   const { collId } = useParams();
+//   return (
+//     (collId !== FEATURED.VC) ? (
+//       true
+//     ) : (
+//       <DialogBody head="Validating Collection Trade">
+//         <p>
+//           TODO: Error message for when an item is not transferable.
+//         </p>
+//       </DialogBody head="Checking Collection KYC">
+//     )
+//   );
+// }
+
+const DefaultWalletCheckers = [
+  CheckWalletConnection,
+  CheckWalletConsistency,
+  CheckNetworkSupported,
+];
+const DefaultTradeCheckers = DefaultWalletCheckers.concat([
+  CheckOfferOwnership,
+  // CheckCollectionKYC,
+  // CheckCollectionTransfer,
+]);
+
+function DialogBody({
+  head,
+  children,
+  className,
+}: {
+  head: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <React.Fragment>
+      <div className="w-5/6">
+        <header className="mb-3 flex items-center">
+          <h2 className="text-lg font-bold">
+            {head}
+          </h2>
+        </header>
+      </div>
+      <div className={cn("flex flex-col gap-4", className)}>
+        {children}
+      </div>
+    </React.Fragment>
+  );
+}
+
 // FIXME: Gross duplication of '@/components/Dialog' content, but needed in
 // order to minimize edits to 'landscape-apps' files.
 type DialogCloseLocation = 'default' | 'none' | 'lightbox' | 'app' | 'header';
@@ -639,31 +720,9 @@ interface DialogContentProps extends DialogPrimitive.DialogContentProps {
 type DialogProps = DialogPrimitive.DialogProps &
   DialogContentProps & {
     trigger?: ReactNode;
-    isWalletDialog?: boolean;
   };
 
-function DefaultDialog(dprops: DialogProps) {
-  const { isWalletDialog, ...props } = dprops;
-  const dismiss = useDismissNavigate();
-
-  const { address, isConnected } = useWagmiAccount();
-  const lastAddress = useRef<string | undefined>(isConnected ? address : undefined);
-
-  // NOTE: If the user's wallet disconnects or changes, immediately close out
-  // of any wallet-related dialog to prevent unexpected behavior.
-  // FIXME: It would be better if this were a `useLayoutEffect` to prevent
-  // unnecessary renders, but using it causes `dismiss` to only redirect
-  // the page and not properly clear `location.state` to clear the dialog window.
-  useEffect(() => {
-    if (isWalletDialog) {
-      const isAddressNew: boolean = address !== lastAddress.current;
-      lastAddress.current = address;
-      if (!isConnected || isAddressNew) {
-        dismiss();
-      }
-    }
-  }, [address, isConnected]);
-
+function DefaultDialog(props: DialogProps) {
   return (
     <Dialog defaultOpen modal containerClass="w-full sm:max-w-lg" {...props} />
   );

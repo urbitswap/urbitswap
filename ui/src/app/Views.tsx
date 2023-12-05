@@ -398,16 +398,10 @@ export function ItemPage({className}: ClassProps) {
   const modalNavigate = useModalNavigate();
   const chatNavigate = useChatNavigate();
   const {
-    item, owner, bids, mine, offer,
+    item, owner, bids, offer, myItems, isMyItem,
     address, isConnected,
   } = useRouteRaribleAccountItem();
   const traders = useUrbitTraders();
-
-  // NOTE: `isMyItem` differs from `mine` in that the former is relative to
-  // all user accounts/wallets while the latter is only active relative to
-  // the currently active wallet
-  const myItems = useRaribleAccountItems();
-  const isMyItem = (myItems ?? []).some((i: RaribleItem) => i.id === item?.id);
   const myBids = useRaribleAccountBids();
 
   const ownerUrbitId = useMemo(() => (
@@ -438,7 +432,7 @@ export function ItemPage({className}: ClassProps) {
           : makePrettyLapse(new Date(order?.endedAt || ""))
         } />
         <button className="button"
-          onClick={() => modalNavigate("pretrade", {state: {thenTo: `trade/${order?.id}`}})}
+          onClick={() => modalNavigate(`trade/${order?.id}`)}
           disabled={!isConnected || disabled}
         >
           <ArrowsRightLeftIcon className="w-4 h-4" />
@@ -524,14 +518,14 @@ export function ItemPage({className}: ClassProps) {
               badgeClassName="w-6 h-6"
             />
             <button className="button w-full gap-1"
-              onClick={() => modalNavigate("pretrade", {state: {thenTo: "offer"}})}
+              onClick={() => modalNavigate("offer")}
             >
               <CurrencyDollarIcon className="w-4 h-4" />
-              {`${(isMyItem || offer !== undefined) ? "Update" : "Post"} ${isMyItem ? "Ask" : "Bid"}`}
+              {`${(offer !== undefined) ? "Update" : "Post"} ${isMyItem ? "Ask" : "Bid"}`}
             </button>
-            {(isMyItem || offer !== undefined) && (
+            {(offer !== undefined) && (
               <button className="button w-full gap-1"
-                onClick={() => modalNavigate("pretrade", {state: {thenTo: "cancel"}})}
+                onClick={() => modalNavigate("cancel")}
               >
                 <XCircleIcon className="w-4 h-4" />
                 {`Rescind ${isMyItem ? "Ask" : "Bid"}`}

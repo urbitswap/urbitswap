@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import cn from 'classnames';
+import { useNetwork } from 'wagmi';
 import { useWagmiAccount, useUrbitAccountAssocAddresses } from '@/state/app';
 import { get, update } from '@/state/idb';
 import { useModalNavigate } from '@/logic/routing';

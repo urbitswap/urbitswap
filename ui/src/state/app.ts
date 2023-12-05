@@ -319,14 +319,17 @@ export function useRouteRaribleItem(): RouteRaribleItem {
 export function useRouteRaribleAccountItem(): RouteRaribleAccountItem {
   const raribleItem = useRouteRaribleItem();
   const wagmiAccount = useWagmiAccount();
+  const myRaribleItems = useRaribleAccountItems();
 
   return {
     ...raribleItem,
     ...wagmiAccount,
-    mine: raribleItem.owner === wagmiAccount.address,
+    myItems: myRaribleItems,
     offer: raribleItem.owner === wagmiAccount.address
       ? raribleItem.item?.bestSellOrder
       : (raribleItem.bids ?? []).find(o => o.maker === `ETHEREUM:${wagmiAccount.address}`),
+    isMyItem: (myRaribleItems ?? []).some((i: RaribleItem) => i.id === raribleItem.item?.id),
+    isAddressItem: raribleItem.owner === wagmiAccount.address,
   };
 }
 
@@ -382,20 +385,6 @@ export function useRouteRaribleItemMutation<TResponse>(
     },
     ...options,
   });
-}
-
-export function useRouteRaribleOfferItemMutation<TResponse>(
-  options?: UseMutationOptions<TResponse, unknown, any, unknown>
-) {
-  const { mine, offer } = useRouteRaribleAccountItem();
-
-  return useRouteRaribleItemMutation(
-    `order.${mine
-      ? `sell${offer === undefined ? "" : "Update"}`
-      : `bid${offer === undefined ? "" : "Update"}`
-    }`,
-    options,
-  );
 }
 
 function queryRaribleContinuation<

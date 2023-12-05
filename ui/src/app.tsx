@@ -16,7 +16,6 @@ import {
   TradeDialog,
   CancelDialog,
   AssociateDialog,
-  PretradeDialog,
   DisclaimerDialog,
 } from '@/app/Dialogs';
 import NavBar from '@/app/NavBar';
@@ -83,7 +82,6 @@ function RoutedAppRoutes({
           <Route path="/disclaimer" element={<DisclaimerDialog />} />
           <Route path="/assoc" element={<AssociateDialog />} />
           <Route path="/:collId/item/:itemId">
-            <Route path="pretrade" element={<PretradeDialog />} />
             <Route path="offer" element={<OfferDialog />} />
             <Route path="trade/:offerId" element={<TradeDialog />} />
             <Route path="cancel" element={<CancelDialog />} />
