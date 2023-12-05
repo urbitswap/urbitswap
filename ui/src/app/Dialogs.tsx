@@ -76,12 +76,17 @@ import type {
 import type { Address } from 'viem';
 import type { TenderType } from '@/types/app';
 
+// FIXME: Figure out a better way of doing hook/component deferment. Ideally,
+// each of the trade dialogs would do all the wallet checks before the trade
+// checks in a more seamless way.
+
 export function OfferDialog() {
-  return (
-    <DialogSequence comps={DefaultTradeCheckers.concat(OfferDialogHelper)} />
-  );
+  return (<WalletTypeDialog content={OfferDialogHelper1} />);
 }
-function OfferDialogHelper() {
+function OfferDialogHelper1() {
+  return (<TradeTypeDialog content={OfferDialogHelper2} />);
+}
+function OfferDialogHelper2() {
   const dismiss = useDismissNavigate();
   const { item, owner, offer, address, isAddressItem, isMyItem } = useRouteRaribleAccountItem();
   const { mutate: offerMutate, status: offerStatus } = useRouteRaribleItemMutation(
@@ -208,11 +213,12 @@ function OfferDialogHelper() {
 }
 
 export function TradeDialog() {
-  return (
-    <DialogSequence comps={DefaultTradeCheckers.concat(TradeDialogHelper)} />
-  );
+  return (<WalletTypeDialog content={TradeDialogHelper1} />);
 }
-function TradeDialogHelper() {
+function TradeDialogHelper1() {
+  return (<TradeTypeDialog content={TradeDialogHelper2} />);
+}
+function TradeDialogHelper2() {
   const navigate = useNavigate();
   const location = useLocation();
   const dismiss = useDismissNavigate();
@@ -356,11 +362,12 @@ function TradeDialogHelper() {
 }
 
 export function CancelDialog() {
-  return (
-    <DialogSequence comps={DefaultTradeCheckers.concat(CancelDialogHelper)} />
-  );
+  return (<WalletTypeDialog content={CancelDialogHelper1} />);
 }
-function CancelDialogHelper() {
+function CancelDialogHelper1() {
+  return (<TradeTypeDialog content={CancelDialogHelper2} />);
+}
+function CancelDialogHelper2() {
   const dismiss = useDismissNavigate();
   const { offer } = useRouteRaribleAccountItem();
   const { mutate: cancelMutate, status: cancelStatus } = useRouteRaribleItemMutation(
@@ -404,11 +411,9 @@ function CancelDialogHelper() {
 }
 
 export function AssociateDialog() {
-  return (
-    <DialogSequence comps={DefaultWalletCheckers.concat(AssociateDialogHelper)} />
-  );
+  return (<WalletTypeDialog content={AssociateDialogHelper1} />);
 }
-function AssociateDialogHelper() {
+function AssociateDialogHelper1() {
   const dismiss = useDismissNavigate();
   const { address } = useWagmiAccount();
   const { signMessageAsync: signMessage } = useSignMessage({
@@ -511,179 +516,166 @@ export function DisclaimerDialog() {
   );
 }
 
-function DialogSequence({comps}: {comps: React.ForwardRefRenderFunction<null, {}>[]}) {
+interface CheckReport {
+  status: boolean | undefined;
+  report: React.ForwardRefRenderFunction<null, {}>;
+}
+
+function TradeTypeDialog({content}: {content: React.ForwardRefRenderFunction<null, {}>}) {
+  const { status, report } = useTradeChecks();
+  return createElement(!status ? report : content);
+}
+
+function WalletTypeDialog({content}: {content: React.ForwardRefRenderFunction<null, {}>}) {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => (!open && dismiss());
-
-  const etype = useCallback((elem: React.ReactElement) => (
-    // @ts-ignore
-    (typeof elem.type === "string") ? elem.type : elem.type()
-  ), []);
-  // FIXME: For some reason, passing JSX arguments here isn't allowed; React
-  // always errors and says that the component's props are undefined.
-  const LoadingBody = useCallback(() => (
-    <DialogBody head="Loading..." className="justify-center items-center">
-      <UrbitswapIcon className="animate-spin w-20 h-20" />
-      <p className="italic">Check ?/{comps.length}</p>
-    </DialogBody>
-  ), [comps.length]);
+  const { status, report } = useWalletChecks();
 
   return createElement(
     DefaultDialog,
     { onOpenChange: onOpenChange },
-    comps.reduce((a: React.ReactElement, n: React.ForwardRefRenderFunction<null, {}>) => (
-      !([true, undefined].includes(etype(a)))
-        ? a
-        : ((b: React.ReactElement): React.ReactElement => (
-          undefined !== etype(b)
-            ? b
-            : createElement<{}>(LoadingBody)
-        ))(createElement<{}>(n))
-    ), createElement<{}>(() => true))
+    createElement(!status ? report : content),
   );
 }
 
-function CheckWalletConnection(): React.ReactNode {
-  const { isConnected } = useWagmiAccount();
-  return (
-    isConnected ? (
-      true
-    ) : (
-      <DialogBody head="Checking Wallet Connectivity">
-        <p>
-          Please connect your crypto wallet
-          via <Link to="https://metamask.io/">Metamask</Link> in order to
-          start trading. If you don't have Metamask installed, visit their
-          website to get started:
-        </p>
-        <Link to="https://metamask.io/download/" className="text-2xl underline text-center">
-          Install Metamask
-        </Link>
-      </DialogBody>
-    )
-  );
+function useTradeChecks(): CheckReport {
+  const { address, owner, item, isMyItem, isAddressItem } = useRouteRaribleAccountItem();
+  const { collId } = useParams();
+  // const vccKYC = {}; // useVentureAccountKYC();
+  // const vccGrant = {}; // useVentureAccountGrant(params?.itemId ?? "");
+  // const isKYCd: boolean = true; // vccKYC !== undefined && vccKYC.kyc;
+  // const isTransferable: boolean = true; // vccGrant !== undefined && vccGrant?.status === "success";
+
+  const tradeChecks: CheckReport[] = [
+    {
+      status: (item === undefined || owner === undefined)
+        ? undefined
+        : !(isMyItem && !isAddressItem),
+      report: () => (
+        <DialogBody head="Validating Item Ownership">
+          <p>
+            This item is owned by one of your other crypto wallets. Please
+            change to the appropriate wallet to continue (see below).
+          </p>
+          <div className="flex flex-row justify-around items-center py-4">
+            <ENSName address={address} full={false} />
+            <ArrowRightIcon className="w-5 h-5" />
+            <ENSName address={owner ?? "0x"} full={false} />
+          </div>
+        </DialogBody>
+      ),
+    }/*, {
+      status: true,
+      report: () => (
+        <DialogBody head="Checking Collection KYC">
+          <p>
+            In order to exchange assets, you'll first need to go through Venture
+            Club's <Link to="https://en.wikipedia.org/wiki/Know_your_customer">KYC</Link> process.
+            Visit their website to get started:
+          </p>
+          <Link to="https://ventureclub.club" className="text-2xl underline text-center">
+            Venture Club KYC
+          </Link>
+        </DialogBody>
+      ),
+    }, {
+      status: true,
+      report: () => (
+        <DialogBody head="Validating Collection Trade">
+          <p>
+            TODO: Error message for when an item is not transferable.
+          </p>
+        </DialogBody head="Checking Collection KYC">
+      ),
+    },*/
+  ];
+
+  const [currCheck, currIndex]: [CheckReport | undefined, number] = (() => {
+    const index: number = tradeChecks.findIndex((check: CheckReport) => !check.status);
+    return [(index === -1) ? undefined : tradeChecks[index], index];
+  })();
+
+  return {
+    status: !currCheck || currCheck.status,
+    report: (currCheck?.status === true) ? () => true
+      : (currCheck?.status === false) ? currCheck.report
+      : () => (<DialogLoadingBody step={currIndex + 1} total={tradeChecks.length} />),
+  };
 }
 
-function CheckWalletConsistency(): React.ReactNode {
-  const { address } = useWagmiAccount();
-  const lastAddress = useRef<Address>(address);
-  return (
-    (address === lastAddress.current) ? (
-      true
-    ) : (
-      <DialogBody head="Checking Wallet Consistency">
-        <p>
-          Your wallet address has changed since opening this dialog (see the
-          change below). Please refresh the dialog to continue.
-        </p>
-        <div className="flex flex-row justify-around items-center py-4">
-          <ENSName address={address} full={false} />
-          <ArrowRightIcon className="w-5 h-5" />
-          <ENSName address={lastAddress.current} full={false} />
-        </div>
-      </DialogBody>
-    )
-  );
-}
-
-function CheckNetworkSupported(): React.ReactNode {
+function useWalletChecks(): CheckReport {
+  const { address, isConnected } = useWagmiAccount();
   const { chain, chains } = useNetwork();
-  return (
-    (chain !== undefined && !chain.unsupported) ? (
-      true
-    ) : (
-      <DialogBody head="Checking Blockchain Network">
-        <p>
-          Your crypto wallet is connected to the wrong network. Please use
-          your wallet interface to switch to the following network and try again:
-        </p>
-        <p className="text-2xl underline text-center">
-          {chains?.[0]?.name ?? "<Unknown>"}
-        </p>
-      </DialogBody>
-    )
-  );
+  const lastAddress = useRef<Address>(address);
+
+  const walletChecks: CheckReport[] = [
+    {
+      status: isConnected,
+      report: () => (
+        <DialogBody head="Checking Wallet Connectivity">
+          <p>
+            Please connect your crypto wallet
+            via <Link to="https://metamask.io/">Metamask</Link> in order to
+            start trading. If you don't have Metamask installed, visit their
+            website to get started:
+          </p>
+          <Link to="https://metamask.io/download/" className="text-2xl underline text-center">
+            Install Metamask
+          </Link>
+        </DialogBody>
+      ),
+    },  {
+      status: address === lastAddress.current,
+      report: () => (
+        <DialogBody head="Checking Wallet Consistency">
+          <p>
+            Your wallet address has changed since opening this dialog (see the
+            change below). Please refresh the dialog to continue.
+          </p>
+          <div className="flex flex-row justify-around items-center py-4">
+            <ENSName address={address} full={false} />
+            <ArrowRightIcon className="w-5 h-5" />
+            <ENSName address={lastAddress.current} full={false} />
+          </div>
+        </DialogBody>
+      ),
+    },  {
+      status: chain !== undefined && !chain.unsupported,
+      report: () => (
+        <DialogBody head="Checking Blockchain Network">
+          <p>
+            Your crypto wallet is connected to the wrong network. Please use
+            your wallet interface to switch to the following network and try again:
+          </p>
+          <p className="text-2xl underline text-center">
+            {chains?.[0]?.name ?? "<Unknown>"}
+          </p>
+        </DialogBody>
+      ),
+    },
+  ];
+
+  const [currCheck, currIndex]: [CheckReport | undefined, number] = (() => {
+    const index: number = walletChecks.findIndex((check: CheckReport) => !check.status);
+    return [(index === -1) ? undefined : walletChecks[index], index];
+  })();
+
+  return {
+    status: !currCheck || currCheck.status,
+    report: (currCheck?.status === true) ? () => true
+      : (currCheck?.status === false) ? currCheck.report
+      : () => (<DialogLoadingBody step={currIndex + 1} total={walletChecks.length} />),
+  };
 }
 
-function CheckOfferOwnership(): React.ReactNode {
-  const {
-    address, owner, item,
-    isMyItem, isAddressItem,
-  } = useRouteRaribleAccountItem();
+function DialogLoadingBody({step, total}: {step: number; total: number;}) {
   return (
-    (item === undefined || owner === undefined) ? (
-      undefined
-    ) : !(isMyItem && !isAddressItem) ? (
-      true
-    ) : (
-      <DialogBody head="Validating Item Ownership">
-        <p>
-          This item is owned by one of your other crypto wallets. Please
-          change to the appropriate wallet to continue (see below).
-        </p>
-        <div className="flex flex-row justify-around items-center py-4">
-          <ENSName address={address} full={false} />
-          <ArrowRightIcon className="w-5 h-5" />
-          <ENSName address={owner} full={false} />
-        </div>
-      </DialogBody>
-    )
+    <DialogBody head="Loading..." className="justify-center items-center">
+      <UrbitswapIcon className="animate-spin w-20 h-20" />
+      <p className="italic">Check {step}/{total}</p>
+    </DialogBody>
   );
 }
-
-// function CheckCollectionKYC(): React.ReactNode {
-//   const { collId } = useParams();
-//   const vccKYC = useVentureAccountKYC();
-//
-//   // // const vccKYC = {}; // useVentureAccountKYC();
-//   // // const vccGrant = {}; // useVentureAccountGrant(params?.itemId ?? "");
-//   // // const isKYCd: boolean = true; // vccKYC !== undefined && vccKYC.kyc;
-//   // // const isTransferable: boolean = true; // vccGrant !== undefined && vccGrant?.status === "success";
-//   return (
-//     (collId !== FEATURED.VC) ? (
-//       true
-//     ) : (vccKYC === undefined) ? (
-//       undefined
-//     ) : () ? (
-//       <DialogBody head="Checking Collection KYC">
-//         <p>
-//           In order to exchange assets, you'll first need to go through Venture
-//           Club's <Link to="https://en.wikipedia.org/wiki/Know_your_customer">KYC</Link> process.
-//           Visit their website to get started:
-//         </p>
-//         <Link to="https://ventureclub.club" className="text-2xl underline text-center">
-//           Venture Club KYC
-//         </Link>
-//       </DialogBody>
-//     )
-//   );
-// }
-//
-// function CheckCollectionTransfer(): React.ReactNode {
-//   const { collId } = useParams();
-//   return (
-//     (collId !== FEATURED.VC) ? (
-//       true
-//     ) : (
-//       <DialogBody head="Validating Collection Trade">
-//         <p>
-//           TODO: Error message for when an item is not transferable.
-//         </p>
-//       </DialogBody head="Checking Collection KYC">
-//     )
-//   );
-// }
-
-const DefaultWalletCheckers = [
-  CheckWalletConnection,
-  CheckWalletConsistency,
-  CheckNetworkSupported,
-];
-const DefaultTradeCheckers = DefaultWalletCheckers.concat([
-  CheckOfferOwnership,
-  // CheckCollectionKYC,
-  // CheckCollectionTransfer,
-]);
 
 function DialogBody({
   head,
