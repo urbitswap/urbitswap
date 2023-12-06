@@ -276,7 +276,7 @@ function TradeDialogHelper2() {
 
   return (
     <DialogBody head={`${isAddressItem ? "Sell" : "Buy"} NFT`}>
-      (myOffer !== undefined && !hasBeenWarned) ? (
+      {(myOffer !== undefined && !hasBeenWarned) ? (
         <React.Fragment>
           <p>
             You have an open {isAddressItem ? "ask" : "bid"} for this item. Would you
@@ -356,7 +356,7 @@ function TradeDialogHelper2() {
             </div>
           </footer>
         </form>
-      )
+      )}
     </DialogBody>
   );
 }

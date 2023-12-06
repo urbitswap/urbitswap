@@ -72,8 +72,8 @@ export default function NavBar({
   const inCollectionMode: boolean = collId !== undefined;
   const assocAddresses = useUrbitAccountAssocAddresses();
   const isAssociated: boolean = (assocAddresses ?? new Set()).has(address);
-  // const vccKYC = {}; // useVentureAccountKYC();
-  // const isKYCd: boolean = false; // vccKYC !== undefined && vccKYC.kyc;
+  const collectionKYC = useCollectionAccountKYC();
+  const isKYCd = collectionKYC?.kyc && !collectionKYC?.noauth;
 
   const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const {value}: {value: string;} = event.target;
@@ -225,19 +225,13 @@ export default function NavBar({
         }>
           <DropdownEntry disabled>
             <span>Wallet</span>
-            {/*(isKYCd && (<IdentificationIcon className="w-3 h-3" />))*/}
+            {(isKYCd && (<IdentificationIcon className="w-3 h-3" />))}
             {(isAssociated && (<LinkIcon className="w-3 h-3" />))}
           </DropdownEntry>
           <DropdownEntry onSelect={() => !isConnected ? connect() : disconnect()}>
             {!isConnected ? (<BoltIcon className="w-4 h-4" />) : (<BoltSlashIcon className="w-4 h-4" />)}
             <span>{`${isConnected ? "Disc" : "C"}onnect Wallet`}</span>
           </DropdownEntry>
-          {/*(isConnected && !isKYCd) && (
-            <DropdownEntry onSelect={() => modalNavigate("pretrade")}>
-              <IdentificationIcon className="w-4 h-4" />
-              <span>Submit KYC</span>
-            </DropdownEntry>
-          )*/}
           {(isConnected && !isAssociated) && (
             <DropdownEntry onSelect={() => modalNavigate("/assoc")}>
               <LinkIcon className="w-4 h-4" />

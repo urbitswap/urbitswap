@@ -37,6 +37,7 @@ export interface IconLabel<IdType extends string = string> {
 export interface KYCData {
   kyc: boolean;
   details?: string;
+  noauth?: boolean;
 }
 
 export type TransferData = TransferDenial | TransferGrant;

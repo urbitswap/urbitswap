@@ -1,6 +1,7 @@
 import { add as offsetDate } from 'date-fns';
 import axios from 'axios';
 import type { KYCData, TransferData } from '@/types/app';
+import { APP_DBUG } from '@/constants';
 import type { Address } from 'viem';
 import type { Item as RaribleItem, Meta as RaribleItemMeta } from '@rarible/api-client';
 
@@ -9,7 +10,10 @@ export async function requestVentureKYC(
 ): Promise<KYCData> {
   return axios.request({
     method: "get",
-    baseURL: "https://app.ventureclub.club/",
+    baseURL: `https://${APP_DBUG
+      ? "staging--venture-club-platform.netlify.app"
+      : "app.ventureclub.club"
+    }/`,
     url: "/.netlify/functions/get-kyc",
     params: {
       wallets: wallet
