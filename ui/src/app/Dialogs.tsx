@@ -19,7 +19,7 @@ import DateTimePicker from 'react-datetime-picker';
 import 'react-datetime-picker/dist/DateTimePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import '@/styles/DateTimePicker.css';
-import { useNetwork, useSignMessage } from 'wagmi';
+import { useNetwork, useSwitchNetwork, useSignMessage } from 'wagmi';
 import {
   ArrowRightIcon,
   ArrowsRightLeftIcon,
@@ -559,6 +559,7 @@ function useTradeChecks(): CheckReport {
             <ArrowRightIcon className="w-5 h-5" />
             <ENSName address={owner ?? "0x"} full={false} />
           </div>
+          <DialogFooter />
         </DialogBody>
       ),
     }, {
@@ -566,13 +567,16 @@ function useTradeChecks(): CheckReport {
       report: () => (
         <DialogBody head="Checking Collection KYC">
           <p>
-            In order to exchange assets, you'll first need to go through Venture
-            Club's <Link to="https://en.wikipedia.org/wiki/Know_your_customer">KYC</Link> process.
-            Visit their website to get started:
+            In order to exchange assets in this collection, you'll first need
+            to go through a collection-specific <Link
+            to="https://en.wikipedia.org/wiki/Know_your_customer">KYC</Link> process.
+            Visit their website to get started.
           </p>
-          <Link to="https://ventureclub.club" className="text-2xl underline text-center">
-            Venture Club KYC
-          </Link>
+          <DialogFooter close="Decline">
+            <Link to="https://ventureclub.club" target="_blank" className="button">
+              Submit KYC
+            </Link>
+          </DialogFooter>
         </DialogBody>
       ),
     }, {
@@ -603,6 +607,7 @@ function useTradeChecks(): CheckReport {
 function useWalletChecks(): CheckReport {
   const { address, isConnected } = useWagmiAccount();
   const { chain, chains } = useNetwork();
+  const { switchNetwork, isLoading: isSwitchLoading, isError: isSwitchError } = useSwitchNetwork();
   const lastAddress = useRef<Address>(address);
 
   const walletChecks: CheckReport[] = [
@@ -614,11 +619,13 @@ function useWalletChecks(): CheckReport {
             Please connect your crypto wallet
             via <Link to="https://metamask.io/">Metamask</Link> in order to
             start trading. If you don't have Metamask installed, visit their
-            website to get started:
+            website to get started.
           </p>
-          <Link to="https://metamask.io/download/" className="text-2xl underline text-center">
-            Install Metamask
-          </Link>
+          <DialogFooter close="Decline">
+            <Link to="https://metamask.io/download/" target="_blank" className="button">
+              Install
+            </Link>
+          </DialogFooter>
         </DialogBody>
       ),
     },  {
@@ -627,13 +634,15 @@ function useWalletChecks(): CheckReport {
         <DialogBody head="Checking Wallet Consistency">
           <p>
             Your wallet address has changed since opening this dialog (see the
-            change below). Please refresh the dialog to continue.
+            change below). Please reconnect the old address or refresh the
+            dialog to continue.
           </p>
           <div className="flex flex-row justify-around items-center py-4">
             <ENSName address={address} full={false} />
             <ArrowRightIcon className="w-5 h-5" />
             <ENSName address={lastAddress.current} full={false} />
           </div>
+          <DialogFooter />
         </DialogBody>
       ),
     },  {
@@ -641,12 +650,20 @@ function useWalletChecks(): CheckReport {
       report: () => (
         <DialogBody head="Checking Blockchain Network">
           <p>
-            Your crypto wallet is connected to the wrong network. Please use
-            your wallet interface to switch to the following network and try again:
+            Your crypto wallet is connected to the wrong network. Please switch
+            to the "{chains?.[0]?.name ?? "<Unknown>"}" network and try again.
           </p>
-          <p className="text-2xl underline text-center">
-            {chains?.[0]?.name ?? "<Unknown>"}
-          </p>
+          <DialogFooter>
+            <button className="button" onClick={() => switchNetwork?.(chains?.[0]?.id || -1)}>
+              {isSwitchLoading ? (
+                <LoadingSpinner />
+              ) : isSwitchError ? (
+                "Error"
+              ) : (
+                "Switch"
+              )}
+            </button>
+          </DialogFooter>
         </DialogBody>
       ),
     },
@@ -680,7 +697,7 @@ function DialogBody({
   className,
 }: {
   head: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   className?: string;
 }) {
   return (
@@ -696,6 +713,27 @@ function DialogBody({
         {children}
       </div>
     </React.Fragment>
+  );
+}
+
+function DialogFooter({
+  children,
+  close,
+}: {
+  children?: React.ReactNode;
+  close?: string;
+}) {
+  return (
+    <footer className="flex items-center justify-between space-x-2">
+      <div className="ml-auto flex items-center space-x-2">
+        <DialogPrimitive.Close asChild>
+          <button className="secondary-button ml-auto">
+            {close ?? "Dismiss"}
+          </button>
+        </DialogPrimitive.Close>
+        {children}
+      </div>
+    </footer>
   );
 }
 
