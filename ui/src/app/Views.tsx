@@ -10,7 +10,6 @@ import ItemBadges from '@/components/ItemBadges';
 import {
   useUrbitTraders,
   useUrbitAccountAllAddresses,
-  useRaribleCollectionItems,
   useRaribleAccountItems,
   useRaribleAccountBids,
   useRouteRaribleItem,

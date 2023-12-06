@@ -34,17 +34,17 @@ export interface IconLabel<IdType extends string = string> {
   icon: typeof TagIcon;
 }
 
-export interface VentureKYC {
+export interface KYCData {
   kyc: boolean;
   details?: string;
 }
 
-export type VentureTransfer = VentureTransferDenial | VentureTransferGrant;
-export interface VentureTransferDenial {
+export type TransferData = TransferDenial | TransferGrant;
+export interface TransferDenial {
   status: "failed";
   details: string;
 }
-export interface VentureTransferGrant {
+export interface TransferGrant {
   status: "success";
   callId: string;
   signature: string;

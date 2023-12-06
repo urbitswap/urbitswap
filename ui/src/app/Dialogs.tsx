@@ -41,8 +41,8 @@ import {
 import {
   useWagmiAccount,
   useUrbitAssociateMutation,
-  useVentureAccountKYC,
-  useVentureAccountGrant,
+  useCollectionAccountKYC,
+  useItemAccountGrant,
   useRouteRaribleItem,
   useRouteRaribleAccountItem,
   useRouteRaribleItemMutation,
@@ -540,11 +540,8 @@ function WalletTypeDialog({content}: {content: React.ForwardRefRenderFunction<nu
 
 function useTradeChecks(): CheckReport {
   const { address, owner, item, isMyItem, isAddressItem } = useRouteRaribleAccountItem();
-  const { collId } = useParams();
-  // const vccKYC = {}; // useVentureAccountKYC();
-  // const vccGrant = {}; // useVentureAccountGrant(params?.itemId ?? "");
-  // const isKYCd: boolean = true; // vccKYC !== undefined && vccKYC.kyc;
-  // const isTransferable: boolean = true; // vccGrant !== undefined && vccGrant?.status === "success";
+  const collKYC = useCollectionAccountKYC();
+  const itemGrant = useItemAccountGrant();
 
   const tradeChecks: CheckReport[] = [
     {
@@ -564,8 +561,8 @@ function useTradeChecks(): CheckReport {
           </div>
         </DialogBody>
       ),
-    }/*, {
-      status: true,
+    }, {
+      status: collKYC?.kyc,
       report: () => (
         <DialogBody head="Checking Collection KYC">
           <p>
@@ -579,15 +576,15 @@ function useTradeChecks(): CheckReport {
         </DialogBody>
       ),
     }, {
-      status: true,
+      status: itemGrant?.status && (itemGrant?.status === "success"),
       report: () => (
         <DialogBody head="Validating Collection Trade">
           <p>
             TODO: Error message for when an item is not transferable.
           </p>
-        </DialogBody head="Checking Collection KYC">
+        </DialogBody>
       ),
-    },*/
+    },
   ];
 
   const [currCheck, currIndex]: [CheckReport | undefined, number] = (() => {
@@ -599,7 +596,7 @@ function useTradeChecks(): CheckReport {
     status: !currCheck || currCheck.status,
     report: (currCheck?.status === true) ? () => true
       : (currCheck?.status === false) ? currCheck.report
-      : () => (<DialogLoadingBody step={currIndex + 1} total={tradeChecks.length} />),
+      : () => (<DialogLoadingBody type="Trade" step={currIndex + 1} total={tradeChecks.length} />),
   };
 }
 
@@ -664,13 +661,13 @@ function useWalletChecks(): CheckReport {
     status: !currCheck || currCheck.status,
     report: (currCheck?.status === true) ? () => true
       : (currCheck?.status === false) ? currCheck.report
-      : () => (<DialogLoadingBody step={currIndex + 1} total={walletChecks.length} />),
+      : () => (<DialogLoadingBody type="Wallet" step={currIndex + 1} total={walletChecks.length} />),
   };
 }
 
-function DialogLoadingBody({step, total}: {step: number; total: number;}) {
+function DialogLoadingBody({type, step, total}: {type: string; step: number; total: number;}) {
   return (
-    <DialogBody head="Loading..." className="justify-center items-center">
+    <DialogBody head={`Loading ${type}...`} className="justify-center items-center">
       <UrbitswapIcon className="animate-spin w-20 h-20" />
       <p className="italic">Check {step}/{total}</p>
     </DialogBody>

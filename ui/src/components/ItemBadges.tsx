@@ -7,7 +7,7 @@ import {
   LockOpenIcon,
 } from '@heroicons/react/24/solid';
 import Popover from '@/components/Popover';
-import { useUrbitNetworkLayer, useVentureAccountGrant } from '@/state/app';
+// import { useUrbitNetworkLayer, useVentureAccountGrant } from '@/state/app';
 import { APP_TERM, FEATURED, QUERY } from '@/constants';
 import {
   COLLECTION_ICON_MAP,

@@ -37,10 +37,10 @@ import {
   useWagmiAccount,
   useRaribleCollectionMeta,
   useUrbitAccountAssocAddresses,
-  useVentureAccountKYC,
+  useCollectionAccountKYC,
 } from '@/state/app';
 import { wagmiAPI } from '@/api';
-import { QUERY } from '@/constants';
+import { APP_TERM, QUERY } from '@/constants';
 import type { Chain } from 'viem'; // node_modules/viem/types/chain.ts
 import type {
   CollectionBaseish,
@@ -64,7 +64,7 @@ export default function NavBar({
   const { collId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const collMeta = useRaribleCollectionMeta(collId ?? "");
+  const collMeta = useRaribleCollectionMeta();
   const { address, isConnected } = useWagmiAccount();
   const { connect } = useConnect({connector: wagmiAPI.connectors?.[0]});
   const { disconnect } = useDisconnect();
@@ -161,6 +161,7 @@ export default function NavBar({
               />
             </span>
             <input
+              name={`${APP_TERM}-navbar-search`}
               value={searchQuery}
               onChange={onChange}
               onKeyDown={onKeyDown}

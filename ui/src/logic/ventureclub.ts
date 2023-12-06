@@ -1,12 +1,12 @@
 import { add as offsetDate } from 'date-fns';
 import axios from 'axios';
-import type { VentureKYC, VentureTransfer } from '@/types/app';
+import type { KYCData, TransferData } from '@/types/app';
 import type { Address } from 'viem';
 import type { Item as RaribleItem, Meta as RaribleItemMeta } from '@rarible/api-client';
 
 export async function requestVentureKYC(
   wallet: Address,
-): Promise<VentureKYC> {
+): Promise<KYCData> {
   return axios.request({
     method: "get",
     baseURL: "https://app.ventureclub.club/",
@@ -21,7 +21,7 @@ export async function requestVentureTransfer(
   toWallet: Address,
   contract: Address,
   tokenId: string,
-): Promise<VentureTransfer> {
+): Promise<TransferData> {
   // TODO: Replace with real VCC validation query.
   const unlockDate = getVentureFakeUnlock(tokenId);
   const isUSWallet = !(/^-?\d+$/.test(toWallet?.[2]));

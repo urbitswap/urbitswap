@@ -35,8 +35,8 @@ import type {
 } from '@rarible/api-client';
 import type {
   UrbitLayer,
-  VentureKYC,
-  VentureTransfer,
+  KYCData,
+  TransferData,
   UrbitTraders,
   UrbitAssoc,
   RouteRaribleItem,
@@ -50,6 +50,50 @@ export function useWagmiAccount() {
     address: ((address ?? "0x").toLowerCase() as Address),
     ...account,
   };
+}
+
+export function useCollectionAccountKYC(): KYCData | undefined {
+  const { address } = useWagmiAccount();
+  const { collId } = useParams();
+  const queryKey: QueryKey = useMemo(() => [
+    APP_TERM, "collection", collId, "kyc", address,
+  ], [address, collId]);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: queryKey,
+    queryFn: async () => (
+      collId === FEATURED.VC
+        ? requestVentureKYC(address)
+        : {kyc: true}
+    ),
+    enabled: !!collId,
+  });
+
+  return (isLoading || isError)
+    ? undefined
+    : (data as KYCData);
+}
+
+export function useItemAccountGrant(): TransferData | undefined {
+  const { address } = useWagmiAccount();
+  const { collId, itemId } = useParams();
+  const queryKey: QueryKey = useMemo(() => [
+    APP_TERM, "collection", collId, "grant", address, itemId,
+  ], [address, collId, itemId]);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: queryKey,
+    queryFn: async () => (
+      collId === FEATURED.VC
+        ? requestVentureTransfer(address, address, itemId ?? "")
+        : {status: "success", callId: "", signature: "", nonce: "", expiryBlock: ""}
+    ),
+    enabled: !!collId && !!itemId,
+  });
+
+  return (isLoading || isError)
+    ? undefined
+    : (data as TransferData);
 }
 
 export function useUrbitTraders(): UrbitTraders | undefined {
@@ -148,43 +192,8 @@ export function useUrbitNetworkLayer(urbitId: string): UrbitLayer | undefined {
     : (data as UrbitLayer);
 }
 
-export function useVentureAccountKYC(): VentureKYC | undefined {
-  const { address } = useWagmiAccount();
-  const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "venture", "kyc", address,
-  ], [address]);
-
-  const { data, isLoading, isError } = useQuery({
-    queryKey: queryKey,
-    queryFn: async () => requestVentureKYC(address),
-  });
-
-  return (isLoading || isError)
-    ? undefined
-    : (data as VentureKYC);
-}
-
-export function useVentureAccountGrant(itemId: string): VentureTransfer | undefined {
-  const { address } = useWagmiAccount();
-  const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "venture", "grant", address, itemId,
-  ], [address, itemId]);
-
-  const { data, isLoading, isError } = useQuery({
-    queryKey: queryKey,
-    queryFn: async () => requestVentureTransfer(
-      address,
-      ("0x"/*FEATURED.VC.slice("ETHEREUM:".length)*/ as Address),
-      itemId,
-    ),
-  });
-
-  return (isLoading || isError)
-    ? undefined
-    : (data as VentureTransfer);
-}
-
-export function useRaribleCollectionMeta(collId: string): RaribleCollection | undefined {
+export function useRaribleCollectionMeta(): RaribleCollection | undefined {
+  const { collId } = useParams();
   const queryKey: QueryKey = useMemo(() => [
     APP_TERM, "rarible", "collection", collId, "meta",
   ], [collId]);
@@ -193,7 +202,7 @@ export function useRaribleCollectionMeta(collId: string): RaribleCollection | un
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
     queryFn: () => rsdk.apis.collection.getCollectionById(
-      {collection: collId},
+      {collection: collId ?? ""},
     ),
     enabled: !!collId,
     // NOTE: This will update extremely infrequently, so we don't even bother
@@ -207,7 +216,8 @@ export function useRaribleCollectionMeta(collId: string): RaribleCollection | un
     : (data as RaribleCollection);
 }
 
-export function useRaribleCollectionItems(collId: string): RaribleItem[] | undefined {
+export function useRaribleCollectionItems(): RaribleItem[] | undefined {
+  const { collId } = useParams();
   const queryKey: QueryKey = useMemo(() => [
     APP_TERM, "rarible", "collection", collId, "items",
   ], [collId]);
@@ -217,7 +227,7 @@ export function useRaribleCollectionItems(collId: string): RaribleItem[] | undef
     queryKey: queryKey,
     queryFn: () => queryRaribleContinuation(
       rsdk.apis.item.getItemsByCollection,
-      {collection: collId},
+      {collection: collId ?? ""},
     ),
     enabled: !!collId,
   });
