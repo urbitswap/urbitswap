@@ -40,6 +40,7 @@ import {
 } from '@/components/Selector';
 import {
   useWagmiAccount,
+  useWagmiConnect,
   useUrbitAssociateMutation,
   useCollectionAccountKYC,
   useItemAccountGrant,
@@ -549,7 +550,7 @@ function useTradeChecks(): CheckReport {
         ? undefined
         : !(isMyItem && !isAddressItem),
       report: () => (
-        <DialogBody head="Validating Item Ownership">
+        <DialogBody head="Wrong Wallet for Item">
           <p>
             This item is owned by one of your other crypto wallets. Please
             change to the appropriate wallet to continue (see below).
@@ -565,7 +566,7 @@ function useTradeChecks(): CheckReport {
     }, {
       status: collKYC?.kyc,
       report: () => (
-        <DialogBody head="Checking Collection KYC">
+        <DialogBody head="Collection Requires KYC">
           <p>
             In order to exchange assets in this collection, you'll first need
             to go through a collection-specific <Link
@@ -582,7 +583,7 @@ function useTradeChecks(): CheckReport {
     }, {
       status: itemGrant?.status && (itemGrant?.status === "success"),
       report: () => (
-        <DialogBody head="Validating Collection Trade">
+        <DialogBody head="Unapproved Collection Trade">
           <p>
             TODO: Error message for when an item is not transferable.
           </p>
@@ -607,31 +608,77 @@ function useTradeChecks(): CheckReport {
 function useWalletChecks(): CheckReport {
   const { address, isConnected } = useWagmiAccount();
   const { chain, chains } = useNetwork();
-  const { switchNetwork, isLoading: isSwitchLoading, isError: isSwitchError } = useSwitchNetwork();
+  const {
+    connect: connectWallet,
+    isLoading: isConnectLoading,
+    isError: isConnectError,
+  } = useWagmiConnect();
+  const {
+    switchNetwork,
+    isLoading: isSwitchLoading,
+    isError: isSwitchError,
+  } = useSwitchNetwork();
+
   const lastAddress = useRef<Address>(address);
+  // From the official MetaMask's source:
+  // https://github.com/MetaMask/metamask-onboarding/blob/v1.0.1/src/index.ts#L169
+  const isInstalled: boolean = Boolean(
+    (window as any)?.ethereum && (window as any)?.ethereum?.isMetaMask
+  );
+
+  // NOTE: For cases when no wallet is connected and this dialog is then used
+  // to connect (need to update `lastAddress` while keeping the dialog open).
+  useEffect(() => {
+    if (isConnected && lastAddress.current === "0x") {
+      lastAddress.current = address;
+    }
+  }, [isConnected]);
 
   const walletChecks: CheckReport[] = [
     {
-      status: isConnected,
+      status: isInstalled,
       report: () => (
-        <DialogBody head="Checking Wallet Connectivity">
+        <DialogBody head="MetaMask Not Detected">
           <p>
-            Please connect your crypto wallet
-            via <Link to="https://metamask.io/">Metamask</Link> in order to
-            start trading. If you don't have Metamask installed, visit their
-            website to get started.
+            You don't have <Link to="https://metamask.io/">
+            Metamask</Link> installed on this browser, which
+            is required to enable trading. Please visit the MetaMask website
+            for installation instructions.
           </p>
           <DialogFooter close="Decline">
             <Link to="https://metamask.io/download/" target="_blank" className="button">
-              Install
+              Install Metamask
             </Link>
           </DialogFooter>
         </DialogBody>
       ),
-    },  {
-      status: address === lastAddress.current,
+    }, {
+      status: isConnected,
       report: () => (
-        <DialogBody head="Checking Wallet Consistency">
+        <DialogBody head="No Wallet Connected">
+          <p>
+            Please connect your crypto wallet through <Link
+            to="https://metamask.io/">Metamask</Link> in order to start trading.
+          </p>
+          <DialogFooter>
+            <button className="button" onClick={() => connectWallet()}>
+              {isConnectLoading ? (
+                <LoadingSpinner />
+              ) : isConnectError ? (
+                "Error"
+              ) : (
+                "Connect"
+              )}
+            </button>
+          </DialogFooter>
+        </DialogBody>
+      ),
+    },  {
+      status: (lastAddress.current === "0x")
+        ? undefined
+        : address === lastAddress.current,
+      report: () => (
+        <DialogBody head="Active Wallet Changed">
           <p>
             Your wallet address has changed since opening this dialog (see the
             change below). Please reconnect the old wallet or refresh the
@@ -648,7 +695,7 @@ function useWalletChecks(): CheckReport {
     },  {
       status: chain !== undefined && !chain.unsupported,
       report: () => (
-        <DialogBody head="Checking Blockchain Network">
+        <DialogBody head="Invalid Blockchain Network">
           <p>
             Your crypto wallet is connected to the wrong network. Please switch
             to the "{chains?.[0]?.name ?? "<Unknown>"}" network and try again.

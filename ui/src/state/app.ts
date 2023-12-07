@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 import axios from 'axios';
-import { useAccount } from 'wagmi';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import {
   QueryKey,
   MutationFunction,
@@ -20,7 +20,7 @@ import {
   requestVentureTransfer,
   addVentureAttribs,
 } from '@/logic/ventureclub';
-import { urbitAPI } from '@/api';
+import { wagmiAPI, urbitAPI } from '@/api';
 import { APP_TERM, CONTRACT, FEATURED, TRADERS_HOST, TRADERS_HOST_FLAG } from '@/constants';
 import { OrderStatus as RaribleOrderStatus } from '@rarible/api-client';
 import type { Address } from 'viem';
@@ -50,6 +50,15 @@ export function useWagmiAccount() {
     address: ((address ?? "0x").toLowerCase() as Address),
     ...account,
   };
+}
+
+export function useWagmiConnect() {
+  return useConnect({connector: wagmiAPI.connectors?.[0]});
+}
+
+// NOTE: Purely for symmetry
+export function useWagmiDisconnect() {
+  return useDisconnect();
 }
 
 export function useCollectionAccountKYC(): KYCData | undefined {

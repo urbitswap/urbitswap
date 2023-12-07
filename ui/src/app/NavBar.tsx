@@ -7,7 +7,6 @@ import React, {
 } from 'react';
 import cn from 'classnames';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useConnect, useDisconnect } from 'wagmi';
 import {
   BoltIcon,
   BoltSlashIcon,
@@ -35,11 +34,12 @@ import {
 } from '@/logic/utils';
 import {
   useWagmiAccount,
+  useWagmiConnect,
+  useWagmiDisconnect,
   useRaribleCollectionMeta,
   useUrbitAccountAssocAddresses,
   useCollectionAccountKYC,
 } from '@/state/app';
-import { wagmiAPI } from '@/api';
 import { APP_TERM, QUERY } from '@/constants';
 import type { Chain } from 'viem'; // node_modules/viem/types/chain.ts
 import type {
@@ -66,8 +66,8 @@ export default function NavBar({
 
   const collMeta = useRaribleCollectionMeta();
   const { address, isConnected } = useWagmiAccount();
-  const { connect } = useConnect({connector: wagmiAPI.connectors?.[0]});
-  const { disconnect } = useDisconnect();
+  const { connect } = useWagmiConnect();
+  const { disconnect } = useWagmiDisconnect();
 
   const inCollectionMode: boolean = collId !== undefined;
   const assocAddresses = useUrbitAccountAssocAddresses();
