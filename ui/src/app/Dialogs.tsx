@@ -634,7 +634,7 @@ function useWalletChecks(): CheckReport {
         <DialogBody head="Checking Wallet Consistency">
           <p>
             Your wallet address has changed since opening this dialog (see the
-            change below). Please reconnect the old address or refresh the
+            change below). Please reconnect the old wallet or refresh the
             dialog to continue.
           </p>
           <div className="flex flex-row justify-around items-center py-4">

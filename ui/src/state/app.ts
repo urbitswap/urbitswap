@@ -226,8 +226,10 @@ export function useRaribleCollectionItems(): RaribleItem[] | undefined {
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
     queryFn: () => queryRaribleContinuation(
-      rsdk.apis.item.getItemsByCollection,
-      {collection: collId ?? ""},
+      (c: string | undefined) => rsdk.apis.item.getItemsByCollection({
+        collection: collId ?? "",
+        continuation: c,
+      }),
     ),
     enabled: !!collId,
   });
@@ -245,8 +247,10 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
   const results = useQueries({ queries: addressList.map((address: Address) => ({
     queryKey: [APP_TERM, "rarible", "account", address, "items"],
     queryFn: () => queryRaribleContinuation(
-      rsdk.apis.item.getItemsByOwner,
-      {owner: `ETHEREUM:${address}`},
+      (c: string | undefined) => rsdk.apis.item.getItemsByOwner({
+        owner: `ETHEREUM:${address}`,
+        continuation: c,
+      }),
     ),
     enabled: !!addresses,
     // FIXME: Applying a more strict throttle on ownership because the query
@@ -272,8 +276,11 @@ export function useRaribleAccountBids(): RaribleOrder[] | undefined {
   const results = useQueries({ queries: addressList.map((address: Address) => ({
     queryKey: [APP_TERM, "rarible", "account", address, "bids"],
     queryFn: () => queryRaribleContinuation(
-      rsdk.apis.order.getOrderBidsByMaker,
-      {maker: [`ETHEREUM:${address}`], status: [RaribleOrderStatus.ACTIVE]},
+      (c: string | undefined) => rsdk.apis.order.getOrderBidsByMaker({
+        maker: [`ETHEREUM:${address}`],
+        status: [RaribleOrderStatus.ACTIVE],
+        continuation: c,
+      }),
     ),
     enabled: !!addresses,
     // FIXME: We can query account bids even less frequently because all
@@ -305,12 +312,17 @@ export function useRouteRaribleItem(): RouteRaribleItem {
       return Promise.all([
         rsdk.apis.item.getItemById({itemId: itemAddr}),
         queryRaribleContinuation(
-          rsdk.apis.ownership.getOwnershipsByItem,
-          {itemId: itemAddr},
+          (c: string | undefined) => rsdk.apis.ownership.getOwnershipsByItem({
+            itemId: itemAddr,
+            continuation: c,
+          }),
         ),
         queryRaribleContinuation(
-          rsdk.apis.order.getOrderBidsByItem,
-          {itemId: itemAddr, status: [RaribleOrderStatus.ACTIVE]},
+          (c: string | undefined) => rsdk.apis.order.getOrderBidsByItem({
+            itemId: itemAddr,
+            status: [RaribleOrderStatus.ACTIVE],
+            continuation: c,
+          }),
         ),
       ]);
     },
@@ -397,13 +409,16 @@ export function useRouteRaribleItemMutation<TResponse>(
   });
 }
 
+// FIXME: Using a lamda captured function in this way required more code
+// duplication, but it's needed as a workaround to capture/context problems
+// when calling raw passed Rarible SDK functions with more recent versions
+// (i.e. 0.13.50+).
 function queryRaribleContinuation<
-  TInput extends RaribleContinuation,
   TOutput extends RaribleContinuation,
   TResult,
 >(
-  queryFn: (params: TInput) => Promise<TOutput>,
-  queryIn: TInput,
+  queryFn: (continuation: string | undefined) => Promise<TOutput>,
+  queryIn: string | undefined = undefined,
   results: TResult[] = [],
   isFinalCall: boolean = false,
 ): Promise<TResult[]> {
@@ -416,7 +431,7 @@ function queryRaribleContinuation<
         (Object.values(output).find(Array.isArray) as TResult[]);
       return queryRaribleContinuation(
         queryFn,
-        Object.assign({}, queryIn, {continuation: output.continuation}),
+        output.continuation,
         results.concat(newResults),
         newResults.length < 50 || output.continuation === undefined,
       );

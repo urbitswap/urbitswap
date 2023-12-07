@@ -1,6 +1,5 @@
 import React, { useMemo, useEffect, useCallback } from 'react';
 import cn from 'classnames';
-import axios from 'axios';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useInView } from 'react-intersection-observer'
 import { useInfiniteQuery } from '@tanstack/react-query'
@@ -36,6 +35,7 @@ import UrbitswapIcon from '@/components/icons/UrbitswapIcon';
 import ErrorIcon from '@/components/icons/ErrorIcon';
 import { APP_DBUG, APP_TERM, FEATURED } from '@/constants';
 import {
+  Blockchain,
   ItemsSearchSort as RaribleItemsSort,
   OrderStatus as RaribleOrderStatus,
 } from '@rarible/api-client';
@@ -75,38 +75,17 @@ export function CollectionGrid({className}: ClassProps) {
         const pageResults = await Promise.all(Object.entries(FEATURED).sort().map(
           ([_, collId]) => rsdk.apis.collection.getCollectionById({collection: collId})
         ));
-
         return {
           last: true,
           next: undefined,
           data: pageResults,
         };
       } else {
-        // FIXME: This is a hack we have to use because the collection
-        // search function is not currently included in the Rarible SDK.
-        const pageResults = await axios.request({
-          method: "post",
-          baseURL: `https://${!APP_DBUG ? "" : "testnet-"}api.rarible.org/`,
-          url: `/v0.1/collections/search/`,
-          data: {
-            "size": 20,
-            "continuation": pageParam,
-            "filter": {
-              "text": query?.name,
-              "blockchains": ["ETHEREUM"],
-            },
-          },
-          headers: {
-            "accept": "application/json",
-            "content-type": "application/json",
-            "X-API-KEY": APP_DBUG
-              ? import.meta.env.VITE_RARIBLE_TESTNET_KEY
-              : import.meta.env.VITE_RARIBLE_MAINNET_KEY,
-          }
-        }).then((response: any) => (
-          response.data
-        ));
-
+        const pageResults = await rsdk.apis.collection.searchCollection({collectionsSearchRequest: {
+          filter: {text: query?.name, blockchains: [Blockchain.ETHEREUM]},
+          size: 20,
+          continuation: pageParam,
+        }});
         return {
           last: (pageResults.collections.length < 20) || (pageResults.continuation === undefined),
           next: pageResults.continuation,
