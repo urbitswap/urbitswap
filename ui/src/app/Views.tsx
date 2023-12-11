@@ -81,11 +81,13 @@ export function CollectionGrid({className}: ClassProps) {
           data: pageResults,
         };
       } else {
-        const pageResults = await rsdk.apis.collection.searchCollection({collectionsSearchRequest: {
-          filter: {text: query?.name, blockchains: [Blockchain.ETHEREUM]},
-          size: 20,
-          continuation: pageParam,
-        }});
+        const pageResults = await rsdk.apis.collection.searchCollection({
+          collectionsSearchRequest: {
+            filter: {text: query?.name, blockchains: [Blockchain.ETHEREUM]},
+            size: 20,
+            continuation: pageParam,
+          },
+        });
         return {
           last: (pageResults.collections.length < 20) || (pageResults.continuation === undefined),
           next: pageResults.continuation,
