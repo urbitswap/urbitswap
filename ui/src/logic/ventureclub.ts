@@ -18,7 +18,10 @@ export async function requestVentureKYC(
     params: {
       wallets: wallet
     },
-  });
+  }).then(({data: vcKYC}: {data?: any;}): KYCData => ({
+    kyc: vcKYC?.known ?? false,
+    details: vcKYC?.details ?? "Unrecognized data format from VentureClub auth server.",
+  }));
 }
 
 export async function requestVentureTransfer(

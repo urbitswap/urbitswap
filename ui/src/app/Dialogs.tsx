@@ -559,11 +559,17 @@ function useTradeChecks(): CheckReport {
       report: () => (
         <DialogBody head="Collection Requires KYC">
           <p>
-            In order to exchange assets in this collection, you'll first need
+            In order to exchange this collection's assets, you'll first need
             to go through a collection-specific <Link
             to="https://en.wikipedia.org/wiki/Know_your_customer">KYC</Link> process.
-            Visit their website to get started.
+            Visit the collection's website to get started.
           </p>
+          {collKYC?.details && (
+            <div>
+              <h1 className="text-lg font-semibold">Collection-specific Notification</h1>
+              <p className="italic">{collKYC.details}</p>
+            </div>
+          )}
           <DialogFoot close="Decline">
             <Link to="https://ventureclub.club" target="_blank" className="button">
               Submit KYC
