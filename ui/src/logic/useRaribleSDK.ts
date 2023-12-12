@@ -34,8 +34,7 @@ export default function useRaribleSDK(): RaribleSdk {
   ), [isConnected, walletClient]);
 }
 
-async function reportRaribleCall(fn: Callable, args: Args): MiddlewarePromise
-{
+async function reportRaribleCall(fn: Callable, args: Args): MiddlewarePromise {
   return [
     (...argz: any[]) => {
       APP_DBUG && console.log(fn.name);
@@ -50,8 +49,7 @@ async function reportRaribleCall(fn: Callable, args: Args): MiddlewarePromise
 }
 
 const limitRarible = genRateLimiter(10, 6); // 10 queries / 6 seconds
-async function limitRaribleCall(fn: Callable, args: Args): MiddlewarePromise
-{
+async function limitRaribleCall(fn: Callable, args: Args): MiddlewarePromise {
   return [
     (...argz: any[]) => fn(...argz),
     async (res: Promise<any>) => (
