@@ -1,17 +1,25 @@
-import React from 'react';
+import React, {createElement} from 'react';
+import cn from 'classnames';
 import { format, formatDistance } from 'date-fns';
 import seedrandom from 'seedrandom';
 import {
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
   FunnelIcon,
   GlobeAltIcon,
-  ViewfinderCircleIcon,
-  WalletIcon,
   SparklesIcon,
   StarIcon,
   TagIcon,
+  ViewfinderCircleIcon,
+  WalletIcon,
 } from '@heroicons/react/24/solid';
 import { APP_DBUG, APP_VERSION, MAX_DATE, CONTRACT, QUERY } from '@/constants';
-import { Blockchain } from '@rarible/api-client';
+import {
+    Blockchain as RaribleBlockchain,
+    ItemsSearchSort as RaribleItemSort,
+} from '@rarible/api-client';
 import { toContractAddress } from '@rarible/types';
 import type {
   RequestCurrency as RaribleCurrency,
@@ -29,6 +37,8 @@ import type {
 } from '@rarible/api-client';
 import type {
   CollectionBaseish,
+  CollectionSort,
+  CollectionSortish,
   UrbitPointTypeish,
   TenderType,
   OfferType,
@@ -37,14 +47,44 @@ import type {
 } from '@/types/app';
 import type { Callable } from '@/types/utils';
 
-export const COLLECTION_ICONS: IconLabel<CollectionBaseish>[] = [
+export const COLLECTIONBASE_ICONS: IconLabel<CollectionBaseish>[] = [
   {id: "", name: "Full Collection", icon: ViewfinderCircleIcon},
   {id: "mine", name: "Owned Asset", icon: WalletIcon},
   {id: "bids", name: "Bid Asset", icon: TagIcon},
 ];
-export const COLLECTION_ICON_MAP: Record<CollectionBaseish, IconLabel> = COLLECTION_ICONS.reduce(
+export const COLLECTIONBASE_ICON_MAP: Record<CollectionBaseish, IconLabel> = COLLECTIONBASE_ICONS.reduce(
   (a, i) => {a[i.id] = i; return a;},
   ({} as Record<CollectionBaseish, IconLabel>),
+);
+export const COLLECTIONSORT_ICONS: IconLabel<CollectionSortish>[] = [{
+    id: ""/*RaribleItemSort.LOWEST_SELL*/,
+    name: "Ask Price Descending",
+    icon: genSortIcon(CurrencyDollarIcon, false)
+  }, {
+    id: RaribleItemSort.HIGHEST_SELL,
+    name: "Ask Price Ascending",
+    icon: genSortIcon(CurrencyDollarIcon, true)
+  }, {
+    id: RaribleItemSort.HIGHEST_BID,
+    name: "Bid Price Descending",
+    icon: genSortIcon(TagIcon, false),
+  }, {
+    id: RaribleItemSort.LOWEST_BID,
+    name: "Bid Price Ascending",
+    icon: genSortIcon(TagIcon, true),
+  }, {
+    id: RaribleItemSort.LATEST,
+    name: "NFT Age Ascending",
+    icon: genSortIcon(ClockIcon, true),
+  }, {
+    id: RaribleItemSort.EARLIEST,
+    name: "NFT Age Decending",
+    icon: genSortIcon(ClockIcon, false),
+  },
+];
+export const COLLECTIONSORT_ICON_MAP: Record<CollectionSortish, IconLabel> = COLLECTIONSORT_ICONS.reduce(
+  (a, i) => {a[i.id] = i; return a;},
+  ({} as Record<CollectionSortish, IconLabel>),
 );
 export const URBITPOINT_ICONS: IconLabel<UrbitPointTypeish>[] = [
   {id: "", name: "Point Type", icon: FunnelIcon},
@@ -87,7 +127,7 @@ export function genRateLimiter(maxReqs: number, perSecs: number) {
 
 export function tenderToAsset(tender: TenderType): RaribleAssetType {
   return tender === "eth"
-    ? {"@type": "ETH", "blockchain": Blockchain.ETHEREUM}
+    ? {"@type": "ETH", "blockchain": RaribleBlockchain.ETHEREUM}
     : {"@type": "ERC20", "contract": toContractAddress(CONTRACT.USDC)};
 }
 
@@ -177,10 +217,10 @@ export function encodeQuery(query: NavigationQuery): URLSearchParams {
 
   if (query?.base) {
     params.set("base", encodeURIComponent(query.base));
-  } if (query?.type) {
-    params.set("type", encodeURIComponent(query.type));
-  } if (query?.name) {
-    params.set("name", encodeURIComponent(query.name));
+  } if (query?.text) {
+    params.set("text", encodeURIComponent(query.text));
+  } if (query?.sort) {
+    params.set("sort", encodeURIComponent(query.sort));
   }
 
   return params;
@@ -189,8 +229,10 @@ export function encodeQuery(query: NavigationQuery): URLSearchParams {
 export function decodeQuery(query: URLSearchParams): NavigationQuery {
   return {
     base: QUERY.COLLECTION_BASE.find(s => s === decodeURIComponent(query.get("base") ?? "")),
-    type: QUERY.POINT_TYPE.find(s => s === decodeURIComponent(query.get("type") ?? "")),
-    name: decodeURIComponent(query.get("name") ?? "") || undefined,
+    text: decodeURIComponent(query.get("text") ?? "") || undefined,
+    sort: Object.values(RaribleItemSort).find(
+      s => s === decodeURIComponent(query.get("sort") ?? "")
+    ) as CollectionSort | undefined,
   };
 }
 
@@ -222,4 +264,20 @@ export function getItemUnlock(item: RaribleItem): Date {
   return (itemUnlockAttrib === undefined)
     ? MAX_DATE
     : new Date(Date.parse(itemUnlockAttrib));
+}
+
+function genSortIcon(SortTypeIcon: typeof TagIcon, isAscending: boolean): typeof TagIcon {
+  // @ts-ignore
+  return ({className, ...props}) => {
+    return createElement("div", {className: "relative"},
+      createElement(
+        isAscending ? ArrowTrendingUpIcon : ArrowTrendingDownIcon,
+        {className, ...props}
+      ),
+      createElement(
+        SortTypeIcon,
+        {className: cn("w-3 h-3 absolute -bottom-0.5 -left-0.5"), ...props}
+      ),
+    );
+  };
 }

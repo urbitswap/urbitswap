@@ -69,9 +69,9 @@ export function CollectionGrid({className}: ClassProps) {
     isFetchingNextPage,
     fetchNextPage,
   } = useInfiniteQuery(
-    [APP_TERM, "rarible", "collections", query?.name],
+    [APP_TERM, "rarible", "collections", query?.text],
     async ({ pageParam = undefined }) => {
-      if (!query?.name) {
+      if (!query?.text) {
         const pageResults = await Promise.all(Object.entries(FEATURED).sort().map(
           ([_, collId]) => rsdk.apis.collection.getCollectionById({collection: collId})
         ));
@@ -83,7 +83,7 @@ export function CollectionGrid({className}: ClassProps) {
       } else {
         const pageResults = await rsdk.apis.collection.searchCollection({
           collectionsSearchRequest: {
-            filter: {text: query?.name, blockchains: [Blockchain.ETHEREUM]},
+            filter: {text: query?.text, blockchains: [Blockchain.ETHEREUM]},
             size: 20,
             continuation: pageParam,
           },
@@ -119,7 +119,7 @@ export function CollectionGrid({className}: ClassProps) {
         <FailureIcon />
       ) : (
         <React.Fragment>
-          {!query?.name && (
+          {!query?.text && (
             <h1 className="text-2xl text-center font-bold underline pb-4">
               Featured Collections
             </h1>
@@ -210,16 +210,21 @@ export function ItemGrid({className}: ClassProps) {
   } = useInfiniteQuery(
     // TODO: Need to include address list in the query (or at least invalidate
     // relevant queries when new personal addresses are added).
-    [APP_TERM, "rarible", "pcollection", collId, query?.base, query?.name, query?.type],
+    [
+      APP_TERM, "rarible", "collection", collId, "pages",
+      query?.base, query?.text,
+      (query?.base === undefined) ? query?.sort : undefined,
+    ],
     async ({ pageParam = undefined }) => {
       const queryAddresses = Array.from(addresses ?? new Set());
       const queryFilter = (item: RaribleItem): boolean => !!(
-        (!query?.type
+        /*(!query?.type
           || (item.meta?.attributes ?? []).find(({key, value}) =>
             key === "size" && value === query.type
           )
-        ) && (!query?.name
-          || ((item.meta?.name ?? "").includes(query.name))
+        ) &&*/
+        (!query?.text
+          || ((item.meta?.name ?? "").includes(query.text))
         )
       );
 
@@ -271,13 +276,13 @@ export function ItemGrid({className}: ClassProps) {
       } else {
         const pageResults = await rsdk.apis.item.searchItems({ itemsSearchRequest: {
           size: 20,
-          sort: RaribleItemsSort.LOWEST_SELL,
           continuation: pageParam,
+          sort: query?.sort ?? RaribleItemsSort.LOWEST_SELL,
           filter: {
             collections: ([collId] as RaribleCollectionId[]),
             deleted: false,
-            names: query?.name ? [query?.name] : undefined,
-            traits: query?.type ? [{key: "size", value: query?.type}] : undefined,
+            names: query?.text ? [query?.text] : undefined,
+            // traits: query?.type ? [{key: "size", value: query?.type}] : undefined,
           },
         }});
         return {

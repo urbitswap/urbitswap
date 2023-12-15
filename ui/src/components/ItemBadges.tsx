@@ -10,7 +10,7 @@ import Popover from '@/components/Popover';
 // import { useUrbitNetworkLayer, useVentureAccountGrant } from '@/state/app';
 import { APP_TERM, FEATURED, QUERY } from '@/constants';
 import {
-  COLLECTION_ICON_MAP,
+  COLLECTIONBASE_ICON_MAP,
   URBITPOINT_ICON_MAP,
   capitalize,
   isMaxDate,
@@ -80,16 +80,16 @@ export default function ItemBadges({
             </Popover>
           )}
           {myItems.some((i: RaribleItem) => i.id === item.id) && (
-            <Popover message={COLLECTION_ICON_MAP["mine"].name}>
-              {createElement(COLLECTION_ICON_MAP["mine"].icon, {className: badgeClassName})}
+            <Popover message={COLLECTIONBASE_ICON_MAP["mine"].name}>
+              {createElement(COLLECTIONBASE_ICON_MAP["mine"].icon, {className: badgeClassName})}
             </Popover>
           )}
           {myBids.some((o: RaribleOrder) =>
             (o.take.type["@type"] === "ERC721" || o.take.type["@type"] === "ERC721_Lazy")
             && `${o.take.type?.contract}:${o.take.type?.tokenId}` === item.id
           ) && (
-            <Popover message={COLLECTION_ICON_MAP["bids"].name}>
-              {createElement(COLLECTION_ICON_MAP["bids"].icon, {className: badgeClassName})}
+            <Popover message={COLLECTIONBASE_ICON_MAP["bids"].name}>
+              {createElement(COLLECTIONBASE_ICON_MAP["bids"].icon, {className: badgeClassName})}
             </Popover>
           )}
         </React.Fragment>

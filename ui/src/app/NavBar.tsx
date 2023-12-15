@@ -4,13 +4,13 @@ import React, {
   useState,
   useRef,
   useCallback,
+  useMemo,
 } from 'react';
 import cn from 'classnames';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   BoltIcon,
   BoltSlashIcon,
-  ChevronDownIcon,
   DocumentIcon,
   HomeIcon,
   RectangleGroupIcon,
@@ -21,11 +21,13 @@ import {
 } from '@heroicons/react/24/solid';
 import ENSName from '@/components/ENSName';
 import UrbitswapIcon from '@/components/icons/UrbitswapIcon';
-import { DropdownMenu, DropdownEntry } from '@/components/Dropdown';
+import { DropdownMenu, DropdownEntry, DropdownButton } from '@/components/Dropdown';
 import { useModalNavigate } from '@/logic/routing';
 import {
-  COLLECTION_ICONS,
-  COLLECTION_ICON_MAP,
+  COLLECTIONBASE_ICONS,
+  COLLECTIONBASE_ICON_MAP,
+  COLLECTIONSORT_ICONS,
+  COLLECTIONSORT_ICON_MAP,
   URBITPOINT_ICONS,
   URBITPOINT_ICON_MAP,
   capitalize,
@@ -44,6 +46,7 @@ import { APP_TERM, QUERY } from '@/constants';
 import type { Chain } from 'viem'; // node_modules/viem/types/chain.ts
 import type {
   CollectionBaseish,
+  CollectionSortish,
   UrbitPointTypeish,
   NavigationQuery,
   IconLabel,
@@ -68,12 +71,8 @@ export default function NavBar({
   const { address, isConnected } = useWagmiAccount();
   const { connect } = useWagmiConnect();
   const { disconnect } = useWagmiDisconnect();
-
-  const inCollectionMode: boolean = collId !== undefined;
   const assocAddresses = useUrbitAccountAssocAddresses();
-  const isAssociated: boolean = (assocAddresses ?? new Set()).has(address);
   const collectionKYC = useCollectionAccountKYC();
-  const isKYCd = collectionKYC?.kyc && !collectionKYC?.noauth;
 
   const onChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const {value}: {value: string;} = event.target;
@@ -82,7 +81,7 @@ export default function NavBar({
   const onSubmit = useCallback((newQuery: NavigationQuery | void) => {
     const newSearchParams: URLSearchParams = encodeQuery({
       ...Object.fromEntries(searchParams),
-      name: searchQuery,
+      text: searchQuery,
       ...(!newQuery ? {} : newQuery),
     });
     // NOTE: We use 'navigate' instead of 'setSearchParams' in order to enable
@@ -96,27 +95,15 @@ export default function NavBar({
     }
   }, [onSubmit]);
 
-  const DropdownButton = useCallback(({
-    title,
-    children,
-    className
-  }: {
-    title: React.ReactNode;
-    children: React.ReactNode;
-    className?: string | boolean;
-  }) => (
-    <div className={cn(
-      "button flex flex-row items-center space-x-2",
-      "font-semibold text-sm sm:text-md",
-      className,
-    )}>
-      {children}
-      <div className="hidden sm:block">
-        {title}
-      </div>
-      <ChevronDownIcon className="h-3 w-3" />
-    </div>
-  ), []);
+  const [searchBase, searchText, searchSort] = useMemo(() => ([
+    (searchParams.get("base") ?? "") as CollectionBaseish,
+    (searchParams.get("text") ?? "") as string,
+    (searchParams.get("sort") ?? "")  as CollectionSortish,
+  ]), [searchParams]);
+
+  const inCollectionMode: boolean = collId !== undefined;
+  const isAssociated: boolean = (assocAddresses ?? new Set()).has(address);
+  const isKYCd = collectionKYC?.kyc && !collectionKYC?.noauth;
 
   return (
     <nav className={cn(
@@ -175,41 +162,51 @@ export default function NavBar({
                 "placeholder:font-normal focus-within:mix-blend-normal text-sm sm:text-md",
               )}
             />
-            {/*<span className={cn(
-              "absolute inset-y-[3px] right-0 h-8 w-8",
-              "flex items-center pr-14 text-gray-400",
-            )}>
-              <DropdownMenu trigger={React.createElement(
-                URBITPOINT_ICON_MAP[((searchParams.get("type") ?? "") as UrbitPointTypeish)].icon,
-                {className: "w-5 h-5"},
-              )}>
-                <DropdownEntry disabled children="Collection" />
-                {URBITPOINT_ICONS.map(({id, name, icon}: IconLabel<UrbitPointTypeish>) => (
-                  <DropdownEntry key={`type-${id}-dd`} onSelect={() => onSubmit({type: id || undefined})}>
-                    {React.createElement(icon, {className: "w-5 h-5"})}
-                    <span>{name}</span>
-                  </DropdownEntry>
-                ))}
-              </DropdownMenu>
-            </span>*/}
             {inCollectionMode && (
-              <span className={cn(
-                "absolute inset-y-[3px] right-0 h-8 w-8",
-                "flex items-center pr-2 text-gray-400",
-              )}>
-                <DropdownMenu trigger={React.createElement(
-                  COLLECTION_ICON_MAP[((searchParams.get("base") ?? "") as CollectionBaseish)].icon,
-                  {className: "w-5 h-5"},
+              <React.Fragment>
+                <span className={cn(
+                  "absolute inset-y-[3px] right-0 h-8 w-8",
+                  "flex items-center pr-14",
+                  searchBase ? "text-gray-100" : "text-gray-400",
                 )}>
-                  <DropdownEntry disabled children="Collection" />
-                  {COLLECTION_ICONS.map(({id, name, icon}: IconLabel<CollectionBaseish>) => (
-                    <DropdownEntry key={`base-${id}-dd`} onSelect={() => onSubmit({base: id || undefined})}>
-                      {React.createElement(icon, {className: "w-5 h-5"})}
-                      <span>{name}</span>
-                    </DropdownEntry>
-                  ))}
-                </DropdownMenu>
-              </span>
+                  <DropdownMenu disabled={!!searchBase}
+                  trigger={React.createElement(
+                    COLLECTIONSORT_ICON_MAP[searchSort].icon,
+                    {className: "w-5 h-5"},
+                  )}>
+                    <DropdownEntry disabled children="Sort Method" />
+                    {COLLECTIONSORT_ICONS.map(({id, name, icon}: IconLabel<CollectionSortish>) => (
+                      <DropdownEntry
+                        key={`sort-${id}-dd`}
+                        onSelect={() => onSubmit({sort: id || undefined})}
+                      >
+                        {React.createElement(icon, {className: "w-5 h-5"})}
+                        <span>{name}</span>
+                      </DropdownEntry>
+                    ))}
+                  </DropdownMenu>
+                </span>
+                <span className={cn(
+                  "absolute inset-y-[3px] right-0 h-8 w-8",
+                  "flex items-center pr-1 text-gray-400",
+                )}>
+                  <DropdownMenu trigger={React.createElement(
+                    COLLECTIONBASE_ICON_MAP[searchBase].icon,
+                    {className: "w-5 h-5"},
+                  )}>
+                    <DropdownEntry disabled children="Collection" />
+                    {COLLECTIONBASE_ICONS.map(({id, name, icon}: IconLabel<CollectionBaseish>) => (
+                      <DropdownEntry
+                        key={`base-${id}-dd`}
+                        onSelect={() => onSubmit({base: id || undefined})}
+                      >
+                        {React.createElement(icon, {className: "w-5 h-5"})}
+                        <span>{name}</span>
+                      </DropdownEntry>
+                    ))}
+                  </DropdownMenu>
+                </span>
+              </React.Fragment>
             )}
           </label>
         </div>
