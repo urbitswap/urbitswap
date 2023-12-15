@@ -10,22 +10,24 @@ type RadixAlign = typeof ALIGN_OPTIONS[number];
 export function DropdownMenu({
   trigger,
   children,
-  className,
+  triggerClassName,
+  contentClassName,
   align = "center",
   disabled = false,
 }: {
   trigger: React.ReactNode;
   children: React.ReactNode;
-  className?: string;
+  triggerClassName?: string;
+  contentClassName?: string;
   align?: RadixAlign;
   disabled?: boolean;
 }) {
   return (
     <BaseDropdownMenu.Root>
-      <BaseDropdownMenu.Trigger disabled={disabled}>
+      <BaseDropdownMenu.Trigger disabled={disabled} className={triggerClassName}>
         {trigger}
       </BaseDropdownMenu.Trigger>
-      <BaseDropdownMenu.Content align={align} className={cn("dropdown", className)}>
+      <BaseDropdownMenu.Content align={align} className={cn("dropdown", contentClassName)}>
         {children}
         <BaseDropdownMenu.Arrow className="w-4 h-3 fill-gray-800" />
       </BaseDropdownMenu.Content>
@@ -67,7 +69,7 @@ export function DropdownButton({
       <div className="hidden sm:block">
         {title}
       </div>
-      <ChevronDownIcon className="h-3 w-3" />
+      <ChevronDownIcon className="h-3 w-3 sm:block hidden" />
     </div>
   );
 }

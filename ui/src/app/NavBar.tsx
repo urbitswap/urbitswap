@@ -1,6 +1,7 @@
 import React, {
   ChangeEvent,
   KeyboardEvent,
+  createElement,
   useState,
   useRef,
   useCallback,
@@ -22,6 +23,7 @@ import {
 import ENSName from '@/components/ENSName';
 import UrbitswapIcon from '@/components/icons/UrbitswapIcon';
 import { DropdownMenu, DropdownEntry, DropdownButton } from '@/components/Dropdown';
+import { useFocusContext } from '@/components/FocusContext';
 import { useModalNavigate } from '@/logic/routing';
 import {
   COLLECTIONBASE_ICONS,
@@ -59,8 +61,8 @@ export default function NavBar({
   className?: string;
   innerClassName?: string;
 }) {
-  // const inputRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const { focusRef, isFocused } = useFocusContext();
 
   const navigate = useNavigate();
   const modalNavigate = useModalNavigate();
@@ -103,7 +105,10 @@ export default function NavBar({
 
   const inCollectionMode: boolean = collId !== undefined;
   const isAssociated: boolean = (assocAddresses ?? new Set()).has(address);
-  const isKYCd = collectionKYC?.kyc && !collectionKYC?.noauth;
+  const isKYCd: boolean | undefined = collectionKYC?.kyc && !collectionKYC?.noauth;
+
+  const btnOutClass: string = "h-full small-button";
+  const btnInnClass: string = "w-5";
 
   return (
     <nav className={cn(
@@ -134,21 +139,11 @@ export default function NavBar({
           </DropdownEntry>
         </DropdownMenu>
 
-        <div className="flex flex-row gap-2 flex-1 min-w-0">
-          <label className="relative flex w-full items-center flex-1 min-w-0">
-            <span className="sr-only">Search Prefences</span>
-            <span className={cn(
-              "absolute inset-y-[3px] left-0 h-8 w-8",
-              "flex items-center pl-2 text-gray-400",
-            )}>
-              <MagnifyingGlassIcon
-                className="h-5 w-5"
-                onClick={() => onSubmit()}
-                style={{transform: "rotateY(180deg)"}}
-              />
-            </span>
+        <div className="flex flex-row input-group flex-1 min-w-0 h-9">
+          <div className="flex flex-row relative items-center flex-1 min-w-0 h-full">
             <input
               name={`${APP_TERM}-navbar-search`}
+              ref={focusRef}
               value={searchQuery}
               onChange={onChange}
               onKeyDown={onKeyDown}
@@ -158,57 +153,55 @@ export default function NavBar({
                 : `Search ${!collMeta ? "Collection" : `'${collMeta.name}'`}`
               }
               className={cn(
-                "input h-9 w-full bg-gray-50 pl-8 pr-16 flex-1 min-w-0",
+                "input bg-gray-50 w-full h-full flex-1 min-w-0",
                 "placeholder:font-normal focus-within:mix-blend-normal text-sm sm:text-md",
+                // FIXME: Wish this was automated, but it isn't because of the
+                // nesting to accommodate the floating status indicator
+                inCollectionMode ? "rounded-l-lg rounded-r-none" : "rounded-lg",
               )}
             />
-            {inCollectionMode && (
-              <React.Fragment>
-                <span className={cn(
-                  "absolute inset-y-[3px] right-0 h-8 w-8",
-                  "flex items-center pr-14",
-                  searchBase ? "text-gray-100" : "text-gray-400",
-                )}>
-                  <DropdownMenu disabled={!!searchBase}
-                  trigger={React.createElement(
-                    COLLECTIONSORT_ICON_MAP[searchSort].icon,
-                    {className: "w-5 h-5"},
-                  )}>
-                    <DropdownEntry disabled children="Sort Method" />
-                    {COLLECTIONSORT_ICONS.map(({id, name, icon}: IconLabel<CollectionSortish>) => (
-                      <DropdownEntry
-                        key={`sort-${id}-dd`}
-                        onSelect={() => onSubmit({sort: id || undefined})}
-                      >
-                        {React.createElement(icon, {className: "w-5 h-5"})}
-                        <span>{name}</span>
-                      </DropdownEntry>
-                    ))}
-                  </DropdownMenu>
-                </span>
-                <span className={cn(
-                  "absolute inset-y-[3px] right-0 h-8 w-8",
-                  "flex items-center pr-1 text-gray-400",
-                )}>
-                  <DropdownMenu trigger={React.createElement(
-                    COLLECTIONBASE_ICON_MAP[searchBase].icon,
-                    {className: "w-5 h-5"},
-                  )}>
-                    <DropdownEntry disabled children="Collection" />
-                    {COLLECTIONBASE_ICONS.map(({id, name, icon}: IconLabel<CollectionBaseish>) => (
-                      <DropdownEntry
-                        key={`base-${id}-dd`}
-                        onSelect={() => onSubmit({base: id || undefined})}
-                      >
-                        {React.createElement(icon, {className: "w-5 h-5"})}
-                        <span>{name}</span>
-                      </DropdownEntry>
-                    ))}
-                  </DropdownMenu>
-                </span>
-              </React.Fragment>
-            )}
-          </label>
+            <span className={cn(
+              "absolute right-2 px-2 text-gray-400 small-secondary-button",
+              "sm:block hidden",
+            )}>
+              {!isFocused ? "/" : searchQuery === "" ? "esc" : "↵"}
+            </span>
+          </div>
+          {inCollectionMode && (
+            <React.Fragment>
+              <DropdownMenu
+                trigger={createElement(COLLECTIONBASE_ICON_MAP[searchBase].icon, {className: btnInnClass})}
+                triggerClassName={btnOutClass}
+              >
+                <DropdownEntry disabled children="Collection" />
+                {COLLECTIONBASE_ICONS.map(({id, name, icon}: IconLabel<CollectionBaseish>) => (
+                  <DropdownEntry
+                    key={`base-${id}-dd`}
+                    onSelect={() => onSubmit({base: id || undefined})}
+                  >
+                    {React.createElement(icon, {className: "w-5 h-5"})}
+                    <span>{name}</span>
+                  </DropdownEntry>
+                ))}
+              </DropdownMenu>
+              <DropdownMenu
+                trigger={createElement(COLLECTIONSORT_ICON_MAP[searchSort].icon, {className: btnInnClass})}
+                triggerClassName={btnOutClass}
+                disabled={!!searchBase}
+              >
+                <DropdownEntry disabled children="Sort Method" />
+                {COLLECTIONSORT_ICONS.map(({id, name, icon}: IconLabel<CollectionSortish>) => (
+                  <DropdownEntry
+                    key={`sort-${id}-dd`}
+                    onSelect={() => onSubmit({sort: id || undefined})}
+                  >
+                    {React.createElement(icon, {className: "w-5 h-5"})}
+                    <span>{name}</span>
+                  </DropdownEntry>
+                ))}
+              </DropdownMenu>
+            </React.Fragment>
+          )}
         </div>
 
         <DropdownMenu align="end" trigger={

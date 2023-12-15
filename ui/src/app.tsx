@@ -20,6 +20,7 @@ import {
 } from '@/app/Dialogs';
 import NavBar from '@/app/NavBar';
 import { NewVersionWatcher, NewWalletWatcher } from '@/app/Watchers';
+import { FocusProvider, FocusContextWatcher } from '@/components/FocusContext';
 import { queryAPI, urbitAPI, wagmiAPI } from '@/api';
 import { APP_TERM } from '@/constants';
 import type { ReactRouterState } from '@/types/urbui';
@@ -29,9 +30,12 @@ export function App() {
     <QueryClientProvider client={queryAPI}>
       <WagmiConfig config={wagmiAPI}>
         <BrowserRouter basename={`/apps/${APP_TERM}/`}>
-          <NewVersionWatcher />
-          <NewWalletWatcher />
-          <RoutedApp />
+          <FocusProvider>
+            <NewVersionWatcher />
+            <NewWalletWatcher />
+            <RoutedApp />
+            <FocusContextWatcher />
+          </FocusProvider>
         </BrowserRouter>
       </WagmiConfig>
     </QueryClientProvider>
