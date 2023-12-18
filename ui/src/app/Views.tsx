@@ -390,7 +390,7 @@ export function ItemPage({className}: ClassProps) {
   const myBids = useRaribleAccountBids();
 
   const ownerUrbitId = useMemo(() => (
-    (traders ?? {})[owner ?? ""]
+    (traders ?? {})[owner ?? "0x"]
   ), [owner, traders]);
 
   const ItemOffer = useCallback(({

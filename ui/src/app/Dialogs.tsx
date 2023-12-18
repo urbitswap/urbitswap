@@ -41,6 +41,7 @@ import {
 import {
   useWagmiAccount,
   useWagmiConnect,
+  useUrbitTraders,
   useUrbitAssociateMutation,
   useCollectionAccountKYC,
   useItemAccountGrant,
@@ -48,7 +49,7 @@ import {
   useRouteRaribleAccountItem,
   useRouteRaribleItemMutation,
 } from '@/state/app';
-import { set } from '@/state/idb';
+import { get, set } from '@/state/idb';
 import { useDismissNavigate } from '@/logic/routing';
 import {
   isMaxDate,
@@ -458,6 +459,67 @@ export function AssociateDialog() {
   return (<WalletChecksDialog render={AssociateDialogRender} />);
 }
 
+export function KnownWalletsDialog() {
+  const [localAddresses, setLocalAddresses] = useState<Set<Address> | undefined>(undefined);
+  const urbitAddressMap = useUrbitTraders();
+  const { address, isConnected } = useWagmiAccount();
+
+  useEffect(() => {
+    get("addresses").then((idbAddresses: Set<Address> | undefined) => {
+      const loadedIdbAddresses = idbAddresses ?? new Set();
+      setLocalAddresses(loadedIdbAddresses);
+    });
+  }, []);
+
+  const ShipAddressBlock = useCallback(({ship, addresses} : {ship: string; addresses: Set<Address>;}) => (
+    <div className="flow flow-col justify-start">
+      <ShipName name={ship} full={false} className="italic underline" />
+      <ul className="list-disc list-inside">
+        {[...addresses.values()].sort().map((address: Address) => (
+          <li key={`${ship}-${address}`}>
+            <ENSName address={address} full={false} className="text-sm" />
+          </li>
+        ))}
+      </ul>
+      {/* TODO: Add source information for each entry (what table did this come from, or was it local?) */}
+      {/* TODO: Make this information formatted in a table w/ "@p, address, source" columns */}
+    </div>
+  ), []);
+
+  const urbitShipMap: Record<string, Set<Address>> =
+    (Object.entries(urbitAddressMap ?? {}) as  [Address, string][])
+    .concat([...(localAddresses ?? new Set()).values()].map(adr => [adr, window.our]))
+    .reduce((acc, [key, val]: [Address, string]): Record<string, Set<Address>> => {
+      if (acc[val] === undefined) acc[val] = new Set();
+      acc[val].add(key);
+      return acc;
+    }, ({} as Record<string, Set<Address>>));
+
+  return (
+    <DefaultDialog>
+      <DialogBody head="Known Wallets">
+        {(localAddresses === undefined || urbitAddressMap === undefined) ? (
+          <React.Fragment>
+            <UrbitswapIcon className="animate-spin w-20 h-20" />
+            <p className="italic">Check {
+              [localAddresses, urbitAddressMap].reduce((acc, cur) => (
+                acc + ((cur !== undefined) ? 1 : 0)
+              ), 1)
+            }/2</p>
+          </React.Fragment>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <ShipAddressBlock ship={window.our} addresses={urbitShipMap[window.our]} />
+            {Object.entries(urbitShipMap).map(([ship, addresses]) => (ship !== window.our) && (
+              <ShipAddressBlock key={ship} ship={ship} addresses={addresses} />
+            ))}
+          </div>
+        )}
+      </DialogBody>
+    </DefaultDialog>
+  );
+}
+
 export function DisclaimerDialog() {
   const dismiss = useDismissNavigate();
   const onOpenChange = (open: boolean) => {
@@ -479,7 +541,7 @@ export function DisclaimerDialog() {
         </header>
       </div>
 
-      <form className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <p>
           This is unaudited prerelease software that may contain bugs,
           errors and other problems that could cause system or other
@@ -503,7 +565,7 @@ export function DisclaimerDialog() {
             </DialogPrimitive.Close>
           </div>
         </footer>
-      </form>
+      </div>
     </DefaultDialog>
   );
 }

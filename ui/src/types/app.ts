@@ -62,7 +62,7 @@ export interface TransferGrant {
 }
 
 export interface UrbitTraders {
-  [wallet: string]: string;  // wallet -> @p
+  [wallet: Address]: string;  // wallet -> @p
 }
 
 export interface UrbitAssoc {

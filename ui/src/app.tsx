@@ -16,6 +16,7 @@ import {
   TradeDialog,
   CancelDialog,
   AssociateDialog,
+  KnownWalletsDialog,
   DisclaimerDialog,
 } from '@/app/Dialogs';
 import NavBar from '@/app/NavBar';
@@ -84,7 +85,8 @@ function RoutedAppRoutes({
       {state?.backgroundLocation && (
         <Routes>
           <Route path="/disclaimer" element={<DisclaimerDialog />} />
-          <Route path="/assoc" element={<AssociateDialog />} />
+          <Route path="/associate" element={<AssociateDialog />} />
+          <Route path="/wallets" element={<KnownWalletsDialog />} />
           <Route path="/:collId/item/:itemId">
             <Route path="offer" element={<OfferDialog />} />
             <Route path="trade/:offerId" element={<TradeDialog />} />

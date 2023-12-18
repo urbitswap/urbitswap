@@ -37,12 +37,12 @@ export function NewWalletWatcher() {
   const modalNavigate = useModalNavigate();
 
   const { address, isConnected } = useWagmiAccount();
-  const lastAddress = useRef<string | undefined>(isConnected ? address : undefined);
+  const lastAddress = useRef<Address | undefined>(isConnected ? address : undefined);
   const assocAddresses = useUrbitAccountAssocAddresses();
 
   useEffect(() => {
     if (assocAddresses !== undefined) {
-      update("addresses", (idbAddresses: Set<string> | undefined) => {
+      update("addresses", (idbAddresses: Set<Address> | undefined) => {
         const newIdbAddresses = idbAddresses ?? new Set();
         assocAddresses.forEach((a: Address) => newIdbAddresses.add(a));
         return newIdbAddresses;
@@ -54,7 +54,7 @@ export function NewWalletWatcher() {
     // NOTE: This can cause unnecessary prompts in cases where a user is
     // using a new client and hasn't downloaded the Urbit address list yet.
     if (isConnected && address !== lastAddress.current) {
-      update("addresses", (idbAddresses: Set<string> | undefined) => {
+      update("addresses", (idbAddresses: Set<Address> | undefined) => {
         const newIdbAddresses = idbAddresses ?? new Set();
         if (!newIdbAddresses.has(address)) {
           lastAddress.current = address;

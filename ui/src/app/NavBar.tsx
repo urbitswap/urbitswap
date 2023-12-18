@@ -133,6 +133,10 @@ export default function NavBar({
               <span>View Collection</span>
             </DropdownEntry>
           )}
+          <DropdownEntry onSelect={() => modalNavigate("/wallets")}>
+            <WalletIcon className="w-4 h-4" />
+            <span>View Wallets</span>
+          </DropdownEntry>
           <DropdownEntry onSelect={() => modalNavigate("/disclaimer")}>
             <DocumentIcon className="w-4 h-4" />
             <span>View License</span>
@@ -223,7 +227,7 @@ export default function NavBar({
             <span>{`${isConnected ? "Disc" : "C"}onnect Wallet`}</span>
           </DropdownEntry>
           {(isConnected && !isAssociated) && (
-            <DropdownEntry onSelect={() => modalNavigate("/assoc")}>
+            <DropdownEntry onSelect={() => modalNavigate("/associate")}>
               <LinkIcon className="w-4 h-4" />
               <span>Associate @p</span>
             </DropdownEntry>

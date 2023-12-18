@@ -6,6 +6,7 @@ import { useUrbitTraders } from '@/state/app';
 import EthereumIcon from '@/components/icons/EthereumIcon';
 import { APP_DBUG } from '@/constants';
 import type { Address } from 'viem';
+import type { UrbitTraders } from '@/types/app';
 
 type EntityNameProps = {
   address: Address;
@@ -14,10 +15,10 @@ type EntityNameProps = {
 } & HTMLAttributes<HTMLSpanElement>;
 
 export default function EntityName(props: EntityNameProps) {
-  const traders = useUrbitTraders();
-  const urbitId = (traders ?? {})[props.address.toLowerCase()];
-  const ethUrl = `https://${!APP_DBUG ? "" : "goerli."}etherscan.io/address/${props.address}`;
-  const isMe = urbitId === window.our;
+  const traders: UrbitTraders | undefined = useUrbitTraders();
+  const urbitId: string = (traders ?? {})[(props.address.toLowerCase() as Address)];
+  const ethUrl: string = `https://${!APP_DBUG ? "" : "goerli."}etherscan.io/address/${props.address}`;
+  const isMe: boolean = urbitId === window.our;
 
   return (
     <span className={cn(
