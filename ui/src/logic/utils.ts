@@ -58,20 +58,20 @@ export const COLLECTIONBASE_ICON_MAP: Record<CollectionBaseish, IconLabel> = COL
 );
 export const COLLECTIONSORT_ICONS: IconLabel<CollectionSortish>[] = [{
     id: ""/*RaribleItemSort.LOWEST_SELL*/,
-    name: "Ask Price Descending",
-    icon: genSortIcon(CurrencyDollarIcon, false)
-  }, {
-    id: RaribleItemSort.HIGHEST_SELL,
     name: "Ask Price Ascending",
     icon: genSortIcon(CurrencyDollarIcon, true)
   }, {
-    id: RaribleItemSort.HIGHEST_BID,
-    name: "Bid Price Descending",
-    icon: genSortIcon(TagIcon, false),
+    id: RaribleItemSort.HIGHEST_SELL,
+    name: "Ask Price Descending",
+    icon: genSortIcon(CurrencyDollarIcon, false)
   }, {
     id: RaribleItemSort.LOWEST_BID,
     name: "Bid Price Ascending",
     icon: genSortIcon(TagIcon, true),
+  }, {
+    id: RaribleItemSort.HIGHEST_BID,
+    name: "Bid Price Descending",
+    icon: genSortIcon(TagIcon, false),
   }, {
     id: RaribleItemSort.LATEST,
     name: "NFT Age Ascending",
