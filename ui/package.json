@@ -18,6 +18,7 @@
     "@radix-ui/react-popover": "^1.0.7",
     "@rarible/sdk": "^0.13.64-beta.2",
     "@tanstack/react-query": "^4.36.1",
+    "@tanstack/react-table": "^8.11.0",
     "@tlon/sigil-js": "^1.4.5",
     "@urbit/api": "2.2",
     "@urbit/http-api": "^2.4.5-debug",

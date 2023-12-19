@@ -12,6 +12,13 @@ import cn from 'classnames';
 import { FormProvider, useForm, useController } from 'react-hook-form';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import DateTimePicker from 'react-datetime-picker';
 // FIXME: There's an issue with the CSS where 'active' and 'now' tiles are
@@ -52,18 +59,19 @@ import {
 import { get, set } from '@/state/idb';
 import { useDismissNavigate } from '@/logic/routing';
 import {
-  isMaxDate,
-  tenderToAsset,
   assetToTender,
+  isMaxDate,
   makePrettyName,
   makePrettyPrice,
+  tenderToAsset,
 } from '@/logic/utils';
 import {
   APP_VERSION,
   FEATURED,
   MAX_DATE,
-  TREASURY,
   TENDERS,
+  TRADERS_HOST,
+  TREASURY,
 } from '@/constants';
 import { BigNumber } from 'bignumber.js';
 import { toBigNumber } from '@rarible/types';
@@ -76,7 +84,7 @@ import type {
   Order as RaribleOrder,
 } from '@rarible/api-client';
 import type { Address } from 'viem';
-import type { DeferredRender, TenderType } from '@/types/app';
+import type { DeferredRender, TenderType, UrbitKnownWallet } from '@/types/app';
 
 export function OfferDialog() {
   const OfferDialogRender = useCallback(() => {
@@ -460,10 +468,11 @@ export function AssociateDialog() {
 }
 
 export function KnownWalletsDialog() {
+  // TODO: Add the ability to copy both wallet address and ship name (use the
+  // "landscape-apps" strategy for copying arbitrary values here)
+  // TODO: Add support for filtering (with a global input filter for the table)
   const [localAddresses, setLocalAddresses] = useState<Set<Address> | undefined>(undefined);
   const urbitAddressMap = useUrbitTraders();
-  const { address, isConnected } = useWagmiAccount();
-
   useEffect(() => {
     get("addresses").then((idbAddresses: Set<Address> | undefined) => {
       const loadedIdbAddresses = idbAddresses ?? new Set();
@@ -471,48 +480,102 @@ export function KnownWalletsDialog() {
     });
   }, []);
 
-  const ShipAddressBlock = useCallback(({ship, addresses} : {ship: string; addresses: Set<Address>;}) => (
-    <div className="flow flow-col justify-start">
-      <ShipName name={ship} full={false} className="italic underline" />
-      <ul className="list-disc list-inside">
-        {[...addresses.values()].sort().map((address: Address) => (
-          <li key={`${ship}-${address}`}>
-            <ENSName address={address} full={false} className="text-sm" />
-          </li>
-        ))}
-      </ul>
-      {/* TODO: Add source information for each entry (what table did this come from, or was it local?) */}
-      {/* TODO: Make this information formatted in a table w/ "@p, address, source" columns */}
-    </div>
-  ), []);
+  // NOTE: Need to store the statically-calculated rows as hook state because
+  // the table library detects a re-render based on data reference (which
+  // changes every render when using a raw/non-stateful array).
+  const tableRows = useMemo<UrbitKnownWallet[]>(() => {
+    const newTableRows: UrbitKnownWallet[] =
+      [...(localAddresses ?? new Set()).values()].map((addr) => ({
+        ship: window.our,
+        wallet: addr,
+        source: ([window.our, "$browser"] as [string, string]),
+      })).concat(
+        (Object.entries(urbitAddressMap ?? {}) as [Address, string][]).map(([addr, ship]) => ({
+          ship: ship,
+          wallet: addr,
+          source: TRADERS_HOST,
+        }))
+      );
+    return newTableRows;
+    // NOTE: Simple test case for bigger tables
+    // return [...Array(10).keys()].reduce(acc => acc.concat(newTableRows), []);
+  }, [localAddresses, urbitAddressMap]);
+  const tableCols = useMemo(() => {
+    const colHelper = createColumnHelper<UrbitKnownWallet>();
+    return [
+      colHelper.accessor("ship", {
+        header: () => (<span className="font-medium">Ship</span>),
+        cell: (info) => (<ShipName name={info.getValue()} full={false} />),
+      }),
+      colHelper.accessor("wallet", {
+        header: () => (<span className="font-medium">Wallet</span>),
+        cell: (info) => (<ENSName address={info.getValue()} full={false} />),
+      }),
+      // FIXME: It would be better to just use `source` as the accessor, but
+      // this causes the table library to use a different sort ordering for
+      // this column (i.e. desc => asc => none, instead of asc => desc => none).
+      colHelper.accessor((row) => row.source.join("/"), {
+        id: "source",
+        header: () => (<span className="font-medium">Source</span>),
+        cell: (info) => (
+          <div className="truncate">
+            <ShipName name={info.getValue().split("/")[0]} full={false} />
+            <span>{`/${info.getValue().split("/")[1]}`}</span>
+          </div>
+        ),
+      }),
+    ];
+  }, []);
 
-  const urbitShipMap: Record<string, Set<Address>> =
-    (Object.entries(urbitAddressMap ?? {}) as  [Address, string][])
-    .concat([...(localAddresses ?? new Set()).values()].map(adr => [adr, window.our]))
-    .reduce((acc, [key, val]: [Address, string]): Record<string, Set<Address>> => {
-      if (acc[val] === undefined) acc[val] = new Set();
-      acc[val].add(key);
-      return acc;
-    }, ({} as Record<string, Set<Address>>));
+  const table = useReactTable({
+    data: tableRows,
+    columns: tableCols,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
 
   return (
     <DefaultDialog>
-      <DialogBody head="Known Wallets">
+      <DialogBody head="Known Wallets" className="max-h-[50vh]">
         {(localAddresses === undefined || urbitAddressMap === undefined) ? (
-          <React.Fragment>
+          <div className="flex flex-col gap-4 justify-center items-center">
             <UrbitswapIcon className="animate-spin w-20 h-20" />
             <p className="italic">Check {
               [localAddresses, urbitAddressMap].reduce((acc, cur) => (
                 acc + ((cur !== undefined) ? 1 : 0)
               ), 1)
             }/2</p>
-          </React.Fragment>
+          </div>
         ) : (
-          <div className="flex flex-col gap-2">
-            <ShipAddressBlock ship={window.our} addresses={urbitShipMap[window.our]} />
-            {Object.entries(urbitShipMap).map(([ship, addresses]) => (ship !== window.our) && (
-              <ShipAddressBlock key={ship} ship={ship} addresses={addresses} />
-            ))}
+          <div className="overflow-y-scroll">
+            <table className="table-fixed w-full text-left rtl:text-right">
+              <thead className="sticky top-0 text-base sm:text-lg border-b-2 bg-white">
+                {table.getHeaderGroups().map(headerGroup => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map(header => (
+                      <th key={header.id}
+                        className={header.column.getCanSort() ? "cursor-pointer select-none" : ""}
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {{asc: " ↑", desc: " ↓"}[header.column.getIsSorted() as string] ?? " •"}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody className="text-sm sm:text-base">
+                {table.getRowModel().rows.map(row => (
+                  <tr key={row.id} className="odd:bg-gray-50 even:bg-gray-100 border-b">
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </DialogBody>

@@ -65,6 +65,12 @@ export interface UrbitTraders {
   [wallet: Address]: string;  // wallet -> @p
 }
 
+export interface UrbitKnownWallet {
+  ship: string;
+  wallet: Address;
+  source: [string, string];
+}
+
 export interface UrbitAssoc {
   address: Address;
   signature: string;
