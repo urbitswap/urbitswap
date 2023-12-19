@@ -16,7 +16,7 @@
     "@radix-ui/react-dialog": "^1.0.2",
     "@radix-ui/react-dropdown-menu": "^2.0.1",
     "@radix-ui/react-popover": "^1.0.7",
-    "@rarible/sdk": "^0.13.64-beta.2",
+    "@rarible/sdk": "0.13.64-beta.2",
     "@tanstack/react-query": "^4.36.1",
     "@tanstack/react-table": "^8.11.0",
     "@tlon/sigil-js": "^1.4.5",
@@ -59,6 +59,7 @@
     "vite-plugin-node-polyfills": "^0.15.0"
   },
   "resolutions": {
-    "**/vite-plugin-rewrite-all": "1.0.1"
+    "**/vite-plugin-rewrite-all": "1.0.1",
+    "**/@rarible/api-client": "0.16.5-alpha.4"
   }
 }
