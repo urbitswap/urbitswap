@@ -211,7 +211,7 @@ export function ItemGrid({className}: ClassProps) {
     // TODO: Need to include address list in the query (or at least invalidate
     // relevant queries when new personal addresses are added).
     [
-      APP_TERM, "rarible", "collection", collId, "pages",
+      APP_TERM, "rarible", "collection", collId, "items", "paged",
       query?.base, query?.text,
       (query?.base === undefined) ? query?.sort : undefined,
     ],

@@ -49,8 +49,8 @@ import type { Callable } from '@/types/utils';
 
 export const COLLECTIONBASE_ICONS: IconLabel<CollectionBaseish>[] = [
   {id: "", name: "Full Collection", icon: ViewfinderCircleIcon},
-  {id: "mine", name: "Owned Asset", icon: WalletIcon},
-  {id: "bids", name: "Bid Asset", icon: TagIcon},
+  {id: "mine", name: "Owned Asset(s)", icon: WalletIcon},
+  {id: "bids", name: "Bid Asset(s)", icon: TagIcon},
 ];
 export const COLLECTIONBASE_ICON_MAP: Record<CollectionBaseish, IconLabel> = COLLECTIONBASE_ICONS.reduce(
   (a, i) => {a[i.id] = i; return a;},

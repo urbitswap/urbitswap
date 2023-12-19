@@ -384,6 +384,10 @@ export function CancelDialog() {
             Do you really want to rescind your listing?
           </p>
 
+          <p className="mt-4 text-sm text-center">
+            (Cancellations generally take between 45-120+ seconds to process.)
+          </p>
+
           <footer className="mt-4 flex items-center justify-between space-x-2">
             <div className="ml-auto flex items-center space-x-2">
               <DialogPrimitive.Close asChild>

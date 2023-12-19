@@ -228,7 +228,7 @@ export function useRaribleCollectionMeta(): RaribleCollection | undefined {
 export function useRaribleCollectionItems(): RaribleItem[] | undefined {
   const { collId } = useParams();
   const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "rarible", "collection", collId, "items",
+    APP_TERM, "rarible", "collection", collId, "items", "complete",
   ], [collId]);
 
   const rsdk = useRaribleSDK();
@@ -389,10 +389,10 @@ export function useRouteRaribleItemMutation<TResponse>(
           ? result
           // @ts-ignore
           : result.wait().then((rsdkResult: any) =>
-            // FIXME: The Rarible Ownership API tends to follow a confirmed
-            // blockchain action with a slight delay, so we just wait a bit
-            // to avoid weird desyncs this can cause with the UI (e.g. a user
-            // not being listed as an NFT owner after purchase).
+            // FIXME: The Rarible Ownership API tends to lag a few seconds
+            // behind a confirmed blockchain action, so we just wait a bit
+            // to avoid UI desyncs (e.g. a user not being listed as an NFT
+            // owner after purchase).
             new Promise(resolve => setTimeout(() => {
               resolve(rsdkResult);
             }, 20 * 1000))
@@ -407,7 +407,7 @@ export function useRouteRaribleItemMutation<TResponse>(
       queryClient.setQueryData(queryKey, oldData),
     onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKey });
-      queryClient.invalidateQueries({ queryKey: [APP_TERM, "rarible", "pcollection", collId] });
+      queryClient.invalidateQueries({ queryKey: [APP_TERM, "rarible", "collection", collId, "items"] });
       if (["order.bid", "order.bidUpdate", "order.cancel"].includes(raribleFn)) {
         queryClient.invalidateQueries({ queryKey: [...accountKey, "bids"] });
       } if (["order.acceptBid", "order.buy"].includes(raribleFn)) {
