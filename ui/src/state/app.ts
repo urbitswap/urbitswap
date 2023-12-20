@@ -71,7 +71,7 @@ export function useCollectionAccountKYC(): KYCData | undefined {
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
     queryFn: async () => (
-      collId === FEATURED.VC
+      false // collId === FEATURED.VC
         ? requestVentureKYC(address)
         : {kyc: true, noauth: true}
     ),
@@ -93,7 +93,7 @@ export function useItemAccountGrant(): TransferData | undefined {
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
     queryFn: async () => (
-      collId === FEATURED.VC
+      false // collId === FEATURED.VC
         ? requestVentureTransfer(address, address, itemId ?? "")
         : {status: "success", callId: "", signature: "", nonce: "", expiryBlock: ""}
     ),
