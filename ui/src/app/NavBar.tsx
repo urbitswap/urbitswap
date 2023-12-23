@@ -17,6 +17,7 @@ import {
   RectangleGroupIcon,
   IdentificationIcon,
   LinkIcon,
+  ListBulletIcon,
   MagnifyingGlassIcon,
   WalletIcon,
 } from '@heroicons/react/24/solid';
@@ -133,10 +134,6 @@ export default function NavBar({
               <span>View Collection</span>
             </DropdownEntry>
           )}
-          <DropdownEntry onSelect={() => modalNavigate("/wallets")}>
-            <WalletIcon className="w-4 h-4" />
-            <span>View Wallets</span>
-          </DropdownEntry>
           <DropdownEntry onSelect={() => modalNavigate("/disclaimer")}>
             <DocumentIcon className="w-4 h-4" />
             <span>View License</span>
@@ -225,6 +222,10 @@ export default function NavBar({
           <DropdownEntry onSelect={() => !isConnected ? connect() : disconnect()}>
             {!isConnected ? (<BoltIcon className="w-4 h-4" />) : (<BoltSlashIcon className="w-4 h-4" />)}
             <span>{`${isConnected ? "Disc" : "C"}onnect Wallet`}</span>
+          </DropdownEntry>
+          <DropdownEntry onSelect={() => modalNavigate("/wallets")}>
+            <ListBulletIcon className="w-4 h-4" />
+            <span>See All Wallets</span>
           </DropdownEntry>
           {(isConnected && !isAssociated) && (
             <DropdownEntry onSelect={() => modalNavigate("/associate")}>

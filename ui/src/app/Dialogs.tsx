@@ -13,9 +13,16 @@ import { FormProvider, useForm, useController } from 'react-hook-form';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  Cell as CellRef,
+  Column as ColumnRef,
+  ColumnDef,
+  ColumnFiltersState,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
+  getFilteredRowModel,
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
@@ -60,10 +67,13 @@ import { get, set } from '@/state/idb';
 import { useDismissNavigate } from '@/logic/routing';
 import {
   assetToTender,
+  capitalize,
+  genTestWallets,
   isMaxDate,
   makePrettyName,
   makePrettyPrice,
   tenderToAsset,
+  useCopy,
 } from '@/logic/utils';
 import {
   APP_VERSION,
@@ -472,9 +482,6 @@ export function AssociateDialog() {
 }
 
 export function KnownWalletsDialog() {
-  // TODO: Add the ability to copy both wallet address and ship name (use the
-  // "landscape-apps" strategy for copying arbitrary values here)
-  // TODO: Add support for filtering (with a global input filter for the table)
   const [localAddresses, setLocalAddresses] = useState<Set<Address> | undefined>(undefined);
   const urbitAddressMap = useUrbitTraders();
   useEffect(() => {
@@ -501,10 +508,9 @@ export function KnownWalletsDialog() {
         }))
       );
     return newTableRows;
-    // NOTE: Simple test case for bigger tables
-    // return [...Array(10).keys()].reduce(acc => acc.concat(newTableRows), []);
+    // return genTestWallets(100);
   }, [localAddresses, urbitAddressMap]);
-  const tableCols = useMemo(() => {
+  const tableCols = useMemo<ColumnDef<UrbitKnownWallet, any>[]>(() => {
     const colHelper = createColumnHelper<UrbitKnownWallet>();
     return [
       colHelper.accessor("ship", {
@@ -531,38 +537,74 @@ export function KnownWalletsDialog() {
     ];
   }, []);
 
+  const [tableColumnFilters, setTableColumnFilters] = useState<ColumnFiltersState>([]);
   const table = useReactTable({
     data: tableRows,
     columns: tableCols,
+    state: { columnFilters: tableColumnFilters },
     getCoreRowModel: getCoreRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
+    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    onColumnFiltersChange: setTableColumnFilters,
   });
+  const ColumnFilter = useCallback(({column}: {column: ColumnRef<any>}) => {
+    // NOTE: We use a callback memo instead of a top-level memo in order to more
+    // easily and directly target each individual column's `getFacetedUniqueValues()`
+    // (which is otherwise hard to memoize because it's embedded in the table)
+    const columnFilteredValues = useMemo<SelectorOption[]>(() => (
+      Array.from(column.getFacetedUniqueValues().keys()).sort().map(value => ({
+        value: value,
+        label: column.id !== "wallet" ? value : `${value.slice(0, 5)}…${value.slice(-4)}`
+      }))
+    ), [column.getFacetedUniqueValues()]);
+    return (
+      <SingleSelector
+        options={columnFilteredValues}
+        value={columnFilteredValues.find(e => e.value === (column.getFilterValue() ?? ''))}
+        onChange={o => column.setFilterValue(o ? o.value : o)}
+        placeholder={capitalize(column.id)}
+        className="my-1 w-full flex-1 min-w-0 text-xs"
+        isSearchable={true}
+        isClearable={true}
+      />
+    );
+  }, []);
+  const ColumnCell = useCallback(({cell}: {cell: CellRef<any, any>}) => {
+    const { didCopy, doCopy } = useCopy(cell.getValue());
+    return (
+      <div onClick={doCopy} className="hover:bg-blue-100">
+        {didCopy ? (
+          "Copied!"
+        ) : (
+          flexRender(cell.column.columnDef.cell, cell.getContext())
+        )}
+      </div>
+    );
+  }, []);
 
   return (
     <DefaultDialog>
-      <DialogBody head="Known Wallets" className="max-h-[50vh]">
-        {(localAddresses === undefined || urbitAddressMap === undefined) ? (
-          <div className="flex flex-col gap-4 justify-center items-center">
-            <UrbitswapIcon className="animate-spin w-20 h-20" />
-            <p className="italic">Check {
-              [localAddresses, urbitAddressMap].reduce((acc, cur) => (
-                acc + ((cur !== undefined) ? 1 : 0)
-              ), 1)
-            }/2</p>
-          </div>
-        ) : (
-          <div className="overflow-y-scroll">
+      {(localAddresses === undefined || urbitAddressMap === undefined) ? (
+        <DialogLoad
+          title="Wallets"
+          at={1 + [localAddresses, urbitAddressMap].filter(i => i !== undefined).length}
+          len={2}
+        />
+      ) : (
+        <DialogBody head="Known Wallets" className="h-[60vh]">
+          <div className="h-full overflow-y-scroll">
             <table className="table-fixed w-full text-left rtl:text-right">
-              <thead className="sticky top-0 text-base sm:text-lg border-b-2 bg-white">
+              <thead className="sticky top-0 text-base sm:text-lg bg-white">
                 {table.getHeaderGroups().map(headerGroup => (
-                  <tr key={headerGroup.id}>
+                  <tr key={headerGroup.id} className="flex">
                     {headerGroup.headers.map(header => (
-                      <th key={header.id}
-                        className={header.column.getCanSort() ? "cursor-pointer select-none" : ""}
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {{asc: " ↑", desc: " ↓"}[header.column.getIsSorted() as string] ?? " •"}
+                      <th key={header.id} className="flex min-w-full space-x-1 px-1 bg-white">
+                        <ColumnFilter column={header.column} />
+                        <button onClick={header.column.getToggleSortingHandler()}>
+                          {{asc: "↑", desc: "↓"}[header.column.getIsSorted() as string] ?? "○"}
+                        </button>
                       </th>
                     ))}
                   </tr>
@@ -570,10 +612,10 @@ export function KnownWalletsDialog() {
               </thead>
               <tbody className="text-sm sm:text-base">
                 {table.getRowModel().rows.map(row => (
-                  <tr key={row.id} className="odd:bg-gray-50 even:bg-gray-100 border-b">
+                  <tr key={row.id} className="odd:bg-gray-50 even:bg-gray-100 border-b first:border-t-2">
                     {row.getVisibleCells().map(cell => (
-                      <td key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      <td key={cell.id} className="font-mono">
+                        <ColumnCell cell={cell} />
                       </td>
                     ))}
                   </tr>
@@ -581,8 +623,8 @@ export function KnownWalletsDialog() {
               </tbody>
             </table>
           </div>
-        )}
-      </DialogBody>
+        </DialogBody>
+      )}
     </DefaultDialog>
   );
 }
@@ -852,13 +894,30 @@ function reduceChecks(checks: CheckReport[], title: string | undefined): CheckRe
     status: !currCheck || currCheck.status,
     report: (currCheck?.status === true) ? () => true
       : (currCheck?.status === false) ? currCheck.report
-      : () => (
-        <DialogBody head={`Loading ${title}...`} className="justify-center items-center">
-          <UrbitswapIcon className="animate-spin w-20 h-20" />
-          <p className="italic">Check {currIndex + 1}/{checks.length}</p>
-        </DialogBody>
-      ),
+      : () => (<DialogLoad title={title ?? ""} at={currIndex + 1} len={checks.length} />),
   };
+}
+
+function DialogLoad({
+  title,
+  at,
+  len,
+  className,
+}: {
+  title: string;
+  at: number;
+  len: number;
+  className?: string;
+}) {
+  return (
+    <DialogBody
+      head={`Loading ${title}...`}
+      className={cn("flex flex-col gap-4 justify-center items-center", className)}
+    >
+      <UrbitswapIcon className="animate-spin w-20 h-20" />
+      <p className="italic">Check {at}/{len}</p>
+    </DialogBody>
+  );
 }
 
 function DialogBody({

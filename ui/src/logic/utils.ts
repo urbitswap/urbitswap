@@ -1,7 +1,9 @@
-import React, {createElement} from 'react';
+import React, { createElement, useCallback, useState } from 'react';
 import cn from 'classnames';
-import { format, formatDistance } from 'date-fns';
+import ob from 'urbit-ob';
 import seedrandom from 'seedrandom';
+import { format, formatDistance } from 'date-fns';
+import { useCopyToClipboard } from 'usehooks-ts';
 import {
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
@@ -40,10 +42,11 @@ import type {
   CollectionSort,
   CollectionSortish,
   UrbitPointTypeish,
-  TenderType,
-  OfferType,
-  NavigationQuery,
+  UrbitKnownWallet,
   IconLabel,
+  NavigationQuery,
+  OfferType,
+  TenderType,
 } from '@/types/app';
 import type { Callable } from '@/types/utils';
 
@@ -123,6 +126,31 @@ export function genRateLimiter(maxReqs: number, perSecs: number) {
       setTimeout(limiter, untilNext);
     }
   };
+}
+
+export function useCopy(copied: string) {
+  const [didCopy, setDidCopy] = useState(false);
+  const [, copy] = useCopyToClipboard();
+
+  const doCopy = useCallback(async () => {
+    let success = false;
+    success = await copy(copied);
+    setDidCopy(success);
+
+    let timeout: ReturnType<typeof setTimeout>;
+    if (success) {
+      timeout = setTimeout(() => {
+        setDidCopy(false);
+      }, 2000);
+    }
+
+    return () => {
+      setDidCopy(false);
+      clearTimeout(timeout);
+    };
+  }, [copied, copy]);
+
+  return { doCopy, didCopy };
 }
 
 export function tenderToAsset(tender: TenderType): RaribleAssetType {
@@ -264,6 +292,20 @@ export function getItemUnlock(item: RaribleItem): Date {
   return (itemUnlockAttrib === undefined)
     ? MAX_DATE
     : new Date(Date.parse(itemUnlockAttrib));
+}
+
+export function genTestWallets(count: number): UrbitKnownWallet[] {
+  return [...Array(count).keys()].map((index: number) => {
+    const ship: string = ob.patp(
+      Math.pow(2, Math.pow(2, 3 + (index % 3)))
+      + Math.floor(index / 3)
+    );
+    return {
+      ship: ship,
+      wallet: `0x${index.toString(16).padStart(40, "0")}`,
+      source: [ob.clan(ship), "master-list"],
+    };
+  });
 }
 
 function genSortIcon(SortTypeIcon: typeof TagIcon, isAscending: boolean): typeof TagIcon {

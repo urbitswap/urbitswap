@@ -67,7 +67,7 @@ export function NewWalletWatcher() {
         const isAddressNew: boolean = address === lastAddress.current;
         lastAddress.current = address;
         if (isAddressNew) {
-          modalNavigate("assoc");
+          modalNavigate("/associate");
         }
       });
     }
