@@ -22,6 +22,11 @@ export default ({ mode }) => {
       // https://stackoverflow.com/a/77153849, https://stackoverflow.com/a/69021714
       // https://github.com/remorses/esbuild-plugins/issues/14#issuecomment-1437893495
       nodePolyfills(),
+      // other info:
+      // https://github.com/Leonidas-from-XIV/node-xml2js/issues/613#issuecomment-1085352670
+      // https://github.com/vitejs/vite/issues/728#issuecomment-795961445
+      // https://nodejs.org/dist/latest-v16.x/docs/api/esm.html#require
+      // https://github.com/vitejs/vite/issues/2618
     ],
     server: {
       host: 'localhost',
