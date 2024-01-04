@@ -34,7 +34,6 @@ import type {
   Ownerships as RaribleOwnerships,
 } from '@rarible/api-client';
 import type {
-  UrbitLayer,
   KYCData,
   TransferData,
   UrbitTraders,
@@ -125,9 +124,8 @@ export function useUrbitTraders(): UrbitTraders | undefined {
 export function useUrbitAccountAssocAddresses(): Set<Address> | undefined {
   const traders = useUrbitTraders();
 
-  return (traders === undefined)
-    ? undefined
-    : new Set(Object.entries(traders)
+  return traders &&
+    new Set(Object.entries(traders)
       .filter(([wlet, patp]: [string, string]) => patp === window.our)
       .map(([wlet, patp]: [string, string]) => (wlet as Address))
     );
@@ -137,9 +135,8 @@ export function useUrbitAccountAllAddresses(): Set<Address> | undefined {
   const { address, isConnected } = useWagmiAccount();
   const assocAddresses = useUrbitAccountAssocAddresses();
 
-  return (assocAddresses === undefined)
-    ? undefined
-    : (() => {
+  return assocAddresses &&
+    (() => {
       if (isConnected) assocAddresses.add(address);
       return assocAddresses;
     })();
@@ -172,33 +169,6 @@ export function useUrbitAssociateMutation(
       queryClient.invalidateQueries({ queryKey: queryKey }),
     ...options,
   });
-}
-
-export function useUrbitNetworkLayer(urbitId: string): UrbitLayer | undefined {
-  const queryApi = "https://mt2aga2c5l.execute-api.us-east-2.amazonaws.com";
-  const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "urbit", "layer", urbitId
-  ], [urbitId]);
-
-  const { data, isLoading, isError } = useQuery({
-    queryKey: queryKey,
-    queryFn: () => axios
-      .get(`${queryApi}/get-pki-events?urbit-id=${urbitId}&limit=1&offset=0`)
-      .then((response: any): UrbitLayer => {
-        const dominion: string | undefined = response.data?.[0]?.dominion;
-        return (dominion === "l2") ? "layer-2"
-          : (dominion === "l1") ? "layer-1"
-          : "locked";
-      }),
-    // NOTE: This will update extremely infrequently, so we don't even bother
-    // refetching the data.
-    retryOnMount: false,
-    refetchOnMount: false,
-  });
-
-  return (isLoading || isError)
-    ? undefined
-    : (data as UrbitLayer);
 }
 
 export function useRaribleCollectionMeta(): RaribleCollection | undefined {

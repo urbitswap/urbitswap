@@ -20,6 +20,7 @@ import {
   DisclaimerDialog,
 } from '@/app/Dialogs';
 import NavBar from '@/app/NavBar';
+import StatusBar from '@/app/StatusBar';
 import { NewVersionWatcher, NewWalletWatcher } from '@/app/Watchers';
 import { FocusProvider, FocusContextWatcher } from '@/components/FocusContext';
 import { queryAPI, urbitAPI, wagmiAPI } from '@/api';
@@ -70,6 +71,7 @@ function RoutedAppRoutes({
         <Route element={
           <div className="flex flex-col h-screen">
             <header className="sticky z-20 top-0">
+              <StatusBar innerClassName={FORM_CLASS} />
               <NavBar innerClassName={FORM_CLASS} />
             </header>
             <main className={cn("p-4 flex-grow overflow-y-scroll", FORM_CLASS)}>

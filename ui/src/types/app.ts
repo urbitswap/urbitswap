@@ -12,12 +12,11 @@ import type { Address } from 'viem';
 
 export type TenderType = "eth" | "usdc";
 export type OfferType = "bid" | "sell";
-export type CollectionBase = typeof QUERY.COLLECTION_BASE[number];
-export type CollectionSort = Exclude<RaribleItemSort, RaribleItemSort.TRAIT | RaribleItemSort.LOWEST_SELL>;
-export type CollectionBaseish = CollectionBase | "";
-export type CollectionSortish = CollectionSort | "";
 
-export type UrbitLayer = "locked" | "layer-2" | "layer-1";
+export type CollectionBase = typeof QUERY.COLLECTION_BASE[number];
+export type CollectionBaseish = CollectionBase | "";
+export type CollectionSort = Exclude<RaribleItemSort, RaribleItemSort.TRAIT | RaribleItemSort.LOWEST_SELL>;
+export type CollectionSortish = CollectionSort | "";
 export type UrbitPointType = typeof QUERY.POINT_TYPE[number];
 export type UrbitPointTypeish = UrbitPointType | "";
 

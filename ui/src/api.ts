@@ -23,6 +23,9 @@ export const queryAPI = new QueryClient({
 
 export const urbitAPI = new Urbit('', '', window.desk);
 urbitAPI.ship = window.ship;
+// urbitAPI.onOpen = () => console.log("=== OPEN ===");
+// urbitAPI.onRetry = () => console.log("=== RECO ===");
+// urbitAPI.onError = () => console.log("=== DISC ===");
 
 const { chains: wagmiChains, publicClient: wagmiClient } = configureChains(
   [APP_DBUG ? goerli : mainnet],

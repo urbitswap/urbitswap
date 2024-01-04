@@ -1,0 +1,26 @@
+diff --git a/node_modules/@urbit/http-api/dist/cjs/index.cjs b/node_modules/@urbit/http-api/dist/cjs/index.cjs
+index e89e1ac..4fdfd38 100644
+--- a/node_modules/@urbit/http-api/dist/cjs/index.cjs
++++ b/node_modules/@urbit/http-api/dist/cjs/index.cjs
+@@ -693,7 +693,7 @@ class Urbit {
+                         this.seamlessReset();
+                         return;
+                     }
+-                    if (!(error instanceof FatalError)) {
++                    if (!(error instanceof FatalError) && this.errorCount++ < 4) {
+                         this.emit('status-update', { status: 'reconnecting' });
+                         this.onRetry && this.onRetry();
+                         return Math.min(5000, Math.pow(2, this.errorCount - 1) * 750);
+diff --git a/node_modules/@urbit/http-api/dist/esm/index.js b/node_modules/@urbit/http-api/dist/esm/index.js
+index 2e6756f..f1d84fe 100644
+--- a/node_modules/@urbit/http-api/dist/esm/index.js
++++ b/node_modules/@urbit/http-api/dist/esm/index.js
+@@ -689,7 +689,7 @@ class Urbit {
+                         this.seamlessReset();
+                         return;
+                     }
+-                    if (!(error instanceof FatalError)) {
++                    if (!(error instanceof FatalError) && this.errorCount++ < 4) {
+                         this.emit('status-update', { status: 'reconnecting' });
+                         this.onRetry && this.onRetry();
+                         return Math.min(5000, Math.pow(2, this.errorCount - 1) * 750);

@@ -3295,10 +3295,10 @@
     immer "^9.0.1"
     urbit-ob "^5.0.1"
 
-"@urbit/http-api@^2.4.5-debug":
-  version "2.4.5-debug"
-  resolved "https://registry.yarnpkg.com/@urbit/http-api/-/http-api-2.4.5-debug.tgz#47b213966a3f84614e49cc03a29a5fae6f263c4a"
-  integrity sha512-kMzQwNlrObEz4tEg90nlPRW69Tf+9rD3iIK/JgvsG3423x9oa4rFXobnFKBphXR/5bqd5vR41RoMFN7mqEfDgQ==
+"@urbit/http-api@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@urbit/http-api/-/http-api-3.0.0.tgz#0a5a84d5efd9e45342cd795da33f85dc463e46de"
+  integrity sha512-EmyPbWHWXhfYQ/9wWFcLT53VvCn8ct9ljd6QEe+UBjNPEhUPOFBLpDsDp3iPLQgg8ykSU8JMMHxp95LHCorExA==
   dependencies:
     "@babel/runtime" "^7.12.5"
     browser-or-node "^1.3.0"
