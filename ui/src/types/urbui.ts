@@ -10,3 +10,8 @@ export type ReactRouterState = null | {
 export interface ClassProps {
   className?: string;
 }
+
+export interface Class2Props {
+  className?: string;
+  innerClassName?: string;
+}

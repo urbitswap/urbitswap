@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { IconProps } from './icons/icon';
+import { IconProps } from './icon';
 
-export default function LoadingSpinner({
+export default function LoadingIcon({
   primary,
   secondary,
   className = 'h-4 w-4',

@@ -24,11 +24,6 @@ export type GetWagmiAccountResult = Omit<GetAccountResult, "address"> & {
   address: Address;
 };
 
-export interface DeferredRender<T = null, P = {}> {
-  render: React.ForwardRefRenderFunction<T, P>;
-  props?: P;
-}
-
 export interface NavigationQuery {
   base?: CollectionBase;
   text?: string;

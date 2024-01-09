@@ -54,14 +54,9 @@ import type {
   NavigationQuery,
   IconLabel,
 } from '@/types/app';
+import type { ConnectionStatus, Class2Props } from '@/types/urbui';
 
-export default function NavBar({
-  className,
-  innerClassName,
-}: {
-  className?: string;
-  innerClassName?: string;
-}) {
+export default function NavBar({className, innerClassName}: Class2Props) {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const { focusRef, isFocused } = useFocusContext();
 
@@ -223,16 +218,16 @@ export default function NavBar({
             {!isConnected ? (<BoltIcon className="w-4 h-4" />) : (<BoltSlashIcon className="w-4 h-4" />)}
             <span>{`${isConnected ? "Disc" : "C"}onnect Wallet`}</span>
           </DropdownEntry>
-          <DropdownEntry onSelect={() => modalNavigate("/wallets")}>
-            <ListBulletIcon className="w-4 h-4" />
-            <span>See All Wallets</span>
-          </DropdownEntry>
           {(isConnected && !isAssociated) && (
             <DropdownEntry onSelect={() => modalNavigate("/associate")}>
               <LinkIcon className="w-4 h-4" />
               <span>Associate @p</span>
             </DropdownEntry>
           )}
+          <DropdownEntry onSelect={() => modalNavigate("/wallets")}>
+            <ListBulletIcon className="w-4 h-4" />
+            <span>See All Wallets</span>
+          </DropdownEntry>
         </DropdownMenu>
       </div>
     </nav>

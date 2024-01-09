@@ -42,10 +42,11 @@ import {
 } from '@heroicons/react/24/solid';
 import Dialog from '@/components/Dialog';
 import Popover from '@/components/Popover';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import LoadingComponent from '@/components/LoadingComponent';
 import TraderName from '@/components/TraderName';
 import ENSName from '@/components/ENSName';
 import ShipName from '@/components/ShipName';
+import LoadingIcon from '@/components/icons/LoadingIcon';
 import UrbitswapIcon from '@/components/icons/UrbitswapIcon';
 import {
   SingleSelector,
@@ -94,7 +95,12 @@ import type {
   Order as RaribleOrder,
 } from '@rarible/api-client';
 import type { Address } from 'viem';
-import type { DeferredRender, TenderType, UrbitKnownWallet } from '@/types/app';
+import type { TenderType, UrbitKnownWallet } from '@/types/app';
+import type {
+  DeferredRenderProps,
+  DeferredPrecheckProps,
+  DeferredPrecheckReport,
+} from '@/types/utils';
 
 export function OfferDialog() {
   const OfferDialogRender = useCallback(() => {
@@ -208,7 +214,7 @@ export function OfferDialog() {
                   disabled={!isValid || !isDirty}
                 >
                   {(offerStatus === "loading") ? (
-                    <LoadingSpinner />
+                    <LoadingIcon />
                   ) : (offerStatus === "error") ? (
                     "Error"
                   ) : (
@@ -355,7 +361,7 @@ export function TradeDialog() {
                 </DialogPrimitive.Close>
                 <button className="button bg-green" type="submit">
                   {(tradeStatus === "loading") ? (
-                    <LoadingSpinner />
+                    <LoadingIcon />
                   ) : (tradeStatus === "error") ? (
                     "Error"
                   ) : (
@@ -407,7 +413,7 @@ export function CancelDialog() {
               </DialogPrimitive.Close>
               <button className="button bg-red" type="submit">
                 {cancelStatus === "loading" ? (
-                  <LoadingSpinner />
+                  <LoadingIcon />
                 ) : cancelStatus === "error" ? (
                   "Error"
                 ) : (
@@ -464,7 +470,7 @@ export function AssociateDialog() {
               </DialogPrimitive.Close>
               <button className="button" type="submit">
                 {assocStatus === "loading" ? (
-                  <LoadingSpinner />
+                  <LoadingIcon />
                 ) : assocStatus === "error" ? (
                   "Error"
                 ) : (
@@ -588,9 +594,9 @@ export function KnownWalletsDialog() {
     <DefaultDialog>
       {(localAddresses === undefined || urbitAddressMap === undefined) ? (
         <DialogLoad
-          title="Wallets"
-          at={1 + [localAddresses, urbitAddressMap].filter(i => i !== undefined).length}
-          len={2}
+          title="Known Wallets"
+          stage={1 + [localAddresses, urbitAddressMap].filter(i => i !== undefined).length}
+          total={2}
         />
       ) : (
         <DialogBody head="Known Wallets" className="h-[60vh]">
@@ -679,91 +685,82 @@ export function DisclaimerDialog() {
   );
 }
 
-interface CheckReport {
-  status: boolean | undefined;
-  report: React.ForwardRefRenderFunction<null, {}>;
-}
+function TradeChecksDialog<P extends {}>(props: DeferredRenderProps<null, P>) {
+  const TradeChecksDialogRender = useCallback(function<P extends {}>(pops: DeferredRenderProps<null, P>) {
+    const { address, owner, item, isMyItem, isAddressItem } = useRouteRaribleAccountItem();
+    const collKYC = useCollectionAccountKYC();
+    const itemGrant = useItemAccountGrant();
+    const dialogProps = useRef({stage: 0, total: 0, title: "Trade"});
 
-function TradeChecksDialog<P extends {}>(props: DeferredRender<null, P>) {
-  const TradeChecksDialogRender = useCallback(function<P extends {}>(pops:  DeferredRender<null, P>) {
-    const tradeCheck = useTradeChecks();
-    return renderCheck<null, P>(tradeCheck, pops);
+    const tradeChecks: DeferredPrecheckReport[] = [
+      {
+        status: (item === undefined || owner === undefined)
+          ? undefined
+          : !(isMyItem && !isAddressItem),
+        render: () => (
+          <DialogBody head="Wrong Wallet for Item">
+            <p>
+              This item is owned by one of your other crypto wallets. Please
+              change to the appropriate wallet to continue (see below).
+            </p>
+            <div className="flex flex-row justify-around items-center py-4">
+              <ENSName address={address} full={false} />
+              <ArrowRightIcon className="w-5 h-5" />
+              <ENSName address={owner ?? "0x"} full={false} />
+            </div>
+            <DialogFoot />
+          </DialogBody>
+        ),
+      }, {
+        status: collKYC?.kyc,
+        render: () => (
+          <DialogBody head="Collection Requires KYC">
+            <p>
+              In order to exchange this collection's assets, you'll first need
+              to go through a collection-specific <Link
+              to="https://en.wikipedia.org/wiki/Know_your_customer">KYC</Link> process.
+              Visit the collection's website to get started.
+            </p>
+            {collKYC?.details && (
+              <div>
+                <h1 className="text-lg font-semibold">Collection-specific Notification</h1>
+                <p className="italic">{collKYC.details}</p>
+              </div>
+            )}
+            <DialogFoot close="Decline">
+              <Link to="https://ventureclub.club" target="_blank" className="button">
+                Submit KYC
+              </Link>
+            </DialogFoot>
+          </DialogBody>
+        ),
+      }, {
+        status: itemGrant?.status && (itemGrant?.status === "success"),
+        render: () => (
+          <DialogBody head="Unapproved Collection Trade">
+            <p>
+              TODO: Error message for when an item is not transferable.
+            </p>
+          </DialogBody>
+        ),
+      },
+    ];
+
+    return (
+      <LoadingComponent
+        checks={tradeChecks}
+        render={pops}
+        prerender={{render: DialogLoad, props: dialogProps.current}}
+      />
+    );
   }, []);
 
-  return createElement(
-    WalletChecksDialog<DeferredRender<null, P>>,
-    { render: TradeChecksDialogRender<P>, props: props ?? {} },
+  return (
+    <WalletChecksDialog render={TradeChecksDialogRender<P>} props={props} />
   );
 }
 
-function WalletChecksDialog<P extends {}>(props: DeferredRender<null, P>) {
-  const walletCheck = useWalletChecks();
-  return createElement(DefaultDialog, {}, renderCheck<null, P>(walletCheck, props));
-}
-
-function useTradeChecks(): CheckReport {
-  const { address, owner, item, isMyItem, isAddressItem } = useRouteRaribleAccountItem();
-  const collKYC = useCollectionAccountKYC();
-  const itemGrant = useItemAccountGrant();
-
-  const tradeChecks: CheckReport[] = [
-    {
-      status: (item === undefined || owner === undefined)
-        ? undefined
-        : !(isMyItem && !isAddressItem),
-      report: () => (
-        <DialogBody head="Wrong Wallet for Item">
-          <p>
-            This item is owned by one of your other crypto wallets. Please
-            change to the appropriate wallet to continue (see below).
-          </p>
-          <div className="flex flex-row justify-around items-center py-4">
-            <ENSName address={address} full={false} />
-            <ArrowRightIcon className="w-5 h-5" />
-            <ENSName address={owner ?? "0x"} full={false} />
-          </div>
-          <DialogFoot />
-        </DialogBody>
-      ),
-    }, {
-      status: collKYC?.kyc,
-      report: () => (
-        <DialogBody head="Collection Requires KYC">
-          <p>
-            In order to exchange this collection's assets, you'll first need
-            to go through a collection-specific <Link
-            to="https://en.wikipedia.org/wiki/Know_your_customer">KYC</Link> process.
-            Visit the collection's website to get started.
-          </p>
-          {collKYC?.details && (
-            <div>
-              <h1 className="text-lg font-semibold">Collection-specific Notification</h1>
-              <p className="italic">{collKYC.details}</p>
-            </div>
-          )}
-          <DialogFoot close="Decline">
-            <Link to="https://ventureclub.club" target="_blank" className="button">
-              Submit KYC
-            </Link>
-          </DialogFoot>
-        </DialogBody>
-      ),
-    }, {
-      status: itemGrant?.status && (itemGrant?.status === "success"),
-      report: () => (
-        <DialogBody head="Unapproved Collection Trade">
-          <p>
-            TODO: Error message for when an item is not transferable.
-          </p>
-        </DialogBody>
-      ),
-    },
-  ];
-
-  return reduceChecks(tradeChecks, "Trade");
-}
-
-function useWalletChecks(): CheckReport {
+function WalletChecksDialog<P extends {}>(props: DeferredRenderProps<null, P>) {
   const { address, isConnected } = useWagmiAccount();
   const { chain, chains } = useNetwork();
   const {
@@ -777,6 +774,7 @@ function useWalletChecks(): CheckReport {
     isError: isSwitchError,
   } = useSwitchNetwork();
 
+  const dialogProps = useRef({stage: 0, total: 0, title: "Wallet"});
   const lastAddress = useRef<Address>(address);
   // From the official MetaMask's source:
   // https://github.com/MetaMask/metamask-onboarding/blob/v1.0.1/src/index.ts#L169
@@ -792,10 +790,10 @@ function useWalletChecks(): CheckReport {
     }
   }, [isConnected]);
 
-  const walletChecks: CheckReport[] = [
+  const walletChecks: DeferredPrecheckReport[] = [
     {
       status: isInstalled,
-      report: () => (
+      render: () => (
         <DialogBody head="MetaMask Not Detected">
           <p>
             You don't have <Link to="https://metamask.io/">
@@ -812,7 +810,7 @@ function useWalletChecks(): CheckReport {
       ),
     }, {
       status: isConnected,
-      report: () => (
+      render: () => (
         <DialogBody head="No Wallet Connected">
           <p>
             Please connect your crypto wallet through <Link
@@ -821,7 +819,7 @@ function useWalletChecks(): CheckReport {
           <DialogFoot>
             <button className="button" onClick={() => connectWallet()}>
               {isConnectLoading ? (
-                <LoadingSpinner />
+                <LoadingIcon />
               ) : isConnectError ? (
                 "Error"
               ) : (
@@ -835,7 +833,7 @@ function useWalletChecks(): CheckReport {
       status: (lastAddress.current === "0x")
         ? undefined
         : address === lastAddress.current,
-      report: () => (
+      render: () => (
         <DialogBody head="Active Wallet Changed">
           <p>
             Your wallet address has changed since opening this dialog (see the
@@ -852,7 +850,7 @@ function useWalletChecks(): CheckReport {
       ),
     },  {
       status: chain !== undefined && !chain.unsupported,
-      report: () => (
+      render: () => (
         <DialogBody head="Invalid Blockchain Network">
           <p>
             Your crypto wallet is connected to the wrong network. Please switch
@@ -861,7 +859,7 @@ function useWalletChecks(): CheckReport {
           <DialogFoot>
             <button className="button" onClick={() => switchNetwork?.(chains?.[0]?.id || -1)}>
               {isSwitchLoading ? (
-                <LoadingSpinner />
+                <LoadingIcon />
               ) : isSwitchError ? (
                 "Error"
               ) : (
@@ -874,48 +872,33 @@ function useWalletChecks(): CheckReport {
     },
   ];
 
-  return reduceChecks(walletChecks, "Wallet");
-}
-
-function renderCheck<T extends any, P extends {}>(
-  {status, report}: CheckReport,
-  {render, props}: DeferredRender<T, P>,
-): React.ReactNode {
-  return createElement(!status ? report : () => createElement<P>(render, props));
-}
-
-function reduceChecks(checks: CheckReport[], title: string | undefined): CheckReport {
-  const [currCheck, currIndex]: [CheckReport | undefined, number] = (() => {
-    const index: number = checks.findIndex((check: CheckReport) => !check.status);
-    return [(index === -1) ? undefined : checks[index], index];
-  })();
-
-  return {
-    status: !currCheck || currCheck.status,
-    report: (currCheck?.status === true) ? () => true
-      : (currCheck?.status === false) ? currCheck.report
-      : () => (<DialogLoad title={title ?? ""} at={currIndex + 1} len={checks.length} />),
-  };
+  return (
+    <DefaultDialog>
+      <LoadingComponent
+        checks={walletChecks}
+        render={props}
+        prerender={{render: DialogLoad, props: dialogProps.current}}
+      />
+    </DefaultDialog>
+  );
 }
 
 function DialogLoad({
+  stage,
+  total,
   title,
-  at,
-  len,
-  className,
 }: {
+  stage: number;
+  total: number;
   title: string;
-  at: number;
-  len: number;
-  className?: string;
 }) {
   return (
     <DialogBody
       head={`Loading ${title}...`}
-      className={cn("flex flex-col gap-4 justify-center items-center", className)}
+      className="flex flex-col gap-4 justify-center items-center"
     >
       <UrbitswapIcon className="animate-spin w-20 h-20" />
-      <p className="italic">Check {at}/{len}</p>
+      <p className="italic">Check {stage}/{total}</p>
     </DialogBody>
   );
 }
