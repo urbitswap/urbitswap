@@ -89,28 +89,20 @@ function MarketplaceStatus<P extends Class2Props>(props: DeferredRenderProps<nul
 }
 
 function OurShipStatus<P extends Class2Props>(props: DeferredRenderProps<null, P>) {
-  // FIXME: It would be better if all local state for this component was
-  // made global instead.
   const [ourConn, setOurConn] = useState<ConnectionStatus>("connected");
+
   useEffect(() => {
-    urbitAPI.onOpen = () => setOurConn("connected");
-    urbitAPI.onReconnect = () => setOurConn("reconnecting");
-    urbitAPI.onRetry = () => setOurConn("reconnecting");
-    urbitAPI.onError = (e: Error) => setOurConn("disconnected");
+    urbitAPI.on("status-update", ({status}: {status: string;}) => {
+      setOurConn(
+        (status === "errored") ? "disconnected"
+        : (status === "active" || status === "reconnecting") ? "connected"
+        : "reconnecting" // "reconnecting", "initial", "opening"
+      );
+    });
   }, []);
 
   const onClick = useCallback(() => {
-    setOurConn("reconnecting");
-    urbitAPI.delete().then(async () => {
-      try {
-        await urbitAPI.reset();
-        await urbitAPI.eventSource();
-      } catch (error: any) {
-        // NOTE: Give the user a chance to see that a reconnect was
-        // attempted (important in the case of an immediate rejection).
-        setTimeout(() => setOurConn("disconnected"), 3 * 1000);
-      }
-    });
+    urbitAPI.reset();
   }, []);
 
   const ourChecks: DeferredPrecheckReport[] = [
@@ -129,25 +121,33 @@ function OurShipStatus<P extends Class2Props>(props: DeferredRenderProps<null, P
 }
 
 function HerShipStatus<P extends Class2Props>(props: DeferredRenderProps<null, P>) {
+  // NOTE: This current implementation only prompts the host ship once on boot;
+  // it may be desirable to call "refetchConnection" with a regular interval to
+  // monitor the connection during use
   const {
     data: connection,
     refetch: refetchConnection,
+    isLoading: isConnLoading,
+    isFetching : isConnFetching,
     showConnection,
-  } = useConnectivityCheck(TRADERS_HOST[0], {
-    waitToDisplay: 5 * 1000,
-    staleTime: 60 * 1000,
-  });
+  } = useConnectivityCheck(TRADERS_HOST[0], { waitToDisplay: 5 * 1000 });
 
-  const herConn: ConnectionStatus = (!connection?.status || ("pending" in connection?.status))
-    ? "reconnecting"
-    : (connection?.status.complete === 'yes')
-      ? "connected"
-      : "disconnected";
+  // FIXME: Something like this should be able to intelligently detect and prompt
+  // data invalidation for the connectivity check
+  //
+  // useEffect(() => {
+  //   urbitAPI.on("error", ({time, msg}: {time: number; msg: string;}) => {
+  //     refetcthConnection();
+  //   });
+  // }, []);
 
-  // FIXME: I fear that this isn't really working... needs to be tested more thoroughly
-  // in real and fake cases
-  // FIXME: May want to call "refetchConnection" with a regular interval to continue
-  // monitoring the connection with the host
+  const herConn: ConnectionStatus =
+    ((isConnLoading || isConnFetching || !connection?.status) || ("pending" in connection?.status))
+      ? "reconnecting"
+      : (connection?.status.complete === 'yes')
+        ? "connected"
+        : "disconnected";
+
   const onClick = useCallback(() => {
     refetchConnection();
   }, [refetchConnection]);

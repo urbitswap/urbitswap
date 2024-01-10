@@ -1,3 +1,6 @@
+// inspired by `tloncorp/landscape-apps`
+// https://github.com/tloncorp/landscape-apps/blob/f9304a403a00cadfe0dca9ba719cb56298cf611b/ui/src/logic/useReactQuerySubscription.tsx
+
 import {
   QueryKey,
   useQuery,
@@ -7,7 +10,6 @@ import {
 import debounce from 'lodash.debounce';
 import { useEffect, useRef } from 'react';
 import { urbitAPI } from '@/api';
-import { useUrbitContext } from '@/components/UrbitContext';
 
 export default function useUrbitSubscription<T>({
   queryKey,
@@ -27,9 +29,7 @@ export default function useUrbitSubscription<T>({
   const queryClient = useQueryClient();
   const invalidate = useRef(
     debounce(
-      () => {
-        queryClient.invalidateQueries(queryKey);
-      },
+      () => { queryClient.invalidateQueries(queryKey); },
       300,
       { leading: true, trailing: true }
     )
@@ -42,18 +42,13 @@ export default function useUrbitSubscription<T>({
     })
   );
 
-  const { subscriptions, setSubscriptions } = useUrbitContext();
-  const urbitKey = `${app} ${path}`;
-  if (!subscriptions.has(urbitKey)) {
-    setSubscriptions(subs => new Map(subs.set(urbitKey, -1)));
+  useEffect(() => {
     urbitAPI.subscribe({
       app,
       path,
       event: invalidate.current,
-    }).then((subId: number) =>
-      setSubscriptions(subs => new Map(subs.set(urbitKey, subId)))
-    );
-  }
+    });
+  }, [/*app, path, queryClient, queryKey*/]);
 
   return useQuery(queryKey, fetchData, {
     retryOnMount: false,
