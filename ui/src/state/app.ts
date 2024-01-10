@@ -103,24 +103,24 @@ export function useItemAccountGrant(): TransferData | undefined {
     : (data as TransferData);
 }
 
-export function useUrbitTraders(): UrbitTraders | undefined {
+export function useUrbitTraders(): UrbitTraders | null | undefined {
   const queryKey: QueryKey = useMemo(() => [
     APP_TERM, "urbit", "traders", ...TRADERS_HOST
   ], []);
 
-  const { data, isLoading, isError } = useUrbitSubscription({
+  const { data, isLoading, isError } = useUrbitSubscription<UrbitTraders>({
     queryKey: queryKey,
     app: "swap-traders",
     path: `/swap/${TRADERS_HOST_FLAG}`,
     scry: `/${TRADERS_HOST_FLAG}`,
   });
 
-  return (isLoading || isError)
-    ? undefined
+  return isLoading ? undefined
+    : isError ? null
     : (data as UrbitTraders);
 }
 
-export function useUrbitAccountAssocAddresses(): Set<Address> | undefined {
+export function useUrbitAccountAssocAddresses(): Set<Address> | null | undefined {
   const traders = useUrbitTraders();
 
   return traders &&
@@ -130,7 +130,7 @@ export function useUrbitAccountAssocAddresses(): Set<Address> | undefined {
     );
 }
 
-export function useUrbitAccountAllAddresses(): Set<Address> | undefined {
+export function useUrbitAccountAllAddresses(): Set<Address> | null | undefined {
   const { address, isConnected } = useWagmiAccount();
   const assocAddresses = useUrbitAccountAssocAddresses();
 
@@ -230,7 +230,7 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
         continuation: c,
       }),
     ),
-    enabled: !!addresses,
+    enabled: addresses !== undefined,
     // FIXME: Applying a more strict throttle on ownership because the query
     // can be expensive (esp. if a user has multiple addresses or owns many
     // NFTs). It would be better to not retry on fetch/mount and to rely on a
@@ -260,7 +260,7 @@ export function useRaribleAccountBids(): RaribleOrder[] | undefined {
         continuation: c,
       }),
     ),
-    enabled: !!addresses,
+    enabled: addresses !== undefined,
     // FIXME: We can query account bids even less frequently because all
     // modifications will come through this interface (but we still need
     // a clean way to invalidate expired bids, which could probably be done

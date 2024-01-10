@@ -293,7 +293,7 @@ export function ItemGrid({className}: ClassProps) {
       }
     },
     {
-      enabled: !!addresses,
+      enabled: addresses !== undefined,
       getPreviousPageParam: (firstPage) => undefined,
       getNextPageParam: (lastPage) => lastPage.last ? undefined : lastPage.next,
       // NOTE: Don't reload on every mount because we keep everything that's

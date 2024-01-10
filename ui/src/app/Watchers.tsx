@@ -41,7 +41,7 @@ export function NewWalletWatcher() {
   const assocAddresses = useUrbitAccountAssocAddresses();
 
   useEffect(() => {
-    if (assocAddresses !== undefined) {
+    if (!!assocAddresses) {
       update("addresses", (idbAddresses: Set<Address> | undefined) => {
         const newIdbAddresses = idbAddresses ?? new Set();
         assocAddresses.forEach((a: Address) => newIdbAddresses.add(a));
