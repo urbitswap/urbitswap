@@ -7,8 +7,9 @@ import {
 import debounce from 'lodash.debounce';
 import { useEffect, useRef } from 'react';
 import { urbitAPI } from '@/api';
+import { useUrbitContext } from '@/components/UrbitContext';
 
-export default function useUrbitSubscription({
+export default function useUrbitSubscription<T>({
   queryKey,
   app,
   path,
@@ -21,7 +22,7 @@ export default function useUrbitSubscription({
   path: string;
   scry: string;
   scryApp?: string;
-  options?: UseQueryOptions;
+  options?: UseQueryOptions<T>;
 }): ReturnType<typeof useQuery> {
   const queryClient = useQueryClient();
   const invalidate = useRef(
@@ -35,19 +36,24 @@ export default function useUrbitSubscription({
   );
 
   const fetchData = async () => (
-    urbitAPI.scry({
+    urbitAPI.scry<T>({
       app: scryApp,
       path: scry,
     })
   );
 
-  useEffect(() => {
+  const { subscriptions, setSubscriptions } = useUrbitContext();
+  const urbitKey = `${app} ${path}`;
+  if (!subscriptions.has(urbitKey)) {
+    setSubscriptions(subs => new Map(subs.set(urbitKey, -1)));
     urbitAPI.subscribe({
       app,
       path,
       event: invalidate.current,
-    });
-  }, [app, path, queryClient, queryKey]);
+    }).then((subId: number) =>
+      setSubscriptions(subs => new Map(subs.set(urbitKey, subId)))
+    );
+  }
 
   return useQuery(queryKey, fetchData, {
     retryOnMount: false,
