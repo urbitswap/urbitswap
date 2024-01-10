@@ -220,6 +220,7 @@ export function useRaribleCollectionItems(): RaribleItem[] | undefined {
 export function useRaribleAccountItems(): RaribleItem[] | undefined {
   const addresses = useUrbitAccountAllAddresses();
   const addressList = Array.from(addresses ?? new Set<Address>());
+  const isEnabled: boolean = addresses !== undefined;
 
   const rsdk = useRaribleSDK();
   const results = useQueries({ queries: addressList.map((address: Address) => ({
@@ -230,7 +231,7 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
         continuation: c,
       }),
     ),
-    enabled: addresses !== undefined,
+    enabled: isEnabled,
     // FIXME: Applying a more strict throttle on ownership because the query
     // can be expensive (esp. if a user has multiple addresses or owns many
     // NFTs). It would be better to not retry on fetch/mount and to rely on a
@@ -238,7 +239,7 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
     staleTime: 2 * 60 * 1000,
   }))});
 
-  return (!addresses || results.some(q => q.isLoading) || results.some(q => q.isError))
+  return (!isEnabled || results.some(q => q.isLoading) || results.some(q => q.isError))
     ? undefined
     : results.reduce(
       (a, i) => a.concat(i.data as RaribleItem[]),
@@ -249,6 +250,7 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
 export function useRaribleAccountBids(): RaribleOrder[] | undefined {
   const addresses = useUrbitAccountAllAddresses();
   const addressList = Array.from(addresses ?? new Set<Address>());
+  const isEnabled: boolean = addresses !== undefined;
 
   const rsdk = useRaribleSDK();
   const results = useQueries({ queries: addressList.map((address: Address) => ({
@@ -260,7 +262,7 @@ export function useRaribleAccountBids(): RaribleOrder[] | undefined {
         continuation: c,
       }),
     ),
-    enabled: addresses !== undefined,
+    enabled: isEnabled,
     // FIXME: We can query account bids even less frequently because all
     // modifications will come through this interface (but we still need
     // a clean way to invalidate expired bids, which could probably be done
@@ -268,7 +270,7 @@ export function useRaribleAccountBids(): RaribleOrder[] | undefined {
     staleTime: 10 * 60 * 1000,
   }))});
 
-  return (!addresses || results.some(q => q.isLoading) || results.some(q => q.isError))
+  return (!isEnabled || results.some(q => q.isLoading) || results.some(q => q.isError))
     ? undefined
     : results.reduce(
       (a, i) => a.concat(i.data as RaribleOrder[]),
