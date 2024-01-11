@@ -1,10 +1,10 @@
 :~  title+'urbitswap'
     info+'A peer-to-peer NFT trading platform native to Urbit'
     color+0x11.1111
-    image+'https://raw.githubusercontent.com/sidnym-ladrut/urbitswap/v0.0.2/meta/logo/urbitswap-tile.svg'
-    glob-http+['https://raw.githubusercontent.com/sidnym-ladrut/urbitswap/v0.0.2/meta/glob/v0.0.2.glob' 0v2.o9aoc.r3v3i.52ubn.67qd8.nkn16]
+    image+'https://raw.githubusercontent.com/urbitswap/urbitswap/v0.0.3/meta/logo/urbitswap-tile.svg'
+    glob-http+['https://raw.githubusercontent.com/urbitswap/urbitswap/v0.0.3/meta/glob/v0.0.3.glob' 0v3.2e6vu.oc06k.8ivb6.sgkrf.34de0]
     base+'urbitswap'
-    version+[0 0 2]
-    website+'https://github.com/sidnym-ladrut/urbitswap'
+    version+[0 0 3]
+    website+'https://github.com/urbitswap/urbitswap'
     license+'GNU LGPLv3 (+ Amendment)'
 ==
