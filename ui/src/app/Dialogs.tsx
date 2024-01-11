@@ -514,7 +514,8 @@ export function KnownWalletsDialog() {
         }))
       );
     return newTableRows;
-    // return genTestWallets(100);
+    // return []; // test no entries
+    // return genTestWallets(100); // test many entries
   }, [localAddresses, urbitAddressMap]);
   const tableCols = useMemo<ColumnDef<UrbitKnownWallet, any>[]>(() => {
     const colHelper = createColumnHelper<UrbitKnownWallet>();
@@ -617,15 +618,19 @@ export function KnownWalletsDialog() {
                 ))}
               </thead>
               <tbody className="text-sm sm:text-base">
-                {table.getRowModel().rows.map(row => (
-                  <tr key={row.id} className="odd:bg-gray-50 even:bg-gray-100 border-b first:border-t-2">
-                    {row.getVisibleCells().map(cell => (
-                      <td key={cell.id} className="font-mono">
-                        <ColumnCell cell={cell} />
-                      </td>
-                    ))}
-                  </tr>
-                ))}
+                {(!tableRows?.length) ? (
+                  <tr children={[...Array(3).keys()].map(i => <td key={i} />)} />
+                ) : (
+                  table.getRowModel().rows.map(row => (
+                    <tr key={row.id} className="odd:bg-gray-50 even:bg-gray-100 border-b first:border-t-2">
+                      {row.getVisibleCells().map(cell => (
+                        <td key={cell.id} className="font-mono">
+                          <ColumnCell cell={cell} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
