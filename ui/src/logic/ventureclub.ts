@@ -74,7 +74,7 @@ export async function requestVentureTransfer(
     args: [CONTRACT.EXCHANGE, fromWallet, toWallet, dealId],
   })).then((approved: boolean): TransferData => {
     return {
-      approved,
+      approved: approved,
       details: approved
         ? undefined
         : "Please go to https://app.ventureclub.club/ and ask about transfer failure",
