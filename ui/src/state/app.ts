@@ -59,7 +59,7 @@ export function useWagmiDisconnect() {
 }
 
 export function useCollectionAccountKYC(): KYCData | undefined {
-  const { address } = useWagmiAccount();
+  const { address, isConnected } = useWagmiAccount();
   const { collId } = useParams();
   const queryKey: QueryKey = useMemo(() => [
     APP_TERM, "collection", collId, "kyc", address,
@@ -70,9 +70,9 @@ export function useCollectionAccountKYC(): KYCData | undefined {
     queryFn: async () => (
       collId === FEATURED.VC
         ? requestVentureKYC(address)
-        : {kyc: true, noauth: true}
+        : {kyc: true, required: false}
     ),
-    enabled: !!collId,
+    enabled: isConnected && !!collId,
   });
 
   return (isLoading || isError)
@@ -80,9 +80,11 @@ export function useCollectionAccountKYC(): KYCData | undefined {
     : (data as KYCData);
 }
 
-export function useItemAccountGrant(): TransferData | undefined {
-  const { address } = useWagmiAccount();
-  const { collId, itemId } = useParams();
+// NOTE: `itemId` can't be queried from `useParams` in order to support
+// rendering on `ItemBadges` from views w/o `itemId` param (e.g. collection view)
+export function useCollectionAccountGrant(itemId?: string): TransferData | undefined {
+  const { address, isConnected } = useWagmiAccount();
+  const { collId } = useParams();
   const queryKey: QueryKey = useMemo(() => [
     APP_TERM, "collection", collId, "grant", address, itemId,
   ], [address, collId, itemId]);
@@ -94,7 +96,7 @@ export function useItemAccountGrant(): TransferData | undefined {
         ? requestVentureTransfer(address, address, itemId ?? "")
         : {approved: true}
     ),
-    enabled: !!collId && !!itemId,
+    enabled: isConnected && !!collId && !!itemId,
   });
 
   return (isLoading || isError)

@@ -59,7 +59,8 @@ import {
   useUrbitTraders,
   useUrbitAssociateMutation,
   useCollectionAccountKYC,
-  useItemAccountGrant,
+  useCollectionAccountGrant,
+  useRaribleCollectionMeta,
   useRouteRaribleItem,
   useRouteRaribleAccountItem,
   useRouteRaribleItemMutation,
@@ -693,8 +694,11 @@ export function DisclaimerDialog() {
 function TradeChecksDialog<P extends {}>(props: DeferredRenderProps<null, P>) {
   const TradeChecksDialogRender = useCallback(function<P extends {}>(pops: DeferredRenderProps<null, P>) {
     const { address, owner, item, isMyItem, isAddressItem } = useRouteRaribleAccountItem();
+    // FIXME: Would be nice to include `collMeta?.meta?.externalLink` for error
+    // messages, but it currently isn't included in Rarible API responses
+    // const collMeta = useRaribleCollectionMeta();
     const collKYC = useCollectionAccountKYC();
-    const itemGrant = useItemAccountGrant();
+    const collGrant = useCollectionAccountGrant(item?.tokenId);
     const dialogProps = useRef({stage: 0, total: 0, title: "Trade"});
 
     const tradeChecks: DeferredPrecheckReport[] = [
@@ -727,8 +731,8 @@ function TradeChecksDialog<P extends {}>(props: DeferredRenderProps<null, P>) {
               Visit the collection's website to get started.
             </p>
             {collKYC?.details && (
-              <div>
-                <h1 className="text-lg font-semibold">Collection-specific Notification</h1>
+              <div className="flex flex-col gap-1">
+                <h1 className="italic font-semibold">Collection-specific Details</h1>
                 <p className="italic">{collKYC.details}</p>
               </div>
             )}
@@ -736,17 +740,17 @@ function TradeChecksDialog<P extends {}>(props: DeferredRenderProps<null, P>) {
           </DialogBody>
         ),
       }, {
-        status: itemGrant?.approved,
+        status: collGrant?.approved,
         render: () => (
           <DialogBody head="Unapproved Collection Trade">
             <p>
               This is not a compliant trade based on collection-specific
               transfer rules. Visit the collection's website for more information.
             </p>
-            {itemGrant?.details && (
-              <div>
-                <h1 className="text-lg font-semibold">Collection-specific Notification</h1>
-                <p className="italic">{itemGrant.details}</p>
+            {collGrant?.details && (
+              <div className="flex flex-col gap-1">
+                <h1 className="italic font-semibold">Collection-specific Details</h1>
+                <p className="italic">{collGrant.details}</p>
               </div>
             )}
             <DialogFoot />

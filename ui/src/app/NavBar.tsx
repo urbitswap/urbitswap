@@ -45,7 +45,7 @@ import {
   useUrbitAccountAssocAddresses,
   useCollectionAccountKYC,
 } from '@/state/app';
-import { APP_TERM, QUERY } from '@/constants';
+import { APP_TERM, FEATURED, QUERY } from '@/constants';
 import type {
   CollectionBaseish,
   CollectionSortish,
@@ -100,7 +100,8 @@ export default function NavBar({className, innerClassName}: Class2Props) {
 
   const inCollectionMode: boolean = collId !== undefined;
   const isAssociated: boolean = (assocAddresses ?? new Set()).has(address);
-  const isKYCd: boolean | undefined = collectionKYC?.kyc && !collectionKYC?.noauth;
+  const isKYCColl: boolean = inCollectionMode && collId === FEATURED.VC;
+  const isKYCd: boolean | undefined = collectionKYC?.kyc;
 
   const btnOutClass: string = "h-full small-button";
   const btnInnClass: string = "w-5";
@@ -205,13 +206,21 @@ export default function NavBar({className, innerClassName}: Class2Props) {
               : <ENSName address={address} className={isConnected && "text-2xs"} />
             }
             children={<WalletIcon className="h-5 w-5" />}
-            className={isConnected && "text-blue-400"}
+            className={!isConnected
+              ? undefined
+              : (isKYCColl && isKYCd === false)
+                ? "text-red-400"
+                : "text-blue-400"
+            }
           />
         }>
           <DropdownEntry disabled>
             <span>Wallet</span>
-            {(isAssociated && (<LinkIcon className="w-3 h-3" />))}
-            {(isKYCd && (<IdentificationIcon className="w-3 h-3" />))}
+            {isAssociated && (<LinkIcon className="w-3 h-3" />)}
+            {(isKYCColl && isKYCd !== undefined) && (<IdentificationIcon className={cn(
+              "w-3 h-3",
+              (isKYCd === false) && "text-red-400",
+            )} />)}
           </DropdownEntry>
           <DropdownEntry onSelect={() => !isConnected ? connect() : disconnect()}>
             {!isConnected ? (<BoltIcon className="w-4 h-4" />) : (<BoltSlashIcon className="w-4 h-4" />)}
@@ -223,6 +232,12 @@ export default function NavBar({className, innerClassName}: Class2Props) {
               <span>Associate @p</span>
             </DropdownEntry>
           )}
+          {/*(isConnected && isKYCColl && !isKYCd) && (
+            <DropdownEntry onSelect={() => modalNavigate("/todo")}>
+              <IdentificationIcon className="w-4 h-4" />
+              <span>Submit KYC</span>
+            </DropdownEntry>
+          )*/}
           <DropdownEntry onSelect={() => modalNavigate("/wallets")}>
             <ListBulletIcon className="w-4 h-4" />
             <span>See All Wallets</span>

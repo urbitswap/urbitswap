@@ -16,6 +16,12 @@ export const CONTRACT = Object.freeze({
   USDC: APP_DBUG
     ? "ETHEREUM:0x07865c6e87b9f70255377e024ace6630c1eaa37f"
     : "ETHEREUM:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+  // https://docs.rarible.org/reference/contract-addresses
+  // FIXME: Technically an "ETHEREUM:" address, but it's passed to Wagmi
+  // instead of Rarible so we need to omit the chain identifier
+  EXCHANGE: APP_DBUG
+    ? "0x02afbD43cAD367fcB71305a2dfB9A3928218f0c1"
+    : "0x9757F2d2b135150BBeb65308D4a91804107cd8D6",
 });
 
 export const FEATURED = Object.freeze({

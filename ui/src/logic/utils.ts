@@ -285,15 +285,6 @@ export function getVersionCompatibility(version: string): number {
     ), -1);
 }
 
-export function getItemUnlock(item: RaribleItem): Date {
-  const itemUnlockAttrib: string | undefined = (item.meta?.attributes ?? []).find(
-    (m: RaribleMetaAttrib) => m.key.match(/[uU]nlock/)
-  )?.value;
-  return (itemUnlockAttrib === undefined)
-    ? MAX_DATE
-    : new Date(Date.parse(itemUnlockAttrib));
-}
-
 export function genTestWallets(count: number): UrbitKnownWallet[] {
   return [...Array(count).keys()].map((index: number) => {
     const ship: string = ob.patp(
@@ -308,6 +299,8 @@ export function genTestWallets(count: number): UrbitKnownWallet[] {
   });
 }
 
+// NOTE: This function uses `createElement` so as not to JSX, which would
+// require renaming this file to `*.tsx`
 function genSortIcon(SortTypeIcon: typeof TagIcon, isAscending: boolean): typeof TagIcon {
   // @ts-ignore
   return ({className, ...props}) => {

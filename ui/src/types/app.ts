@@ -38,8 +38,8 @@ export interface IconLabel<IdType extends string = string> {
 
 export interface KYCData {
   kyc: boolean;
+  required: boolean;
   details?: string;
-  noauth?: boolean;
 }
 
 export interface TransferData {

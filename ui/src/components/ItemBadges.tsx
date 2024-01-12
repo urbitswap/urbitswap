@@ -7,7 +7,11 @@ import {
   LockOpenIcon,
 } from '@heroicons/react/24/solid';
 import Popover from '@/components/Popover';
-// import { useUrbitNetworkLayer, useVentureAccountGrant } from '@/state/app';
+import {
+  useWagmiAccount,
+  useCollectionAccountKYC,
+  useCollectionAccountGrant,
+} from '@/state/app';
 import { APP_TERM, FEATURED, QUERY } from '@/constants';
 import {
   COLLECTIONBASE_ICON_MAP,
@@ -15,7 +19,6 @@ import {
   capitalize,
   isMaxDate,
   makePrettyLapse,
-  getItemUnlock,
 } from '@/logic/utils';
 import type {
   Item as RaribleItem,
@@ -41,36 +44,38 @@ export default function ItemBadges({
   badgeClassName?: string;
 }) {
   const { collId } = useParams();
-  // const myItemGrant = useVentureAccountGrant(item.tokenId ?? "");
-  // const myItemLayer = useUrbitNetworkLayer(item.meta?.name ?? "");
+  const { isConnected } = useWagmiAccount();
+  const myCollKYC = useCollectionAccountKYC();
+  const myItemGrant = useCollectionAccountGrant(item?.tokenId);
+
+  const isKYCColl: boolean = collId === FEATURED.VC;
+  const isWalletKYCd: boolean = isConnected && !!myCollKYC?.kyc;
+  const isItemTransferable: boolean = !!myItemGrant?.approved;
 
   const isUrbitCollection: boolean = collId === FEATURED.AZP;
   const urbitItemType: UrbitPointType | undefined = QUERY.POINT_TYPE.find(a =>
     a === (item.meta?.attributes ?? []).find(a => a.key === "size")?.value
   );
-  // const itemUnlock: Date = getItemUnlock(item);
-  // const itemTransferable: boolean = myItemGrant !== undefined
-  //   && myItemGrant?.status === "success";
 
   return (
     <div className={cn(className, "flex flex-row justify-center gap-1 items")}>
-      {(myItems === undefined || myBids === undefined) ? (
+      {(myItems === undefined || myBids === undefined ||
+          (isKYCColl && isConnected && (myCollKYC === undefined || myItemGrant === undefined))) ? (
         <EllipsisHorizontalIcon className={cn(badgeClassName, "text-black animate-ping")} />
       ) : (
         <React.Fragment>
-          {/*(itemUnlock < new Date(Date.now())) ? (
-            <Popover
-              trigger={<LockOpenIcon className={badgeClassName} />}
-              content="Available for General Purchase"
-            />
-          ) : (
-            <Popover
-              trigger={<LockClosedIcon className={badgeClassName} />}
-              content={`Lockup Period Ends ${
-                isMaxDate(itemUnlock) ? "???" : makePrettyLapse(itemUnlock)
-              } (${itemTransferable ? "A" : "Una"}vailable to You)`}
-            />
-          )*/}
+          {isKYCColl && (
+            <Popover message={isItemTransferable ? "Available" : `Unavailable (${
+              !isConnected ? "No Wallet Connected"
+              : !isWalletKYCd ? "No KYC Submitted"
+              : "Non-compliant Transfer"
+            })`}>
+              {createElement(
+                isItemTransferable ? LockOpenIcon : LockClosedIcon,
+                {className: badgeClassName}
+              )}
+            </Popover>
+          )}
           {isUrbitCollection && (
             <Popover message={`${URBITPOINT_ICON_MAP[(urbitItemType ?? "")].name} ID`}>
               {createElement(

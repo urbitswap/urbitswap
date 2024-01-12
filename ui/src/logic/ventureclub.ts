@@ -3,7 +3,7 @@ import axios from 'axios';
 import { readContract } from '@wagmi/core'
 import type { KYCData, TransferData } from '@/types/app';
 import { wagmiAPI } from '@/api';
-import { APP_DBUG } from '@/constants';
+import { APP_DBUG, CONTRACT } from '@/constants';
 import type { Address } from 'viem';
 import type { Config as WagmiConfig } from '@wagmi/core'
 import type { Item as RaribleItem, Meta as RaribleItemMeta } from '@rarible/api-client';
@@ -46,11 +46,12 @@ export async function requestVentureKYC(
 
     return {
       kyc: isEthKYCd && isWebKYCd,
+      required: true,
       details: (isEthKYCd && isWebKYCd)
         ? undefined
         : (isEthKYCd === isWebKYCd)
           ? web.details
-          : "Please go to https://app.ventureclub.club/ and ask about web/eth KYC mismatch.",
+          : "Please go to https://app.ventureclub.club/ and ask about web/eth KYC mismatch",
     };
   });
 }
@@ -71,15 +72,13 @@ export async function requestVentureTransfer(
     abi: VC.ABI.COMPLIANCE,
     address: VC.ADDRESS.COMPLIANCE,
     functionName: "transferAllowed",
-    // FIXME: In cases where the owner accepts a bid, it's technically
-    // the `fromWallet` that is the `transferCaller` (first argument)
-    args: [toWallet, fromWallet, toWallet, dealId],
+    args: [CONTRACT.EXCHANGE, fromWallet, toWallet, dealId],
   })).then((approved: boolean): TransferData => {
     return {
       approved,
       details: approved
         ? undefined
-        : "Please go to https://app.ventureclub.club/ and ask about transfer failure.",
+        : "Please go to https://app.ventureclub.club/ and ask about transfer failure",
     };
   });
 }
