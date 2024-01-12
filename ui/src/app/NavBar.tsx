@@ -46,7 +46,6 @@ import {
   useCollectionAccountKYC,
 } from '@/state/app';
 import { APP_TERM, QUERY } from '@/constants';
-import type { Chain } from 'viem'; // node_modules/viem/types/chain.ts
 import type {
   CollectionBaseish,
   CollectionSortish,
@@ -211,8 +210,8 @@ export default function NavBar({className, innerClassName}: Class2Props) {
         }>
           <DropdownEntry disabled>
             <span>Wallet</span>
-            {(isKYCd && (<IdentificationIcon className="w-3 h-3" />))}
             {(isAssociated && (<LinkIcon className="w-3 h-3" />))}
+            {(isKYCd && (<IdentificationIcon className="w-3 h-3" />))}
           </DropdownEntry>
           <DropdownEntry onSelect={() => !isConnected ? connect() : disconnect()}>
             {!isConnected ? (<BoltIcon className="w-4 h-4" />) : (<BoltSlashIcon className="w-4 h-4" />)}

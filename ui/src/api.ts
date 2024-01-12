@@ -9,7 +9,7 @@ import Urbit, {
   UrbitHttpApiEvent,
   UrbitHttpApiEventType,
 } from '@urbit/http-api';
-import { WagmiConfig, createConfig, configureChains } from 'wagmi'
+import { createConfig, configureChains } from 'wagmi'
 import { InjectedConnector } from 'wagmi/connectors/injected';
 import { alchemyProvider } from 'wagmi/providers/alchemy'
 import { publicProvider } from 'wagmi/providers/public';

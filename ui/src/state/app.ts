@@ -17,7 +17,6 @@ import useUrbitSubscription from '@/logic/useUrbitSubscription';
 import {
   requestVentureKYC,
   requestVentureTransfer,
-  addVentureAttribs,
 } from '@/logic/ventureclub';
 import { wagmiAPI, urbitAPI } from '@/api';
 import { APP_TERM, CONTRACT, FEATURED, TRADERS_HOST, TRADERS_HOST_FLAG } from '@/constants';
@@ -69,7 +68,7 @@ export function useCollectionAccountKYC(): KYCData | undefined {
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
     queryFn: async () => (
-      false // collId === FEATURED.VC
+      collId === FEATURED.VC
         ? requestVentureKYC(address)
         : {kyc: true, noauth: true}
     ),
@@ -91,9 +90,9 @@ export function useItemAccountGrant(): TransferData | undefined {
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
     queryFn: async () => (
-      false // collId === FEATURED.VC
+      collId === FEATURED.VC
         ? requestVentureTransfer(address, address, itemId ?? "")
-        : {status: "success", callId: "", signature: "", nonce: "", expiryBlock: ""}
+        : {approved: true}
     ),
     enabled: !!collId && !!itemId,
   });
@@ -214,7 +213,7 @@ export function useRaribleCollectionItems(): RaribleItem[] | undefined {
 
   return (isLoading || isError)
     ? undefined
-    : (data as RaribleItem[]); // .map(addVentureAttribs);
+    : (data as RaribleItem[]);
 }
 
 export function useRaribleAccountItems(): RaribleItem[] | undefined {
@@ -244,7 +243,7 @@ export function useRaribleAccountItems(): RaribleItem[] | undefined {
     : results.reduce(
       (a, i) => a.concat(i.data as RaribleItem[]),
       ([] as RaribleItem[])
-    ); // .map(addVentureAttribs);
+    );
 }
 
 export function useRaribleAccountBids(): RaribleOrder[] | undefined {
@@ -311,7 +310,7 @@ export function useRouteRaribleItem(): RouteRaribleItem {
   return (isLoading || isError)
     ? {item: undefined, owner: undefined, bids: undefined}
     : {
-      item: (data[0] as RaribleItem), // addVentureAttribs(data[0] as RaribleItem),
+      item: (data[0] as RaribleItem),
       // @ts-ignore
       owner: (data[1].map((o: RaribleOwnership) => o.owner.replace(/^.+:/g, "").toLowerCase())[0] as Address),
       bids: (data[2] as RaribleOrder[]),

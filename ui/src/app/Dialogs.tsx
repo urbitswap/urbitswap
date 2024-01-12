@@ -732,20 +732,24 @@ function TradeChecksDialog<P extends {}>(props: DeferredRenderProps<null, P>) {
                 <p className="italic">{collKYC.details}</p>
               </div>
             )}
-            <DialogFoot close="Decline">
-              <Link to="https://ventureclub.club" target="_blank" className="button">
-                Submit KYC
-              </Link>
-            </DialogFoot>
+            <DialogFoot />
           </DialogBody>
         ),
       }, {
-        status: itemGrant?.status && (itemGrant?.status === "success"),
+        status: itemGrant?.approved,
         render: () => (
           <DialogBody head="Unapproved Collection Trade">
             <p>
-              TODO: Error message for when an item is not transferable.
+              This is not a compliant trade based on collection-specific
+              transfer rules. Visit the collection's website for more information.
             </p>
+            {itemGrant?.details && (
+              <div>
+                <h1 className="text-lg font-semibold">Collection-specific Notification</h1>
+                <p className="italic">{itemGrant.details}</p>
+              </div>
+            )}
+            <DialogFoot />
           </DialogBody>
         ),
       },

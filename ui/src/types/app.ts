@@ -42,17 +42,9 @@ export interface KYCData {
   noauth?: boolean;
 }
 
-export type TransferData = TransferDenial | TransferGrant;
-export interface TransferDenial {
-  status: "failed";
-  details: string;
-}
-export interface TransferGrant {
-  status: "success";
-  callId: string;
-  signature: string;
-  nonce: string;
-  expiryBlock: string;
+export interface TransferData {
+  approved: boolean;
+  details?: string;
 }
 
 export interface UrbitTraders {
