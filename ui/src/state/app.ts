@@ -70,7 +70,7 @@ export function useCollectionAccountKYC(): KYCData | undefined {
     queryFn: async () => (
       collId === FEATURED.VC
         ? requestVentureKYC(address)
-        : {kyc: true, required: false}
+        : {kyc: true}
     ),
     enabled: isConnected && !!collId,
   });

@@ -46,7 +46,6 @@ export async function requestVentureKYC(
 
     return {
       kyc: isEthKYCd && isWebKYCd,
-      required: true,
       details: (isEthKYCd && isWebKYCd)
         ? undefined
         : (isEthKYCd === isWebKYCd)
