@@ -18,7 +18,8 @@ export const CONTRACT = Object.freeze({
     : "ETHEREUM:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
   // https://docs.rarible.org/reference/contract-addresses
   // FIXME: Technically an "ETHEREUM:" address, but it's passed to Wagmi
-  // instead of Rarible so we need to omit the chain identifier
+  // instead of Rarible so we need to omit the chain identifier and keep
+  // the lowercase/uppercase checksums
   EXCHANGE: APP_DBUG
     ? "0x02afbD43cAD367fcB71305a2dfB9A3928218f0c1"
     : "0x9757F2d2b135150BBeb65308D4a91804107cd8D6",
@@ -32,8 +33,7 @@ export const FEATURED = Object.freeze({
     ? "ETHEREUM:0x248b3e3b3f711002d12c01bd326a8761233dd482"
     : "ETHEREUM:0x5af0d9827e0c53e4799bb226655a1de152a425a5",
   VC: APP_DBUG
-    // "ETHEREUM:0x7374d1CbdCd648e13F5DD64389b73443074a12c1",
-    ? "ETHEREUM:0x0a36453ce8645df38c8aadaaf002b8cc24c0fc81"
+    ? "ETHEREUM:0x7374d1cbdcd648e13f5dd64389b73443074a12c1"
     : "ETHEREUM:0x9d8ca5b5715704175c6877ee911e727593726332",
 });
 

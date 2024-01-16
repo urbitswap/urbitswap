@@ -1,12 +1,13 @@
 import { add as offsetDate } from 'date-fns';
 import axios from 'axios';
 import { readContract } from '@wagmi/core'
-import type { KYCData, TransferData } from '@/types/app';
+import { checksumAddress } from '@/logic/utils';
 import { wagmiAPI } from '@/api';
 import { APP_DBUG, CONTRACT } from '@/constants';
 import type { Address } from 'viem';
 import type { Config as WagmiConfig } from '@wagmi/core'
 import type { Item as RaribleItem, Meta as RaribleItemMeta } from '@rarible/api-client';
+import type { KYCData, TransferData } from '@/types/app';
 
 interface VentureAuthEth {
   countryCode: string;
@@ -22,13 +23,15 @@ interface VentureAuthWeb {
 export async function requestVentureKYC(
   wallet: Address,
 ): Promise<KYCData> {
+  const checksumWallet: Address = checksumAddress(wallet);
+
   return Promise.all([
     readContract({
       chainId: wagmiAPI.chains?.[0].id,
       abi: VC.ABI.DATA,
       address: VC.ADDRESS.DATA,
       functionName: "getAccount",
-      args: [wallet],
+      args: [checksumWallet],
     }),
     axios.request<VentureAuthWeb>({
       method: "get",
@@ -37,7 +40,7 @@ export async function requestVentureKYC(
         : "app.ventureclub.club"
       }/`,
       url: "/.netlify/functions/get-kyc",
-      params: { wallets: wallet },
+      params: { wallets: checksumWallet },
     }),
   ]).then(([eth, {data: web}]: [VentureAuthEth, {data: VentureAuthWeb}]): KYCData => {
     // enum KYCStatus { Unknown, Valid, Lapased, Rejected }
@@ -71,7 +74,12 @@ export async function requestVentureTransfer(
     abi: VC.ABI.COMPLIANCE,
     address: VC.ADDRESS.COMPLIANCE,
     functionName: "transferAllowed",
-    args: [CONTRACT.EXCHANGE, fromWallet, toWallet, dealId],
+    args: [
+      CONTRACT.EXCHANGE,
+      checksumAddress(fromWallet),
+      checksumAddress(toWallet),
+      dealId,
+    ],
   })).then((approved: boolean): TransferData => {
     return {
       approved: approved,

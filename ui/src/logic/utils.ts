@@ -2,6 +2,7 @@ import React, { createElement, useCallback, useState } from 'react';
 import cn from 'classnames';
 import ob from 'urbit-ob';
 import seedrandom from 'seedrandom';
+import { ethers } from 'ethers'
 import { format, formatDistance } from 'date-fns';
 import { useCopyToClipboard } from 'usehooks-ts';
 import {
@@ -23,6 +24,7 @@ import {
     ItemsSearchSort as RaribleItemSort,
 } from '@rarible/api-client';
 import { toContractAddress } from '@rarible/types';
+import type { Address } from 'viem';
 import type {
   RequestCurrency as RaribleCurrency,
 } from '@rarible/sdk';
@@ -102,6 +104,10 @@ export const URBITPOINT_ICON_MAP: Record<UrbitPointTypeish, IconLabel> = URBITPO
 
 export function capitalize(word: string): string {
   return word[0].toUpperCase() + word.slice(1).toLowerCase();
+}
+
+export function checksumAddress(address: Address): Address {
+  return (ethers.utils.getAddress(address)  as Address);
 }
 
 export function genRateLimiter(maxReqs: number, perSecs: number) {
