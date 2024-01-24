@@ -89,14 +89,14 @@ export async function requestVentureTransfer(
   ])).then(([dealId, approved]: [Address, boolean]) => Promise.all([
       Promise.resolve(dealId),
       Promise.resolve(approved),
-      false // approved
+      approved
         ? Promise.resolve<VentureCompEth>([
           {
             countryCode: "",
             accreditationStatus: VC_CONTRACT.STATUS.ACC.VERIFIED,
             kycStatus: VC_CONTRACT.STATUS.KYC.VALID,
           },
-          BigInt(Date.now() / 1000),
+          BigInt(Math.floor(Date.now() / 1000)),
         ]) : readContract({
           chainId: wagmiAPI.chains?.[0].id,
           abi: VC_CONTRACT.ABI.DATA,
