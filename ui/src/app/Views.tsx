@@ -167,11 +167,15 @@ export function CollectionGrid({className}: ClassProps) {
                       </div>*/}
                       <div>
                         <p className="font-bold">Symbol</p>
-                        <p>{collection.symbol}</p>
+                        <p className="line-clamp-1">
+                          {collection.symbol}
+                        </p>
                       </div>
                       <div>
-                        <p className="font-bold">Chain</p>
-                        <p>{collection.blockchain}</p>
+                        <p className="font-bold">KYC?</p>
+                        <p className="line-clamp-1">
+                          {collection.id === FEATURED.VC ? "Yes" : "No"}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -449,19 +453,6 @@ export function ItemPage({className}: ClassProps) {
               &nbsp;{"TODO"}
             </h3>
             */}
-            {/*
-            <hr className="my-2" />
-            <div className="text-sm">
-              {(item.meta?.attributes ?? []).map((attrib: RaribleMetaAttrib) => (
-                <p key={attrib.key}>
-                  <span className="font-semibold italic">
-                    {attrib?.key || "<unknown>"}:
-                  </span>&nbsp;
-                  {attrib?.value || "<unknown>"}
-                </p>
-              ))}
-            </div>
-            */}
             <hr className="my-2" />
             <h4 className="text-md font-bold underline">
               Active Asks
@@ -501,6 +492,7 @@ export function ItemPage({className}: ClassProps) {
               myItems={myItems}
               myBids={myBids}
               badgeClassName="w-6 h-6"
+              verbose
             />
             <button className="button w-full gap-1"
               onClick={() => modalNavigate("offer")}

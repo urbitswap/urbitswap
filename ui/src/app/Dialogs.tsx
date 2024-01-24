@@ -75,6 +75,7 @@ import {
   makePrettyName,
   makePrettyPrice,
   tenderToAsset,
+  truncateAddress,
   useCopy,
 } from '@/logic/utils';
 import {
@@ -248,10 +249,9 @@ export function TradeDialog() {
 
     const { offerId } = useParams();
     const tradeOffer: RaribleOrder | undefined =
-      [(item && item.bestSellOrder), ...(bids || [])]
-      .find(o => o !== undefined && o.id === offerId);
+      [item?.bestSellOrder, ...(bids || [])].find(o => o?.id === offerId);
     const tradeTender: RaribleAsset | undefined =
-      tradeOffer && tradeOffer[isAddressItem ? "make" : "take"];
+      tradeOffer?.[isAddressItem ? "make" : "take"];
 
     const onSubmit = useCallback(async (event: any) => {
       event.preventDefault();
@@ -564,7 +564,7 @@ export function KnownWalletsDialog() {
     const columnFilteredValues = useMemo<SelectorOption[]>(() => (
       Array.from(column.getFacetedUniqueValues().keys()).sort().map(value => ({
         value: value,
-        label: column.id !== "wallet" ? value : `${value.slice(0, 5)}…${value.slice(-4)}`
+        label: column.id !== "wallet" ? value : truncateAddress(value)
       }))
     ), [column.getFacetedUniqueValues()]);
     return (
@@ -698,7 +698,7 @@ function TradeChecksDialog<P extends {}>(props: DeferredRenderProps<null, P>) {
     // messages, but it currently isn't included in Rarible API responses
     // const collMeta = useRaribleCollectionMeta();
     const collKYC = useCollectionAccountKYC();
-    const collGrant = useCollectionAccountGrant(item?.tokenId);
+    const collGrant = useCollectionAccountGrant();
     const dialogProps = useRef({stage: 0, total: 0, title: "Trade"});
 
     const tradeChecks: DeferredPrecheckReport[] = [

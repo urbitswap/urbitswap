@@ -34,12 +34,14 @@ export default function ItemBadges({
   item,
   myItems,
   myBids,
+  verbose = false,
   className,
   badgeClassName,
 }: {
   item: RaribleItem;
   myItems: RaribleItem[] | undefined;
   myBids: RaribleOrder[] | undefined;
+  verbose?: boolean;
   className?: string;
   badgeClassName?: string;
 }) {
@@ -58,44 +60,57 @@ export default function ItemBadges({
   );
 
   return (
-    <div className={cn(className, "flex flex-row justify-center gap-1 items")}>
+    <div className={cn(className, "flex flex-col items-center gap-2")}>
       {(myItems === undefined || myBids === undefined ||
           (isKYCColl && isConnected && (myCollKYC === undefined || myItemGrant === undefined))) ? (
         <EllipsisHorizontalIcon className={cn(badgeClassName, "text-black animate-ping")} />
       ) : (
         <React.Fragment>
-          {isKYCColl && (
-            <Popover message={isItemTransferable ? "Available" : `Unavailable (${
-              !isConnected ? "No Wallet Connected"
-              : !isWalletKYCd ? "No KYC Submitted"
-              : "Non-compliant Transfer"
-            })`}>
-              {createElement(
-                isItemTransferable ? LockOpenIcon : LockClosedIcon,
-                {className: badgeClassName}
-              )}
-            </Popover>
-          )}
-          {isUrbitCollection && (
-            <Popover message={`${URBITPOINT_ICON_MAP[(urbitItemType ?? "")].name} ID`}>
-              {createElement(
-                URBITPOINT_ICON_MAP[urbitItemType ?? ""].icon,
-                {className: badgeClassName},
-              )}
-            </Popover>
-          )}
-          {myItems.some((i: RaribleItem) => i.id === item.id) && (
-            <Popover message={COLLECTIONBASE_ICON_MAP["mine"].name}>
-              {createElement(COLLECTIONBASE_ICON_MAP["mine"].icon, {className: badgeClassName})}
-            </Popover>
-          )}
-          {myBids.some((o: RaribleOrder) =>
-            (o.take.type["@type"] === "ERC721" || o.take.type["@type"] === "ERC721_Lazy")
-            && `${o.take.type?.contract}:${o.take.type?.tokenId}` === item.id
-          ) && (
-            <Popover message={COLLECTIONBASE_ICON_MAP["bids"].name}>
-              {createElement(COLLECTIONBASE_ICON_MAP["bids"].icon, {className: badgeClassName})}
-            </Popover>
+          <div className={cn(className, "flex flex-row justify-center gap-1")}>
+            {isKYCColl && (
+              <Popover message={isItemTransferable
+                ? "Available to Trade"
+                : `Unavailable to Trade (${
+                  !isConnected ? "No Wallet Connected"
+                  : !isWalletKYCd ? "No KYC Submitted"
+                  : "Non-compliant Transfer"
+                })`
+              }>
+                {createElement(
+                  isItemTransferable ? LockOpenIcon : LockClosedIcon,
+                  {className: badgeClassName}
+                )}
+              </Popover>
+            )}
+            {isUrbitCollection && (
+              <Popover message={`${URBITPOINT_ICON_MAP[(urbitItemType ?? "")].name} ID`}>
+                {createElement(
+                  URBITPOINT_ICON_MAP[urbitItemType ?? ""].icon,
+                  {className: badgeClassName},
+                )}
+              </Popover>
+            )}
+            {myItems.some((i: RaribleItem) => i.id === item.id) && (
+              <Popover message={COLLECTIONBASE_ICON_MAP["mine"].name}>
+                {createElement(COLLECTIONBASE_ICON_MAP["mine"].icon, {className: badgeClassName})}
+              </Popover>
+            )}
+            {myBids.some((o: RaribleOrder) =>
+              (o.take.type["@type"] === "ERC721" || o.take.type["@type"] === "ERC721_Lazy")
+              && `${o.take.type?.contract}:${o.take.type?.tokenId}` === item.id
+            ) && (
+              <Popover message={COLLECTIONBASE_ICON_MAP["bids"].name}>
+                {createElement(COLLECTIONBASE_ICON_MAP["bids"].icon, {className: badgeClassName})}
+              </Popover>
+            )}
+          </div>
+          {(isKYCColl && verbose && myItemGrant && !isItemTransferable) && (
+            <p className="text-xs">
+              <span className="text-red-500 font-semibold">
+                ⚠️ Item Unavailable:
+              </span>
+              {` ${myItemGrant?.details}`}
+            </p>
           )}
         </React.Fragment>
       )}

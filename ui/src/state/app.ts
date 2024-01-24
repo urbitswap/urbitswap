@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { readContract } from '@wagmi/core'
 import {
   QueryKey,
   MutationFunction,
@@ -14,10 +15,8 @@ import {
 } from '@tanstack/react-query';
 import useRaribleSDK from '@/logic/useRaribleSDK';
 import useUrbitSubscription from '@/logic/useUrbitSubscription';
-import {
-  requestVentureKYC,
-  requestVentureTransfer,
-} from '@/logic/ventureclub';
+import { requestERC721Owner } from '@/logic/erc721';
+import { requestVentureKYC, requestVentureTransfer } from '@/logic/ventureclub';
 import { wagmiAPI, urbitAPI } from '@/api';
 import { APP_TERM, CONTRACT, FEATURED, TRADERS_HOST, TRADERS_HOST_FLAG } from '@/constants';
 import { OrderStatus as RaribleOrderStatus } from '@rarible/api-client';
@@ -68,9 +67,9 @@ export function useCollectionAccountKYC(): KYCData | undefined {
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
     queryFn: async () => (
-      collId === FEATURED.VC
-        ? requestVentureKYC(address)
-        : {kyc: true}
+      collId !== FEATURED.VC
+        ? {kyc: true}
+        : requestVentureKYC(address)
     ),
     enabled: isConnected && !!collId,
   });
@@ -80,21 +79,48 @@ export function useCollectionAccountKYC(): KYCData | undefined {
     : (data as KYCData);
 }
 
-// NOTE: `itemId` can't be queried from `useParams` in order to support
-// rendering on `ItemBadges` from views w/o `itemId` param (e.g. collection view)
-export function useCollectionAccountGrant(itemId?: string): TransferData | undefined {
+// NOTE: `itemIdAlt` is an optional parameter to enable rendering on `ItemBadges`
+// from views w/o the `itemId` route param (e.g. collection view)
+export function useCollectionAccountGrant(itemIdAlt?: string): TransferData | undefined {
   const { address, isConnected } = useWagmiAccount();
-  const { collId } = useParams();
+  const { collId, itemId: itemIdRoute, offerId } = useParams();
+  const itemId: string = useMemo(() => (
+    itemIdRoute ?? itemIdAlt ?? ""
+  ), [itemIdRoute, itemIdAlt]);
   const queryKey: QueryKey = useMemo(() => [
-    APP_TERM, "collection", collId, "grant", address, itemId,
-  ], [address, collId, itemId]);
+    APP_TERM, "collection", collId, "grant", address, itemId, offerId
+  ], [address, collId, itemId, offerId]);
 
+  const rsdk = useRaribleSDK();
   const { data, isLoading, isError } = useQuery({
     queryKey: queryKey,
     queryFn: async () => (
-      collId === FEATURED.VC
-        ? requestVentureTransfer(address, address, itemId ?? "")
-        : {approved: true}
+      collId !== FEATURED.VC
+        ? {approved: true}
+        : requestERC721Owner(
+          ((collId ?? "0x").replace(/^.+:/g, "") as Address),
+          itemId,
+        ).then((owner: Address) => Promise.all([
+          Promise.resolve(owner),
+          owner !== address
+            ? Promise.resolve(address)
+            : offerId === undefined
+              ? Promise.resolve(owner)
+              : queryRaribleContinuation(
+                  (c: string | undefined) => rsdk.apis.order.getOrderBidsByItem({
+                    itemId: `${collId}:${itemId}`,
+                    status: [RaribleOrderStatus.ACTIVE],
+                    continuation: c,
+                  }),
+                ).then((orders: unknown[]): Address => {
+                  const order = (orders as RaribleOrder[]).find(o => o?.id === offerId);
+                  return ((order?.maker.replace(/^.+:/g, "") ?? "") as Address);
+                })
+        ])).then(([fromWallet, toWallet]: [Address, Address]) => (
+          fromWallet === toWallet
+            ? Promise.resolve<TransferData>({approved: true})
+            : requestVentureTransfer(fromWallet, toWallet, itemId ?? "")
+        ))
     ),
     enabled: isConnected && !!collId && !!itemId,
   });
@@ -292,11 +318,9 @@ export function useRouteRaribleItem(): RouteRaribleItem {
       const itemAddr: string = `${collId}:${itemId}`;
       return Promise.all([
         rsdk.apis.item.getItemById({itemId: itemAddr}),
-        queryRaribleContinuation(
-          (c: string | undefined) => rsdk.apis.ownership.getOwnershipsByItem({
-            itemId: itemAddr,
-            continuation: c,
-          }),
+        requestERC721Owner(
+          ((collId ?? "0x").replace(/^.+:/g, "") as Address),
+          itemId ?? "",
         ),
         queryRaribleContinuation(
           (c: string | undefined) => rsdk.apis.order.getOrderBidsByItem({
@@ -307,14 +331,14 @@ export function useRouteRaribleItem(): RouteRaribleItem {
         ),
       ]);
     },
+    enabled: !!collId && !!itemId,
   });
 
   return (isLoading || isError)
     ? {item: undefined, owner: undefined, bids: undefined}
     : {
       item: (data[0] as RaribleItem),
-      // @ts-ignore
-      owner: (data[1].map((o: RaribleOwnership) => o.owner.replace(/^.+:/g, "").toLowerCase())[0] as Address),
+      owner: (data[1] as Address),
       bids: (data[2] as RaribleOrder[]),
     };
 }

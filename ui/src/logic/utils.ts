@@ -110,6 +110,10 @@ export function checksumAddress(address: Address): Address {
   return (ethers.utils.getAddress(address)  as Address);
 }
 
+export function truncateAddress(address: Address): string {
+  return `${address.slice(0, 5)}…${address.slice(-4)}`;
+}
+
 export function genRateLimiter(maxReqs: number, perSecs: number) {
   let frameStart: number = 0;
   let frameCount: number = 0;

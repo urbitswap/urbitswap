@@ -1,7 +1,7 @@
-import { add as offsetDate } from 'date-fns';
 import axios from 'axios';
+import { add as offsetDate, formatDistance } from 'date-fns';
 import { readContract } from '@wagmi/core'
-import { checksumAddress } from '@/logic/utils';
+import { checksumAddress, truncateAddress } from '@/logic/utils';
 import { wagmiAPI } from '@/api';
 import { APP_DBUG, CONTRACT } from '@/constants';
 import type { Address } from 'viem';
@@ -20,6 +20,13 @@ interface VentureAuthWeb {
   details: string;
 };
 
+type VentureCompEth = readonly [VentureAuthEth, BigInt];
+
+const VC_URL: string = `https://${APP_DBUG
+  ? "staging--venture-club-platform.netlify.app"
+  : "app.ventureclub.club"
+}/`;
+
 export async function requestVentureKYC(
   wallet: Address,
 ): Promise<KYCData> {
@@ -28,23 +35,19 @@ export async function requestVentureKYC(
   return Promise.all([
     readContract({
       chainId: wagmiAPI.chains?.[0].id,
-      abi: VC.ABI.DATA,
-      address: VC.ADDRESS.DATA,
+      abi: VC_CONTRACT.ABI.DATA,
+      address: VC_CONTRACT.ADDRESS.DATA,
       functionName: "getAccount",
       args: [checksumWallet],
     }),
     axios.request<VentureAuthWeb>({
       method: "get",
-      baseURL: `https://${APP_DBUG
-        ? "staging--venture-club-platform.netlify.app"
-        : "app.ventureclub.club"
-      }/`,
+      baseURL: VC_URL,
       url: "/.netlify/functions/get-kyc",
       params: { wallets: checksumWallet },
     }),
   ]).then(([eth, {data: web}]: [VentureAuthEth, {data: VentureAuthWeb}]): KYCData => {
-    // enum KYCStatus { Unknown, Valid, Lapased, Rejected }
-    const isEthKYCd: boolean = eth.kycStatus === 1;
+    const isEthKYCd: boolean = eth.kycStatus === VC_CONTRACT.STATUS.KYC.VALID;
     const isWebKYCd: boolean = web.known;
 
     return {
@@ -53,7 +56,7 @@ export async function requestVentureKYC(
         ? undefined
         : (isEthKYCd === isWebKYCd)
           ? web.details
-          : "Please go to https://app.ventureclub.club/ and ask about web/eth KYC mismatch",
+          : vcError(`Your account has a Web/Eth KYC mismatch`)
     };
   });
 }
@@ -65,32 +68,111 @@ export async function requestVentureTransfer(
 ): Promise<TransferData> {
   return readContract({
     chainId: wagmiAPI.chains?.[0].id,
-    abi: VC.ABI.NFT,
-    address: VC.ADDRESS.NFT,
+    abi: VC_CONTRACT.ABI.NFT,
+    address: VC_CONTRACT.ADDRESS.NFT,
     functionName: "tokenIdToDealId",
     args: [BigInt(tokenId)],
-  }).then((dealId: Address) => readContract({
-    chainId: wagmiAPI.chains?.[0].id,
-    abi: VC.ABI.COMPLIANCE,
-    address: VC.ADDRESS.COMPLIANCE,
-    functionName: "transferAllowed",
-    args: [
-      CONTRACT.EXCHANGE,
-      checksumAddress(fromWallet),
-      checksumAddress(toWallet),
-      dealId,
-    ],
-  })).then((approved: boolean): TransferData => {
+  }).then((dealId: Address) => Promise.all([
+    Promise.resolve(dealId),
+    readContract({
+      chainId: wagmiAPI.chains?.[0].id,
+      abi: VC_CONTRACT.ABI.COMPLIANCE,
+      address: VC_CONTRACT.ADDRESS.COMPLIANCE,
+      functionName: "transferAllowed",
+      args: [
+        CONTRACT.EXCHANGE,
+        checksumAddress(fromWallet),
+        checksumAddress(toWallet),
+        dealId,
+      ],
+    }),
+  ])).then(([dealId, approved]: [Address, boolean]) => Promise.all([
+      Promise.resolve(dealId),
+      Promise.resolve(approved),
+      false // approved
+        ? Promise.resolve<VentureCompEth>([
+          {
+            countryCode: "",
+            accreditationStatus: VC_CONTRACT.STATUS.ACC.VERIFIED,
+            kycStatus: VC_CONTRACT.STATUS.KYC.VALID,
+          },
+          BigInt(Date.now() / 1000),
+        ]) : readContract({
+          chainId: wagmiAPI.chains?.[0].id,
+          abi: VC_CONTRACT.ABI.DATA,
+          address: VC_CONTRACT.ADDRESS.DATA,
+          functionName: "getComplianceData",
+          args: [toWallet, dealId], // FIXME: Could this ever be `fromWallet`?
+        }),
+  ])).then((
+    [dealId, approved, [{countryCode, accreditationStatus, kycStatus}, unixMintTime]]:
+    [Address, boolean, VentureCompEth]
+  ): TransferData => {
+    let details: string | undefined = undefined;
+    if (!approved) {
+      const isKYCd: boolean = kycStatus === VC_CONTRACT.STATUS.KYC.VALID;
+      const isUS: boolean = countryCode === "US";
+      const isAccredited: boolean = ([
+        VC_CONTRACT.STATUS.ACC.SELF,
+        VC_CONTRACT.STATUS.ACC.VERIFIED,
+      ] as number[]).includes(accreditationStatus);
+
+      const currentDate: Date = new Date(Date.now());
+      const tokenMintDate: Date = new Date(Number(unixMintTime.valueOf() * 1000n));
+      const tokenAccrDate: Date = offsetDate(tokenMintDate, {months: 6});
+      const tokenFreeDate: Date = offsetDate(tokenMintDate, {months: 12});
+
+      const shortToWallet: string = truncateAddress(toWallet);
+
+      // VC_CONTRACT.ADDRESS.DATA: `transferAllowed` implementation
+      details =
+        !isKYCd
+          ? vcError(`
+            The wallet '${shortToWallet}'
+            has invalid KYC information
+          `)
+        : (unixMintTime === 0n)
+          ? vcError(`
+            The token '${tokenId}'
+            hasn't been listed by VentureClub for trading
+          `)
+        : (isUS && (currentDate < tokenAccrDate))
+          ? vcError(`
+            The US-based account '${shortToWallet}'
+            must wait at least 6 months after token issuance to trade token '${tokenId}'
+            (i.e. ${formatDistance(currentDate, tokenFreeDate)} from now)
+          `)
+        : (isUS && !isAccredited && (currentDate < tokenFreeDate))
+          ? vcError(`
+            The non-accredited US-based account '${shortToWallet}'
+            must either submit accreditation information with VentureClub
+            or wait at least 12 months after token issuance to trade token '${tokenId}'
+            (i.e. ${formatDistance(currentDate, tokenFreeDate)} from now)
+          `)
+        : vcError(`
+          The transfer of token '${tokenId}' from '${fromWallet}' to '${shortToWallet}'
+          encountered an unrecognized error
+        `);
+    }
+
     return {
       approved: approved,
-      details: approved
-        ? undefined
-        : "Please go to https://app.ventureclub.club/ and ask about transfer failure",
+      details: details,
     };
   });
 }
 
-const VC = Object.freeze({
+function vcError(content: string): string {
+  return `${content.trim()}; please visit ${VC_URL} for assistance`;
+}
+
+const VC_CONTRACT = Object.freeze({
+  STATUS: Object.freeze({
+    // enum AccreditationStatus { Unknown, NotAccredited, SelfAccredited, VerifiedAccredited }
+    ACC: Object.freeze({UNKNOWN: 0, NO: 1, SELF: 2, VERIFIED: 3}),
+    // enum KYCStatus { Unknown, Valid, Lapased, Rejected }
+    KYC: Object.freeze({UNKNOWN: 0, VALID: 1, LAPSED: 2, REJECTED: 3}),
+  }),
   ADDRESS: Object.freeze({
     DATA: APP_DBUG
       ? "0xA57EF53286A7F6FAce06E41C7F0cE4D0662Bf553"

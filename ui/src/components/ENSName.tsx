@@ -1,5 +1,6 @@
 import React, { HTMLAttributes } from 'react';
-import { useEnsName } from 'wagmi'
+import { useEnsName } from 'wagmi';
+import { truncateAddress } from '@/logic/utils';
 // import { useCalm } from '@/state/settings';
 import type { Address } from 'viem';
 
@@ -16,7 +17,7 @@ export default function ENSName({
   ...props
 }: ENSNameProps) {
   const { data: ensName, isSuccess } = useEnsName({address: address});
-  const citedAddress = full ? address : `${address.slice(0, 5)}…${address.slice(-4)}`;
+  const citedAddress = full ? address : truncateAddress(address);
   const calm = {disableNicknames: true}; // useCalm();
 
   return (
