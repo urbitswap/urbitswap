@@ -140,7 +140,7 @@ export async function requestVentureTransfer(
           ? vcError(`
             The US-based account '${shortToWallet}'
             must wait at least 6 months after token issuance to trade token '${tokenId}'
-            (i.e. ${formatDistance(currentDate, tokenFreeDate)} from now)
+            (i.e. ${formatDistance(currentDate, tokenAccrDate)} from now)
           `)
         : (isUS && !isAccredited && (currentDate < tokenFreeDate))
           ? vcError(`

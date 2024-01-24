@@ -173,8 +173,11 @@ export function CollectionGrid({className}: ClassProps) {
                       </div>
                       <div>
                         <p className="font-bold">KYC?</p>
-                        <p className="line-clamp-1">
-                          {collection.id === FEATURED.VC ? "Yes" : "No"}
+                        <p className={cn(
+                          "line-clamp-1 font-semibold",
+                          (collection.id === FEATURED.VC) ? "text-red-400" : "text-blue-400"
+                        )}>
+                          {(collection.id === FEATURED.VC) ? "Yes" : "No"}
                         </p>
                       </div>
                     </div>
@@ -435,12 +438,14 @@ export function ItemPage({className}: ClassProps) {
       {(item === undefined) ? (
         <LoadingIcon />
       ) : (
-        <div className="grid grid-cols-1 grid-flow-dense gap-x-4 sm:grid-cols-3">
-          <div className="sm:col-span-2">
-            <h2 className="text-xl font-bold underline">
+        <div className="grid grid-cols-1 sm:grid-cols-3 sm:grid-rows-[auto_1fr] gap-4">
+        {/* Grid Solution: https://www.w3.org/TR/css3-grid-layout/#adapting-to-available-space */}
+        {/* Title Warp Solution: https://css-tricks.com/useful-flexbox-technique-alignment-shifting-wrapping/ */}
+          <div className="col-span-2 flex flex-wrap text-nowrap items-center border-b-2">
+            <h2 className="grow text-xl font-bold underline">
               {makePrettyName(item)}
             </h2>
-            <h3 className="flex flex-row text-md">
+            <h3 className="flex flex-row text-nowrap text-md">
               <span className="font-semibold">Owner:</span>&nbsp;
               {owner && (
                 <TraderName address={owner} />
@@ -453,40 +458,15 @@ export function ItemPage({className}: ClassProps) {
               &nbsp;{"TODO"}
             </h3>
             */}
-            <hr className="my-2" />
-            <h4 className="text-md font-bold underline">
-              Active Asks
-            </h4>
-            <div className="flex flex-col text-sm gap-4 py-4">
-              {(item.bestSellOrder === undefined) ? (
-                <p>—</p>
-              ) : (
-                <ItemOffer
-                  order={item.bestSellOrder}
-                  offerType="sell"
-                  disabled={isMyItem}
-                />
-              )}
-            </div>
-            <h4 className="text-md font-bold underline">
-              Active Bids
-            </h4>
-            <div className="flex flex-col text-sm gap-4 py-4">
-              {/* TODO: Sort highest to lowest price (converted to USD) */}
-              {((bids ?? []).length === 0) ? (
-                <p>—</p>
-              ) : ((bids ?? []).map((bid: RaribleOrder) => (
-                <ItemOffer
-                  key={bid.id}
-                  order={bid}
-                  offerType="bid"
-                  disabled={!isMyItem}
-                />
-              )))}
-            </div>
           </div>
-          <div className="sm:row-span-1 flex flex-col gap-4 items-center">
-            <MetaIcon src={item} className="object-contain aspect-square border-2 border-gray-800" />
+          <div className="row-span-2 flex flex-col gap-4 items-center">
+            <MetaIcon
+              src={item}
+              className={cn(
+                "object-contain aspect-square max-h-[45vh]",
+                "border-2 border-gray-800",
+              )}
+            />
             <ItemBadges
               item={item}
               myItems={myItems}
@@ -517,6 +497,38 @@ export function ItemPage({className}: ClassProps) {
                 {"Message Owner"}
               </button>
             )}
+          </div>
+          <div className="col-span-2 self-start">
+            <h4 className="text-md font-bold underline">
+              Active Asks
+            </h4>
+            <div className="flex flex-col text-sm gap-4 py-4">
+              {(item.bestSellOrder === undefined) ? (
+                <p>—</p>
+              ) : (
+                <ItemOffer
+                  order={item.bestSellOrder}
+                  offerType="sell"
+                  disabled={isMyItem}
+                />
+              )}
+            </div>
+            <h4 className="text-md font-bold underline">
+              Active Bids
+            </h4>
+            <div className="flex flex-col text-sm gap-4 py-4">
+              {/* TODO: Sort highest to lowest price (converted to USD) */}
+              {((bids ?? []).length === 0) ? (
+                <p>—</p>
+              ) : ((bids ?? []).map((bid: RaribleOrder) => (
+                <ItemOffer
+                  key={bid.id}
+                  order={bid}
+                  offerType="bid"
+                  disabled={!isMyItem}
+                />
+              )))}
+            </div>
           </div>
         </div>
       )}
