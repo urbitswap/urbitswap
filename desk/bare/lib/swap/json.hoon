@@ -7,6 +7,14 @@
         |=  f=flag:s
         ^-  @t
         (rap 3 (scot %p p.f) '/' q.f ~)
+      ++  addrify
+        |=  a=@ux
+        ^-  @t
+        (crip (weld "0x" ((x-co:co 40) a)))
+      ++  signify
+        |=  a=@ux
+        ^-  @t
+        (crip (weld "0x" ((x-co:co 130) a)))
       --
   |%
   ++  flag
@@ -20,7 +28,7 @@
     %-  pairs
     %+  turn  ~(tap by t)
     |=  [a=@ux s=@p]
-    [(crip (z-co:co a)) s+(scot %p s)]
+    [(addrify a) s+(scot %p s)]
   ::
   ++  action
     |=  [f=flag:s u=update:s]
@@ -33,14 +41,13 @@
     ?.  ?=([%asoc *] u)
       ~
     %-  pairs
-    :~  ['addr' s+(crip (z-co:co addr.u))]
-        ['sign' s+(crip (z-co:co sign.u))]
+    :~  ['addr' s+(addrify addr.u)]
+        ['sign' s+(signify sign.u)]
     ==
   --
 ::
 ++  dejs
   =,  dejs:format
-  =,  soft=dejs-soft:format
   |%
   ++  nu2   (su ;~(pfix (jest '0x') hex))
   ++  flag  (su ;~((glue fas) ;~(pfix sig fed:ag) ^sym))

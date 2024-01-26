@@ -23,7 +23,7 @@
 (j2ag '{"traders": "~zod/b", "update": {"init": null}}')
 (j2ag '{"traders": "~zod/b", "update": {"drop": null}}')
 (j2ag '{"traders": "~zod/b", "update": {"join": null}}')
-(j2ag '{"traders": "~zod/b", "update": {"asoc": {"addr": "0x1234", "sign": "0xdEaDbEeF"}}}')
+(j2ag '{"traders": "~zod/b", "update": {"asoc": {"addr": "0x00001234", "sign": "0xdEaDbEeF"}}}')
 ```
 
 ```
