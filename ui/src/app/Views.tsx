@@ -545,7 +545,10 @@ function MetaIcon({
 }) {
   return (
     <img
-      src={extractMetaImage(src.meta, ("name" in src) ? src.name : src.id)}
+      src={extractMetaImage(
+        src.meta,
+        ("name" in src) ? src.name : ("tokenId" in src) ? src.tokenId : src.id,
+      )}
       className={cn("object-cover rounded-lg mx-auto", className)}
     />
   );

@@ -102,10 +102,10 @@ export async function requestVentureTransfer(
           abi: VC_CONTRACT.ABI.DATA,
           address: VC_CONTRACT.ADDRESS.DATA,
           functionName: "getComplianceData",
-          args: [toWallet, dealId], // FIXME: Could this ever be `fromWallet`?
+          args: [checksumAddress(toWallet), dealId],
         }),
   ])).then((
-    [dealId, approved, [{countryCode, accreditationStatus, kycStatus}, unixMintTime]]:
+    [dealId, approved, [{countryCode, accreditationStatus, kycStatus}, unixDealTime]]:
     [Address, boolean, VentureCompEth]
   ): TransferData => {
     let details: string | undefined = undefined;
@@ -118,11 +118,12 @@ export async function requestVentureTransfer(
       ] as number[]).includes(accreditationStatus);
 
       const currentDate: Date = new Date(Date.now());
-      const tokenMintDate: Date = new Date(Number(unixMintTime.valueOf() * 1000n));
-      const tokenAccrDate: Date = offsetDate(tokenMintDate, {months: 6});
-      const tokenFreeDate: Date = offsetDate(tokenMintDate, {months: 12});
+      const tokenDealDate: Date = new Date(Number(unixDealTime.valueOf() * 1000n));
+      const tokenAccrDate: Date = offsetDate(tokenDealDate, {months: 6});
+      const tokenFreeDate: Date = offsetDate(tokenDealDate, {months: 12});
 
       const shortToWallet: string = truncateAddress(toWallet);
+      const shortFromWallet: string = truncateAddress(fromWallet);
 
       // VC_CONTRACT.ADDRESS.DATA: `transferAllowed` implementation
       details =
@@ -131,26 +132,26 @@ export async function requestVentureTransfer(
             The wallet '${shortToWallet}'
             has invalid KYC information
           `)
-        : (unixMintTime === 0n)
+        : (unixDealTime === 0n)
           ? vcError(`
             The token '${tokenId}'
-            hasn't been listed by VentureClub for trading
+            does not have an issue date yet so is locked
           `)
         : (isUS && (currentDate < tokenAccrDate))
           ? vcError(`
-            The US-based account '${shortToWallet}'
-            must wait at least 6 months after token issuance to trade token '${tokenId}'
+            '${shortToWallet}' must wait at least 6 months after
+            the token issuance to trade token '${tokenId}'
             (i.e. ${formatDistance(currentDate, tokenAccrDate)} from now)
           `)
         : (isUS && !isAccredited && (currentDate < tokenFreeDate))
           ? vcError(`
-            The non-accredited US-based account '${shortToWallet}'
-            must either submit accreditation information with VentureClub
-            or wait at least 12 months after token issuance to trade token '${tokenId}'
+            '${shortToWallet}' must wait at least 12 months after
+            the token issuance to trade token '${tokenId}'
             (i.e. ${formatDistance(currentDate, tokenFreeDate)} from now)
           `)
         : vcError(`
-          The transfer of token '${tokenId}' from '${fromWallet}' to '${shortToWallet}'
+          The transfer of token '${tokenId}'
+          from '${shortFromWallet}' to '${shortToWallet}'
           encountered an unrecognized error
         `);
     }

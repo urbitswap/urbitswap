@@ -16,9 +16,6 @@ import { APP_TERM, FEATURED, QUERY } from '@/constants';
 import {
   COLLECTIONBASE_ICON_MAP,
   URBITPOINT_ICON_MAP,
-  capitalize,
-  isMaxDate,
-  makePrettyLapse,
 } from '@/logic/utils';
 import type {
   Item as RaribleItem,

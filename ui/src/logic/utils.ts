@@ -218,14 +218,6 @@ export function isMaxDate(date: Date): boolean {
   return date.getTime() === MAX_DATE.getTime();
 }
 
-export function makeTerseDate(date: Date): string {
-  return format(date, 'yy/MM/dd');
-}
-
-export function makeTerseDateAndTime(date: Date): string {
-  return format(date, 'yy/MM/dd HH:mm');
-}
-
 export function makePrettyLapse(date: Date): string {
   return formatDistance(date, Date.now(), {addSuffix: true})
     .replace(/ a /, ' 1 ')
