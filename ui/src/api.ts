@@ -13,7 +13,7 @@ import { createConfig, configureChains } from 'wagmi'
 import { InjectedConnector } from 'wagmi/connectors/injected';
 import { alchemyProvider } from 'wagmi/providers/alchemy'
 import { publicProvider } from 'wagmi/providers/public';
-import { mainnet, goerli } from 'viem/chains';
+import { mainnet, base, sepolia } from 'viem/chains';
 import { APP_DBUG } from '@/constants';
 import type { ConnectionStatus } from '@/types/urbui';
 
@@ -32,7 +32,7 @@ export const queryAPI = new QueryClient({
 });
 
 const { chains: wagmiChains, publicClient: wagmiClient } = configureChains(
-  [APP_DBUG ? goerli : mainnet],
+  [APP_DBUG ? sepolia : mainnet],
   (APP_DBUG && import.meta.env?.VITE_ALCHEMY_KEY)
     ? [alchemyProvider({apiKey: import.meta.env?.VITE_ALCHEMY_KEY}), publicProvider()]
     : [publicProvider()],

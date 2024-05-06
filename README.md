@@ -23,8 +23,6 @@ echo "VITE_RARIBLE_MAINNET_KEY=$RARIBLE_MAINNET_APIKEY" >> .env.local
 echo "VITE_RARIBLE_TESTNET_KEY=$RARIBLE_TESTNET_APIKEY" >> .env.local
 # Optional: To eliminate rate limiting for ETH requests.
 echo "VITE_ALCHEMY_KEY=$ALCHEMY_APIKEY" >> .env.local
-# Optional: To enable Arcade loan/staking features.
-echo "VITE_ARCADE_KEY=$ARCADE_APIKEY" >> .env.local
 ```
 
 Subsequently, run the following commands to download [durploy] create a new

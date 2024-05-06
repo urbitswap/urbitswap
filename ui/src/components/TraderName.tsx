@@ -16,7 +16,7 @@ type TraderNameProps = {
 export default function TraderName(props: TraderNameProps) {
   const traders = useUrbitTraders();
   const urbitId: string = (traders ?? {})[(props.address.toLowerCase() as Address)];
-  const ethUrl: string = `https://${!APP_DBUG ? "" : "goerli."}etherscan.io/address/${props.address}`;
+  const ethUrl: string = `https://${!APP_DBUG ? "" : "sepolia."}etherscan.io/address/${props.address}`;
   const isMe: boolean = urbitId === window.our;
 
   return (

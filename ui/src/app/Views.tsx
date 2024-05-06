@@ -281,7 +281,7 @@ export function ItemGrid({className}: ClassProps) {
           data: pageResults2.items.filter(queryFilter),
         };
       } else {
-        const pageResults = await rsdk.apis.item.searchItems({ itemsSearchRequest: {
+        const pageResults = await rsdk.apis.search.searchItems({ itemsSearchRequest: {
           size: 20,
           continuation: pageParam,
           sort: query?.sort ?? RaribleItemsSort.LOWEST_SELL,
