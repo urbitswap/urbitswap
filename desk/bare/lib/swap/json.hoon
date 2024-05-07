@@ -34,15 +34,15 @@
     |=  [f=flag:s u=update:s]
     ^-  json
     %-  pairs
-    =-  ~[['traders' s+(flagify f)] ['update' -]]
+    =-  ~[[%traders s+(flagify f)] [%update -]]
     %-  pairs
     :_  ~
     :-  -.u
     ?.  ?=([%asoc *] u)
       ~
     %-  pairs
-    :~  ['addr' s+(addrify addr.u)]
-        ['sign' s+(signify sign.u)]
+    :~  [%addr s+(addrify addr.u)]
+        [%sign s+(signify sign.u)]
     ==
   --
 ::

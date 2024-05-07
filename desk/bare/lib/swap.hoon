@@ -1,41 +1,35 @@
 /-  *swap
-/+  eth=ethereum, txn=naive-transactions
+/+  txn=naive-transactions, config
 |%
-++  dbug  %|
+++  path2flag
+  |=  path=[%swap %traders @ @ ~]
+  ^-  flag
+  [`@p`(slav %p +>-.path) `@tas`(slav %tas +>+<.path)]
 ++  apply
-  |=  [=traders =bowl:gall =action]
-  ^-  ^traders
-  =/  flag=flag   p.action
-  =/  upd=update  q.action
+  |=  [tre=traders bol=bowl:gall flag upd=update]
+  ^-  traders
   ?-    -.upd
       %init
-    ?.  =(0 ~(wyt by traders))
-      traders
-    *^traders
+    *traders
   ::
       ?(%drop %join)
-    *^traders
+    *traders
   ::
       %asoc
-    =-  ~|  "%swap: user {<src.bowl>} provided bad signature for address {<addr.upd>}"
-        ?>(- (~(put by traders) addr.upd src.bowl))
-    ^-  @f
-    ?:  dbug
-      %.y
-    =-  =(- addr.upd)
-    ^-  @ux
+    =-  ~|  "{<dap.bol>}: user {<src.bol>} provided bad signature for address {<addr.upd>}"
+        ?>(- (~(put by tre) addr.upd src.bol))
+    ^-  bean
+    ?:  !<(bean (slot:config %debug))  %&
+    =-  ?=(~ -)
+    ^-  (unit @ux)
     ::  FE signs using EIP-191 format; see:
     ::  https://viem.sh/docs/actions/wallet/signMessage.html
-    =/  raw-msg=@t    (scot %p src.bowl)
-    =/  raw-oct=octs  (as-octs:mimes:html raw-msg)
-    =/  enc-msg=@t
-      %-  crip
-      ;:  welp
-          "\19Ethereum Signed Message:\0a"
-          (scow %ud p.raw-oct)
-          (trip raw-msg)
-      ==
-    =/  enc-oct=octs  (as-octs:mimes:html enc-msg)
-    (fall (verify-sig:txn sign.upd enc-oct) +(addr.upd))
+    =/  dat=tape  (scow %p src.bol)
+    =/  msg=tape  "\19Ethereum Signed Message:\0a{(a-co:co (lent dat))}{dat}"
+    ::  FIXME: Should use +crip instead of +rep, but can't due to a bug in
+    ::  +crip dealing with tapes containing \00 entries; see:
+    ::  https://github.com/urbit/urbit/pull/6818
+    =/  syg=octs  (as-octs:mimes:html (rep 3 msg))
+    (verify-sig:txn sign.upd syg)
   ==
 --

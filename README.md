@@ -74,15 +74,13 @@ cd ./desk
 rm -rI full/
 find bare -type f | while read f; do { d=$(dirname "$f" | sed "s/^bare/full/"); mkdir -p "$d"; ln -sr -t "$d" "$f"; }; done
 ln -sr ../LICENSE.txt full/license.txt
-git clone -b 412k-rc2 --depth 1 https://github.com/urbit/urbit.git urb
-cp urb/pkg/arvo/mar/{bill*,hoon*,json*,kelvin*,mime*,noun*,ship*,txt*} full/mar/
-cp urb/pkg/arvo/lib/{agentio*,dbug*,default-agent*,skeleton*,verb*,naive*,tiny*,ethereum*} full/lib/
+git clone -b 411k --depth 1 https://github.com/urbit/urbit.git urb
+cp urb/pkg/arvo/lib/{verb*,naive*,tiny*,ethereum*} full/lib/
 cp urb/pkg/arvo/sur/verb.hoon full/sur/
-cp urb/pkg/base-dev/lib/mip.hoon full/lib/
-git clone -b v1.16.0 --depth 1 https://github.com/tloncorp/landscape.git lan
-cp lan/desk/mar/docket* full/mar/
-cp lan/desk/lib/docket* full/lib/
-cp lan/desk/sur/docket* full/sur/
+git clone -b sl/server-schooner-z412k --depth 1 https://github.com/sidnym-ladrut/yard.git yar
+cp yar/desk/lib/{dbug*,default-agent*,skeleton*,docket*,mip*} full/lib/
+cp yar/desk/mar/{bill*,docket*,hoon*,json*,kelvin*,mime*,noun*,ship*,txt*} full/mar/
+cp yar/desk/sur/docket* full/sur/
 git clone -b sl/fix-scry-request-agent-wire --depth 1 https://github.com/sidnym-ladrut/sss.git sss
 cp sss/urbit/lib/sss.hoon full/lib/
 cp sss/urbit/sur/sss.hoon full/sur/

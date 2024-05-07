@@ -1,67 +1,40 @@
 /-  traders
 /+  s=swap, j=swap-json
-/+  verb, dbug
-/+  *sss
-/+  default-agent
+/+  config, default-agent, *sss
+/+  dbug, verb
+|%
++$  state-0
+  $:  %0
+      our-traders=(map flag:s traders:s)
+      sub-traders=_(mk-subs traders ,[%swap %traders @ @ ~])
+      pub-traders=_(mk-pubs traders ,[%swap %traders @ @ ~])
+  ==
++$  versioned-state
+  $%  state-0
+  ==
++$  card  card:agent:gall
++$  sign-gall  sign:agent:gall
+--
 ^-  agent:gall
-=>
-  |%
-  +$  state-0
-    $:  %0
-        our-traders=(map flag:s traders:s)
-        sub-traders=_(mk-subs traders ,[%swap %traders @ @ ~])
-        pub-traders=_(mk-pubs traders ,[%swap %traders @ @ ~])
-    ==
-  +$  versioned-state
-    $%  state-0
-    ==
-  +$  card  card:agent:gall
-  ++  master-flag
-    ^-  flag:s
-    :_  %master
-    (slav %p ?:(dbug:s '~zod' '~firser-dister-sidnym-ladrut'))
-  ++  path2flag
-    |=  path=[%swap %traders @ @ ~]
-    ^-  flag:s
-    [`@p`(slav %p +>-.path) `@tas`(slav %tas +>+<.path)]
-  --
 =|  state-0
 =*  state  -
-=<
-  %+  verb  dbug:s
-  %-  agent:dbug
-  |_  =bowl:gall
-  +*  this  .
-      def   ~(. (default-agent this %|) bowl)
-      cor   ~(. +> [bowl ~])
-  ++  on-init
-    ^-  (quip card _this)
-    =^(cards state abet:init:cor [cards this])
-  ++  on-save  !>(state)
-  ++  on-load
-    |=  =vase
-    ^-  (quip card _this)
-    =^(cards state abet:(load:cor vase) [cards this])
-  ++  on-poke
-    |=  [=mark =vase]
-    ^-  (quip card _this)
-    =^(cards state abet:(poke:cor mark vase) [cards this])
-  ++  on-watch
-    |=  =path
-    ^-  (quip card _this)
-    =^(cards state abet:(watch:cor path) [cards this])
-  ++  on-peek   peek:cor
-  ++  on-leave   on-leave:def
-  ++  on-fail    on-fail:def
-  ++  on-agent
-    |=  [=wire =sign:agent:gall]
-    ^-  (quip card _this)
-    =^(cards state abet:(agent:cor wire sign) [cards this])
-  ++  on-arvo
-    |=  [=wire sign=sign-arvo]
-    ^-  (quip card _this)
-    =^(cards state abet:(arvo:cor wire sign) [cards this])
-  --
+=<  =-  ?.  !<(bean (slot:config %debug))  -
+        (verb & (agent:dbug -))
+    |_  bol=bowl:gall
+    +*  tis  .
+        def  ~(. (default-agent tis |) bol)
+        cor  ~(. +> [bol ~])
+    ++  on-init   =^(caz state abet:init:cor [caz tis])
+    ++  on-save   !>(state)
+    ++  on-load   |=(v=vase =^(caz state abet:(load:cor v) [caz tis]))
+    ++  on-poke   |=([m=mark v=vase] =^(caz state abet:(poke:cor m v) [caz tis]))
+    ++  on-watch  |=(p=path =^(caz state abet:(watch:cor p) [caz tis]))
+    ++  on-peek   peek:cor
+    ++  on-leave  on-leave:def
+    ++  on-fail   on-fail:def
+    ++  on-agent  |=([w=wire s=sign-gall] =^(caz state abet:(agent:cor w s) [caz tis]))
+    ++  on-arvo   |=([w=wire s=sign-arvo] =^(caz state abet:(arvo:cor w s) [caz tis]))
+    --
 |_  [=bowl:gall cards=(list card)]
 ::
 +*  da-traders  =/  da  (da traders ,[%swap %traders @ @ ~])
@@ -79,8 +52,9 @@
 ::
 ++  init
   ^+  cor
+  =/  master-flag=flag:s  [!<(@p (slot:config %point)) %master]
   =/  master-core  (ta-abed:ta-core master-flag)
-  ?:  =(our.bowl p:master-flag)
+  ?:  =(our.bowl p.master-flag)
     ta-abet:ta-init:master-core
   ta-abet:ta-join:master-core
 ::
@@ -102,6 +76,8 @@
   :: native pokes ::
       %swap-action
     =+  !<(=action:s vase)
+    ::  TODO: Not quite right, but okay for now since there's only one
+    ::  main trader board
     ?>  (~(has by all-traders) p.action)
     =/  trader-core  (ta-abed:ta-core p.action)
     ?:  =(p.p.action our.bowl)
@@ -127,7 +103,7 @@
   ::
       %sss-traders
     =/  res  !<(into:da-traders (fled vase))
-    ta-abet:(ta-pull:(ta-abed:ta-core (path2flag path.res)) res)
+    ta-abet:(ta-pull:(ta-abed:ta-core (path2flag:s path.res)) res)
   ==
 ::
 ++  watch
@@ -145,6 +121,10 @@
   ^-  (unit (unit cage))
   =/  all-traders=(map flag:s traders:s)  all-traders
   ?+    path  [~ ~]
+      [%x %config slot=@ ~]
+    =/  slot=@tas  (slav %tas slot.path)
+    ``atom+!>(!<(@ (slot:config slot)))
+  ::
       [%x ship=@ name=@ ~]
     =/  ship=@p    (slav %p ship.path)
     =/  name=term  (slav %tas name.path)
@@ -191,7 +171,7 @@
   ^-  (list [flag:s traders:s])
   %+  turn  ~(tap by read:da-traders)
   |=  [[* * paths=[%swap %traders @ @ ~]] [stale=? fail=? =traders:s]]
-  [(path2flag paths) traders]
+  [(path2flag:s paths) traders]
 ++  ta-core
   |_  [=flag:s =traders:s gone=_|]
   ++  ta-core  .
@@ -213,8 +193,16 @@
   ++  ta-up-area  |=(p=path `(list path)`[(welp ta-area p)]~)
   ++  ta-du-path  [%swap %traders (scot %p p.flag) q.flag ~]
   ++  ta-da-path  [p.flag dap.bowl %swap %traders (scot %p p.flag) q.flag ~]
+  ++  ta-do-writ
+    |=  upd=update:s
+    ^-  bean
+    ?-  -.upd
+      ?(%join %asoc)  %&
+      ?(%init %drop)  =(our src):bowl
+    ==
   ::
   ++  ta-init
+    ?>  (ta-do-writ [%init ~])
     =.  ta-core  (ta-push [%init ~])
     =.  cor  (push (public:du-traders [ta-du-path]~))
     ta-core
@@ -223,6 +211,7 @@
     ta-core
   ++  ta-leave
     ^+  ta-core
+    ?>  (ta-do-writ [%drop ~])
     =.  ta-core  (ta-notify [%drop ~])
     =.  cor  (pull ~ (quit:da-traders ta-da-path))
     ta-core(gone &)
@@ -236,9 +225,8 @@
     |=  =update:s
     ^+  ta-core
     =/  =dock  [p.flag dap.bowl]
-    =/  =cage  [%swap-action !>([flag update])]
-    =.  cor  (emit %pass ta-area %agent dock %poke cage)
-    ta-core
+    =/  =cage  swap-action+!>([flag update])
+    ta-core(cor (emit %pass ta-area %agent dock %poke cage))
   ++  ta-pull
     |=  res=into:da-traders
     ^+  ta-core
@@ -256,6 +244,7 @@
   ++  ta-push
     |=  =update:s
     ^+  ta-core
+    ?>  (ta-do-writ update)
     ::  NOTE: Notify *before* state change to avoid errors during deletions.
     =.  ta-core  (ta-notify update)
     ?:  ?=(%drop -.update)
