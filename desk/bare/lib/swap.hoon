@@ -10,17 +10,16 @@
   ^-  traders
   ?-    -.upd
       %init
-    *traders
+    tre
   ::
       ?(%drop %join)
     *traders
   ::
       %asoc
-    =-  ~|  "{<dap.bol>}: user {<src.bol>} provided bad signature for address {<addr.upd>}"
+    =-  ~|  "{<dap.bol>}: {<src.bol>} provided bad signature for address {<addr.upd>}"
         ?>(- (~(put by tre) addr.upd src.bol))
     ^-  bean
-    ?:  !<(bean (slot:config %debug))  %&
-    =-  ?=(~ -)
+    =-  |(!<(bean (slot:config %debug)) ?=(^ -))
     ^-  (unit @ux)
     ::  FE signs using EIP-191 format; see:
     ::  https://viem.sh/docs/actions/wallet/signMessage.html
