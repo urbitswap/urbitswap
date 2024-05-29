@@ -144,12 +144,11 @@
     (push (tell:du-traders |3:path sign))
   ::  swap proxy response  ::
       [%swap ship=@ name=@ ~]
+    ?>  ?=(%poke-ack -.sign)
     =/  ship=@p    (slav %p ship.path)
     =/  name=term  (slav %tas name.path)
-    ?>  ?=(%poke-ack -.sign)
     ?~  p.sign  cor
-    %-  (slog u.p.sign)
-    cor
+    ((slog u.p.sign) cor)
   ==
 ::
 ++  arvo

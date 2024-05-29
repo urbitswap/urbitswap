@@ -2352,10 +2352,10 @@
   resolved "https://registry.yarnpkg.com/@rarible/api-client/-/api-client-0.16.5-alpha.6.tgz#fc98b568ab58b4deee53fda2789e6724cb3fe683"
   integrity sha512-MnzOBVWMBNYdwrF2hxIaB4/dt8nq42FjZShdyubGAGMSRRUtNepfzJGxFebvp94v7mt1hq+cgkPUzPDmeMT0bw==
 
-"@rarible/aptos-sdk@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/aptos-sdk/-/aptos-sdk-0.13.69-beta.3.tgz#2d0413c746327c6d1b675efd53e08433e06ca5ec"
-  integrity sha512-ZyIUweHQ0/tRXkqLkb3vVDOTO82jWw3PBC9JD0VziU072pLdpvGybs+/nsjqTOCuSB2VUqCKKTtgcPIkz/qlpw==
+"@rarible/aptos-sdk@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/aptos-sdk/-/aptos-sdk-0.13.69-beta.4.tgz#af261068c7b7666d865d860e5d746b74205f6802"
+  integrity sha512-MpHGbsOjJlIFUAEgBdZox2ig7SOLGPCYFY0ceDEtF4w7H7yzd2VHq+b+ZyuHNoHPk4N+sHxtuwOrVWwAf2ThqA==
   dependencies:
     "@aptos-labs/ts-sdk" "^1.5.1"
     "@rarible/logger" "^0.9.12"
@@ -2363,14 +2363,14 @@
     "@rarible/utils" "~0.9.10"
     node-fetch "^2.6.7"
 
-"@rarible/aptos-wallet@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/aptos-wallet/-/aptos-wallet-0.13.69-beta.3.tgz#0ba15397c48fdcaa5d0dfea30aebbe6dff28a8bb"
-  integrity sha512-D5uygf/w19qw3Ey1qP1EyCAreqHf1wJJRaWs0IZrOI4alR6P2nmYoEK33FysZTbV2Zl1MUyuAQa+qmmPMe+0MQ==
+"@rarible/aptos-wallet@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/aptos-wallet/-/aptos-wallet-0.13.69-beta.4.tgz#9a406a56e3fd6712d01e1831b7174af4772b931c"
+  integrity sha512-bj+GlA3MJiwOhwUGeSZZLdQsg8CqBInFcNpCMMPNQeZPcCeELbCTmIUEskiz7kjQQFnAyuabiNu6lWJxg6biJw==
   dependencies:
     "@aptos-labs/ts-sdk" "^1.5.1"
     "@rarible/logger" "^0.9.12"
-    "@rarible/sdk-common" "^0.13.68-fix.21"
+    "@rarible/sdk-common" "^0.13.68-fix.22"
     "@rarible/types" "~0.9.26"
     "@rarible/utils" "~0.9.10"
     node-fetch "^2.6.7"
@@ -2382,25 +2382,25 @@
   dependencies:
     "@rarible/types" "~0.9.2"
 
-"@rarible/ethereum-provider@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/ethereum-provider/-/ethereum-provider-0.13.69-beta.3.tgz#d732efa41b1d3f785167403873e53bd4f4dab035"
-  integrity sha512-aTcxmnrGbRH3j6rB5c8ZLdoWp4WbJVUcbnb1JggdeKQ6/u2mQ2kZFMhfPXsoOXtgT4j7PT/x1mDH5FhxwAkwWw==
+"@rarible/ethereum-provider@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/ethereum-provider/-/ethereum-provider-0.13.69-beta.4.tgz#c67e39b7e61b14d1f07683a3c38d2bcf96c33a27"
+  integrity sha512-5GW/cdcrfXI+jYzRXM4afzqEsKuR+vAZWD1C3eR6VLkqbzKgOGF/L6hX8IQLQJDadhHDmhtTuX2bhHmV0SSAAA==
   dependencies:
-    "@rarible/sdk-common" "^0.13.69-beta.3"
+    "@rarible/sdk-common" "^0.13.69-beta.4"
     eth-sig-util "^3.0.0"
 
-"@rarible/ethers-ethereum@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/ethers-ethereum/-/ethers-ethereum-0.13.69-beta.3.tgz#c020bfe11859f53c001316caf48f96603edb9aa6"
-  integrity sha512-dyLPTyYBGA9uWYBZoRBLw3ZnHdO74nngmFondZw+64BsQXOG6q0p1Qp9MPqTxHaz5Kc7YsfELhFRKkSTz7ndGw==
+"@rarible/ethers-ethereum@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/ethers-ethereum/-/ethers-ethereum-0.13.69-beta.4.tgz#e080da45494ee1c3bfd6116195565f2fb141c06e"
+  integrity sha512-naRdlWe2Bl0h3I45Ex36WuIyNvVStZqhDX3gfsnjQfBOFU345A3uW2NLU4r2pKdQsPe+A9gIJ2yFHpbs5YUhaQ==
   dependencies:
-    "@rarible/ethereum-provider" "^0.13.69-beta.3"
-    "@rarible/sdk-common" "^0.13.69-beta.3"
+    "@rarible/ethereum-provider" "^0.13.69-beta.4"
+    "@rarible/sdk-common" "^0.13.69-beta.4"
     ethereumjs-util "^7.1.0"
     ethers "~5.4.4"
 
-"@rarible/fcl-types@^0.5.78":
+"@rarible/fcl-types@^0.5.78", "@rarible/fcl-types@~0.5.56":
   version "0.5.78"
   resolved "https://registry.yarnpkg.com/@rarible/fcl-types/-/fcl-types-0.5.78.tgz#290c04ad92e6855ff63fafd14659bc250e23aba4"
   integrity sha512-q/9bOZ+Y5L4UXFUBTNzLAQ/UIgqv0fRKy1C7e5j9j9Bygf6rWgS7qOMpASomDwIpS8EkciaMWlfGIJIIHrpo7w==
@@ -2423,21 +2423,21 @@
     "@rarible/flow-api-client" "~0.0.5-fix.2"
     "@rarible/utils" "~0.5.0"
 
-"@rarible/immutable-sdk@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/immutable-sdk/-/immutable-sdk-0.13.69-beta.3.tgz#681e40c3278a0b1496c3687e0181d857c528da53"
-  integrity sha512-LeBfUQBMFI5LeDJaZt6RByh7dTUrrrchxg9+6B5qNP1z2k/hdfibVOKV0M13Yi/JgemY3s4DLQd8CNRe+dl+Mg==
+"@rarible/immutable-sdk@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/immutable-sdk/-/immutable-sdk-0.13.69-beta.4.tgz#cd1eaa19fb2e69d96fcac5184a655d655ac02fc9"
+  integrity sha512-NaDIoPYpnSKpySKzqcnQqU1bYzX7Lk4xkOKFou1sOBwlU9lR0g3kqNHBgil4MbitqcDu1LZdGaWOHX1p99EaKw==
   dependencies:
     "@ethersproject/providers" "~5.6.1"
     "@ethersproject/wallet" "~5.6.0"
     "@imtbl/imx-sdk" "^2.1.1"
     "@rarible/ethereum-api-client" "^0.1.26-beta3"
-    "@rarible/immutable-wallet" "^0.13.69-beta.3"
+    "@rarible/immutable-wallet" "^0.13.69-beta.4"
 
-"@rarible/immutable-wallet@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/immutable-wallet/-/immutable-wallet-0.13.69-beta.3.tgz#3c15a4d7ea16d2e6a9b9513fd22851c7ffec273f"
-  integrity sha512-rWoRZcNwSyWHjV0SrAvpIkNleNOYfwkt8K2DEi15yRqBAUY2E+2bCKnX/bEmCD0c2wPviGTmqqLp2L/uGdf93w==
+"@rarible/immutable-wallet@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/immutable-wallet/-/immutable-wallet-0.13.69-beta.4.tgz#28a24a9cc429cdbd0d5859f1ae601b63684f54bd"
+  integrity sha512-3GrKnHBF2hlw8lpuDc/zG5YGvZ0/xxa5ToDTtT8T0vTjLMXRnOw9jV9hpvOPwJShfccf1XOQVJ72xli/RE9blA==
   dependencies:
     "@imtbl/imx-sdk" "^2.1.1"
 
@@ -2448,85 +2448,91 @@
   dependencies:
     json-stringify-safe "^5.0.1"
 
-"@rarible/protocol-ethereum-sdk@0.13.69-beta.3", "@rarible/protocol-ethereum-sdk@^0.13.68-fix.21", "@rarible/protocol-ethereum-sdk@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/protocol-ethereum-sdk/-/protocol-ethereum-sdk-0.13.69-beta.3.tgz#fd4a251626a79337838f6e9c59e550ea47a7f0fa"
-  integrity sha512-0iVk6VXPhrAzlprHbmsxQuyStnIgR7nkZXOvYkbZR5xNolx1edymn0FTfv4rH/GrDdsvVMReYWw8TEKSM7wywA==
+"@rarible/protocol-ethereum-sdk@0.13.69-beta.4", "@rarible/protocol-ethereum-sdk@^0.13.68-fix.22", "@rarible/protocol-ethereum-sdk@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/protocol-ethereum-sdk/-/protocol-ethereum-sdk-0.13.69-beta.4.tgz#e3273a1a31b1d7c533308ff16f41c6e1c806e59f"
+  integrity sha512-h7lrf1MfnsPiWTr87CJXPxLGB6HBNN3TGbFzLtHmVv0j3eP66gOihdlGUNpJObMFrfPOy4Ny4IQu4p5Dd2kJ3Q==
   dependencies:
     "@rarible/action" "~0.9.1"
     "@rarible/ethereum-api-client" "^0.1.26-beta3"
-    "@rarible/ethereum-provider" "^0.13.69-beta.3"
+    "@rarible/ethereum-provider" "^0.13.69-beta.4"
     "@rarible/logger" "^0.9.12"
-    "@rarible/sdk-common" "^0.13.69-beta.3"
+    "@rarible/sdk-common" "^0.13.69-beta.4"
     "@rarible/utils" "~0.9.10"
     eth-sig-util "^3.0.0"
     ethereumjs-util "^7.1.0"
     exponential-backoff "^3.1.0"
     merkletreejs "^0.2.31"
 
-"@rarible/sdk-common@^0.13.68-fix.21":
+"@rarible/sdk-common@^0.13.68-fix.21", "@rarible/sdk-common@^0.13.68-fix.22":
   version "0.13.68"
   resolved "https://registry.yarnpkg.com/@rarible/sdk-common/-/sdk-common-0.13.68.tgz#db383403b460cf575988a06722e9a9d0f95533cf"
   integrity sha512-sWeA3+n1SRhBLhO7j4AiA1PBfxtvs8cEUGr1yBoQK8KqgqufvA6SdhCnvkAl5FPGdTjXPnSEUcYmxlRqbE8eeA==
   dependencies:
     "@rarible/api-client" "0.16.5-alpha.6"
 
-"@rarible/sdk-common@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/sdk-common/-/sdk-common-0.13.69-beta.3.tgz#814aa97b198b3300a0061c05ba8a6070ad78d79d"
-  integrity sha512-t5ZR8sXAGno+WDIPVYaYHZhnUrrGJ1PWdeP9ndAJLJm49BloA+OAQNz8qS+EVU76dJwu+VMI7Ge/bcwzrwRJUw==
+"@rarible/sdk-common@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/sdk-common/-/sdk-common-0.13.69-beta.4.tgz#19915c7d5c6250e45c8537687e484da4280bd9af"
+  integrity sha512-ylsG1lLAM8Atc3XXbyHkQrStrD93UxWJbjvS1hV5nK5/bOcEKzAQ5L0nkBc8iJ6w6DL27Px9/IYVSvTP2q+lyA==
   dependencies:
     "@rarible/api-client" "0.16.5-alpha.10"
 
-"@rarible/sdk-transaction@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/sdk-transaction/-/sdk-transaction-0.13.69-beta.3.tgz#da584c1d80863a4cf90c8c35b90cd68311358deb"
-  integrity sha512-+WnXPXa800RJKM8RazMpGkopxBVBeE1SywnNcs5G+t6ziGwfVkfYl1OJvIQS/jHCl3llYLs6UzpQh5W0q46G6A==
+"@rarible/sdk-transaction@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/sdk-transaction/-/sdk-transaction-0.13.69-beta.4.tgz#528791ac9204ee20a1b52be0d9ef1b8114306982"
+  integrity sha512-0QLB5kNhh/0kaL3zSwd7XflUNwYgH8bG8vmTxK5y6t0ejvyeytNREhn91U+ysvIQd+Bfjh0ZRu+idsiZmnHvzQ==
   dependencies:
     "@babel/runtime" "^7.15.4"
     "@rarible/api-client" "0.16.5-alpha.10"
-    "@rarible/aptos-sdk" "^0.13.69-beta.3"
-    "@rarible/ethereum-provider" "^0.13.69-beta.3"
+    "@rarible/aptos-sdk" "^0.13.69-beta.4"
+    "@rarible/ethereum-provider" "^0.13.69-beta.4"
     "@rarible/flow-sdk" "~0.5.78-fix.3"
-    "@rarible/protocol-ethereum-sdk" "^0.13.69-beta.3"
-    "@rarible/solana-sdk" "^0.13.69-beta.3"
+    "@rarible/protocol-ethereum-sdk" "^0.13.69-beta.4"
+    "@rarible/solana-sdk" "^0.13.69-beta.4"
     "@rarible/tezos-sdk" "0.1.46"
     "@rarible/types" "~0.9.26"
 
-"@rarible/sdk-wallet@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/sdk-wallet/-/sdk-wallet-0.13.69-beta.3.tgz#9a463632bd87e8d0300bfcfef994b943a1f90a42"
-  integrity sha512-4vh7xvs2VeEATP0CEGDKQtdhb4MfPqgdtU7LNfG7q6oTn/tB/Qg6x6432gOCCNIwCWmjcFO1h0JHnpZ6n9TUpw==
+"@rarible/sdk-wallet@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/sdk-wallet/-/sdk-wallet-0.13.69-beta.4.tgz#a9a76f293177d65288f4d4579b588eb997547c16"
+  integrity sha512-fXuTnUJD8LnCsZGHPPv2A4G6fCzNUuhnT4431FFhpLPCpdC8YR9rZ8cDJ6PNNaWUfqfRD+8j+ggP6pYyLzyLJw==
   dependencies:
     "@babel/runtime" "^7.15.4"
     "@ethersproject/abstract-signer" "^5.4.0"
+    "@imtbl/imx-sdk" "^2.1.1"
     "@rarible/api-client" "0.16.5-alpha.10"
-    "@rarible/aptos-wallet" "^0.13.69-beta.3"
-    "@rarible/ethereum-provider" "^0.13.69-beta.3"
-    "@rarible/ethers-ethereum" "^0.13.69-beta.3"
-    "@rarible/types" "~0.9.25"
-    "@rarible/web3-ethereum" "^0.13.69-beta.3"
-    "@rarible/web3-v4-ethereum" "^0.13.69-beta.3"
+    "@rarible/aptos-wallet" "^0.13.69-beta.4"
+    "@rarible/ethereum-provider" "^0.13.69-beta.4"
+    "@rarible/ethers-ethereum" "^0.13.69-beta.4"
+    "@rarible/fcl-types" "~0.5.56"
+    "@rarible/flow-sdk" "~0.5.78-fix.3"
+    "@rarible/sdk-common" "^0.13.69-beta.4"
+    "@rarible/solana-wallet" "^0.13.69-beta.4"
+    "@rarible/tezos-sdk" "0.1.46"
+    "@rarible/types" "~0.9.26"
+    "@rarible/web3-ethereum" "^0.13.69-beta.4"
+    "@rarible/web3-v4-ethereum" "^0.13.69-beta.4"
 
-"@rarible/sdk@0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/sdk/-/sdk-0.13.69-beta.3.tgz#2a852fe5a8455063e1e48b0d1fd2c152dd0d6196"
-  integrity sha512-EyiGxpKJIMIv3lnIXD00YZZp4ViOO6Xm2IjzmaJBB2R22QFFtOdqTucouOmOdsG9jGyPoFmUukRn9wjy0udcyg==
+"@rarible/sdk@0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/sdk/-/sdk-0.13.69-beta.4.tgz#c42819cb146bf9e4ec370d8693850e6ac001825e"
+  integrity sha512-/YX+AxaCZCnQFJEMo4gOh1/M1KV3v3pk/WAB0wiUEfDTK8k77YfHt/nVkL2pyG19P2nCY59L9qekHF/y2UOdvQ==
   dependencies:
     "@babel/runtime" "^7.15.4"
     "@ethersproject/keccak256" "^5.6.0"
     "@rarible/action" "~0.9.1"
     "@rarible/api-client" "0.16.5-alpha.10"
-    "@rarible/aptos-sdk" "^0.13.69-beta.3"
+    "@rarible/aptos-sdk" "^0.13.69-beta.4"
     "@rarible/flow-sdk" "~0.5.78-fix.3"
-    "@rarible/immutable-sdk" "^0.13.69-beta.3"
-    "@rarible/immutable-wallet" "^0.13.69-beta.3"
+    "@rarible/immutable-sdk" "^0.13.69-beta.4"
+    "@rarible/immutable-wallet" "^0.13.69-beta.4"
     "@rarible/logger" "~0.9.12"
-    "@rarible/protocol-ethereum-sdk" "^0.13.68-fix.21"
+    "@rarible/protocol-ethereum-sdk" "^0.13.68-fix.22"
     "@rarible/sdk-common" "^0.13.68-fix.21"
-    "@rarible/sdk-transaction" "^0.13.69-beta.3"
-    "@rarible/sdk-wallet" "^0.13.69-beta.3"
-    "@rarible/solana-sdk" "^0.13.69-beta.3"
+    "@rarible/sdk-transaction" "^0.13.69-beta.4"
+    "@rarible/sdk-wallet" "^0.13.69-beta.4"
+    "@rarible/solana-sdk" "^0.13.69-beta.4"
     "@rarible/tezos-sdk" "0.1.46"
     "@rarible/types" "~0.9.26"
     "@rarible/utils" "~0.9.10"
@@ -2537,15 +2543,15 @@
     tezos-api-client "~0.0.19"
     uuid "^8.3.1"
 
-"@rarible/solana-common@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/solana-common/-/solana-common-0.13.69-beta.3.tgz#10bd1a1a460d8dd2357a6b14395a49fb2496b702"
-  integrity sha512-j+ItRqnrTeILgYs1ImkTqKjPdX9m/oVWhzgFk8V805Q6Z65saSdSBNIqXQfxIbqw+iLniclYxKRZBhLcFiEJJg==
+"@rarible/solana-common@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/solana-common/-/solana-common-0.13.69-beta.4.tgz#2287fadb1831e89518c5ea545e3d02a48ae79976"
+  integrity sha512-RUYAOXLTFAx52Aor5HFD7G5vIHuPdTC0q/MCRI+P4htUHDadt9JIIsaxkA2wIkZomd1EummIYnH1/ytW96pfFA==
 
-"@rarible/solana-sdk@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/solana-sdk/-/solana-sdk-0.13.69-beta.3.tgz#615c126172c1a1d1927697aacd4da718ae32f1e0"
-  integrity sha512-MKERT1ENA940uejoh1OgRx09dH3xZjllQ0QlX4bUj6zpNytrI+VckPH8KCYTm6+ZhyXT4ESEtbJCQHR9s/l7Gw==
+"@rarible/solana-sdk@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/solana-sdk/-/solana-sdk-0.13.69-beta.4.tgz#7b28503a821dc6f28401aac5338356a839cf9a2c"
+  integrity sha512-kf1dSU8S63zfDBYEXJ70OPzmsHtf1lVZrTtKS+tPPihUb9teEwMnJJr1s5kFPTzCJML7w4p9V/k3Np7gtHjeJg==
   dependencies:
     "@metaplex-foundation/mpl-auction" "~0.0.2"
     "@metaplex-foundation/mpl-auction-house" "~1.2.0"
@@ -2556,8 +2562,8 @@
     "@metaplex/js" "~4.12.0"
     "@project-serum/anchor" "~0.22.1"
     "@rarible/logger" "^0.9.12"
-    "@rarible/solana-common" "^0.13.69-beta.3"
-    "@rarible/solana-wallet" "^0.13.69-beta.3"
+    "@rarible/solana-common" "^0.13.69-beta.4"
+    "@rarible/solana-wallet" "^0.13.69-beta.4"
     "@rarible/utils" "~0.9.10"
     "@solana/spl-token" "~0.1.8"
     "@types/bs58" "^4.0.1"
@@ -2565,12 +2571,12 @@
     bs58 "^5.0.0"
     node-fetch "^2.6.7"
 
-"@rarible/solana-wallet@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/solana-wallet/-/solana-wallet-0.13.69-beta.3.tgz#ac61137fa826688c77d4860eaf7b91444a3e8c22"
-  integrity sha512-vgX3Qbp7JOFVEiAg6kbCFZbvkPkByCYHbuEWuNwjwT+5wmU30fTnszXCtSmYh6H+TpLphosBOIbJ9FhiDOxjQg==
+"@rarible/solana-wallet@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/solana-wallet/-/solana-wallet-0.13.69-beta.4.tgz#5846b988b9b52a485d80ad6f48f63958d5b13c65"
+  integrity sha512-0xvQgoz8C8WDA9i2J36Xu17LxvRYhoZ24b36caAXx/QBjqwlonjiTXmKijN9gyiSOPUqsscIAOgjKSNna+pNgA==
   dependencies:
-    "@rarible/solana-common" "^0.13.69-beta.3"
+    "@rarible/solana-common" "^0.13.69-beta.4"
     "@types/bs58" "^4.0.1"
     bs58 "^5.0.0"
     tweetnacl "^1.0.0"
@@ -2628,7 +2634,7 @@
   resolved "https://registry.yarnpkg.com/@rarible/types/-/types-0.9.18.tgz#2045895e436aaa4422e0ff639946d67729517378"
   integrity sha512-OUJy2CT0HPii2/9MEhJffcsgbtcN0CFrqvfp8f6zJZhkZJw5e+0sbSapDEN8oh6b0DX1qolSgqL46MqWQs9q8A==
 
-"@rarible/types@~0.9.25", "@rarible/types@~0.9.26":
+"@rarible/types@~0.9.26":
   version "0.9.26"
   resolved "https://registry.yarnpkg.com/@rarible/types/-/types-0.9.26.tgz#2d8183fd53b5cff32640185e4782d6610d00820a"
   integrity sha512-q4lX1wOUBDENlzhZXctrCU9O0SFaZBsnU/AIgrKixzLktzq96MG/5lOkXxsBhQzotpUnixuDHFbEDtfqtkaLzw==
@@ -2647,13 +2653,13 @@
   dependencies:
     bignumber.js "^9.0.0"
 
-"@rarible/web3-ethereum@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/web3-ethereum/-/web3-ethereum-0.13.69-beta.3.tgz#6d2d9d94f9b4984ea7d9e852ef1beb08e039b205"
-  integrity sha512-l7qG6zyR0I7pdXuHhK9VlbsyiXHMgfk7P3y1/w6goJshiZgpjSj3KE5rjkXcT056kZFroiPYs+rxyfCqefTlBQ==
+"@rarible/web3-ethereum@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/web3-ethereum/-/web3-ethereum-0.13.69-beta.4.tgz#fc48bc3ba175f29b2d9746fb953ebdd7533d075f"
+  integrity sha512-PnHu2Si/T97iC5EvIafDNJuhjYBapwaQP23Cm/jLd1OR4cYFlH6FOw5xKi6FVi2fKF/zJeKVhfOqhXbqLd6gig==
   dependencies:
-    "@rarible/ethereum-provider" "^0.13.69-beta.3"
-    "@rarible/sdk-common" "^0.13.69-beta.3"
+    "@rarible/ethereum-provider" "^0.13.69-beta.4"
+    "@rarible/sdk-common" "^0.13.69-beta.4"
     eth-rpc-errors "^4.0.3"
     web3 "^1.5.0"
     web3-eth "^1.5.0"
@@ -2661,13 +2667,13 @@
     web3-eth-contract "^1.5.0"
     web3-utils "^1.5.0"
 
-"@rarible/web3-v4-ethereum@^0.13.69-beta.3":
-  version "0.13.69-beta.3"
-  resolved "https://registry.yarnpkg.com/@rarible/web3-v4-ethereum/-/web3-v4-ethereum-0.13.69-beta.3.tgz#fed31f5a745e56380d3f79539af686b06d1dfbec"
-  integrity sha512-Jc+pb4lR6Nw6E1zonwAtAoiN5qMRYakb1jKPTiRlvGvfDd0n/3RLo6TjLBWSKP7WbCIrYlfchhWJm5Cfv1Kqag==
+"@rarible/web3-v4-ethereum@^0.13.69-beta.4":
+  version "0.13.69-beta.4"
+  resolved "https://registry.yarnpkg.com/@rarible/web3-v4-ethereum/-/web3-v4-ethereum-0.13.69-beta.4.tgz#7650e552cd8fe895efebf309b1b42d98a25121ad"
+  integrity sha512-OHHkgfykuf7PiD+2UKox6FR/Nk7+EY4wMnf+XyYwZDII4QYSKKMuGZe+Ucr1GvEZ6wGbePBqdLF9u8vfyCUDtw==
   dependencies:
-    "@rarible/ethereum-provider" "^0.13.69-beta.3"
-    "@rarible/sdk-common" "^0.13.69-beta.3"
+    "@rarible/ethereum-provider" "^0.13.69-beta.4"
+    "@rarible/sdk-common" "^0.13.69-beta.4"
     eth-rpc-errors "^4.0.3"
     web3 "^4.4.0"
 
