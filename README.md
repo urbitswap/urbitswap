@@ -2,6 +2,10 @@
 
 A peer-to-peer NFT trading platform native to [Urbit]
 
+## Demo ##
+
+![%urbitswap demo](https://raw.githubusercontent.com/urbitswap/urbitswap/develop/meta/demo/urbitswap-v0.X.gif)
+
 ## Build/Develop ##
 
 All commands assume that the current working directory is this repository's
